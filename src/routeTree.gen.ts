@@ -13,6 +13,7 @@ import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as MarketingIndexRouteImport } from './routes/_marketing.index'
 import { Route as MarketingStatusRouteImport } from './routes/_marketing.status'
 import { Route as MarketingPricingRouteImport } from './routes/_marketing.pricing'
+import { Route as MarketingLegalRouteImport } from './routes/_marketing.legal'
 import { Route as MarketingHostingRouteImport } from './routes/_marketing.hosting'
 import { Route as MarketingFeaturesRouteImport } from './routes/_marketing.features'
 import { Route as MarketingEmailRouteImport } from './routes/_marketing.email'
@@ -20,6 +21,10 @@ import { Route as MarketingDomainsRouteImport } from './routes/_marketing.domain
 import { Route as MarketingContactRouteImport } from './routes/_marketing.contact'
 import { Route as MarketingBlogRouteImport } from './routes/_marketing.blog'
 import { Route as MarketingAboutRouteImport } from './routes/_marketing.about'
+import { Route as MarketingLegalTermsRouteImport } from './routes/_marketing.legal.terms'
+import { Route as MarketingLegalSlaRouteImport } from './routes/_marketing.legal.sla'
+import { Route as MarketingLegalPrivacyRouteImport } from './routes/_marketing.legal.privacy'
+import { Route as MarketingLegalCookiesRouteImport } from './routes/_marketing.legal.cookies'
 import { Route as MarketingBlogSlugRouteImport } from './routes/_marketing.blog.$slug'
 
 const MarketingRoute = MarketingRouteImport.update({
@@ -39,6 +44,11 @@ const MarketingStatusRoute = MarketingStatusRouteImport.update({
 const MarketingPricingRoute = MarketingPricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingLegalRoute = MarketingLegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
   getParentRoute: () => MarketingRoute,
 } as any)
 const MarketingHostingRoute = MarketingHostingRouteImport.update({
@@ -76,6 +86,26 @@ const MarketingAboutRoute = MarketingAboutRouteImport.update({
   path: '/about',
   getParentRoute: () => MarketingRoute,
 } as any)
+const MarketingLegalTermsRoute = MarketingLegalTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => MarketingLegalRoute,
+} as any)
+const MarketingLegalSlaRoute = MarketingLegalSlaRouteImport.update({
+  id: '/sla',
+  path: '/sla',
+  getParentRoute: () => MarketingLegalRoute,
+} as any)
+const MarketingLegalPrivacyRoute = MarketingLegalPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => MarketingLegalRoute,
+} as any)
+const MarketingLegalCookiesRoute = MarketingLegalCookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
+  getParentRoute: () => MarketingLegalRoute,
+} as any)
 const MarketingBlogSlugRoute = MarketingBlogSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -91,9 +121,14 @@ export interface FileRoutesByFullPath {
   '/email': typeof MarketingEmailRoute
   '/features': typeof MarketingFeaturesRoute
   '/hosting': typeof MarketingHostingRoute
+  '/legal': typeof MarketingLegalRouteWithChildren
   '/pricing': typeof MarketingPricingRoute
   '/status': typeof MarketingStatusRoute
   '/blog/$slug': typeof MarketingBlogSlugRoute
+  '/legal/cookies': typeof MarketingLegalCookiesRoute
+  '/legal/privacy': typeof MarketingLegalPrivacyRoute
+  '/legal/sla': typeof MarketingLegalSlaRoute
+  '/legal/terms': typeof MarketingLegalTermsRoute
 }
 export interface FileRoutesByTo {
   '/about': typeof MarketingAboutRoute
@@ -103,10 +138,15 @@ export interface FileRoutesByTo {
   '/email': typeof MarketingEmailRoute
   '/features': typeof MarketingFeaturesRoute
   '/hosting': typeof MarketingHostingRoute
+  '/legal': typeof MarketingLegalRouteWithChildren
   '/pricing': typeof MarketingPricingRoute
   '/status': typeof MarketingStatusRoute
   '/': typeof MarketingIndexRoute
   '/blog/$slug': typeof MarketingBlogSlugRoute
+  '/legal/cookies': typeof MarketingLegalCookiesRoute
+  '/legal/privacy': typeof MarketingLegalPrivacyRoute
+  '/legal/sla': typeof MarketingLegalSlaRoute
+  '/legal/terms': typeof MarketingLegalTermsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -118,10 +158,15 @@ export interface FileRoutesById {
   '/_marketing/email': typeof MarketingEmailRoute
   '/_marketing/features': typeof MarketingFeaturesRoute
   '/_marketing/hosting': typeof MarketingHostingRoute
+  '/_marketing/legal': typeof MarketingLegalRouteWithChildren
   '/_marketing/pricing': typeof MarketingPricingRoute
   '/_marketing/status': typeof MarketingStatusRoute
   '/_marketing/': typeof MarketingIndexRoute
   '/_marketing/blog/$slug': typeof MarketingBlogSlugRoute
+  '/_marketing/legal/cookies': typeof MarketingLegalCookiesRoute
+  '/_marketing/legal/privacy': typeof MarketingLegalPrivacyRoute
+  '/_marketing/legal/sla': typeof MarketingLegalSlaRoute
+  '/_marketing/legal/terms': typeof MarketingLegalTermsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -134,9 +179,14 @@ export interface FileRouteTypes {
     | '/email'
     | '/features'
     | '/hosting'
+    | '/legal'
     | '/pricing'
     | '/status'
     | '/blog/$slug'
+    | '/legal/cookies'
+    | '/legal/privacy'
+    | '/legal/sla'
+    | '/legal/terms'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/about'
@@ -146,10 +196,15 @@ export interface FileRouteTypes {
     | '/email'
     | '/features'
     | '/hosting'
+    | '/legal'
     | '/pricing'
     | '/status'
     | '/'
     | '/blog/$slug'
+    | '/legal/cookies'
+    | '/legal/privacy'
+    | '/legal/sla'
+    | '/legal/terms'
   id:
     | '__root__'
     | '/_marketing'
@@ -160,10 +215,15 @@ export interface FileRouteTypes {
     | '/_marketing/email'
     | '/_marketing/features'
     | '/_marketing/hosting'
+    | '/_marketing/legal'
     | '/_marketing/pricing'
     | '/_marketing/status'
     | '/_marketing/'
     | '/_marketing/blog/$slug'
+    | '/_marketing/legal/cookies'
+    | '/_marketing/legal/privacy'
+    | '/_marketing/legal/sla'
+    | '/_marketing/legal/terms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -198,6 +258,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof MarketingPricingRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/legal': {
+      id: '/_marketing/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof MarketingLegalRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/hosting': {
@@ -249,6 +316,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingAboutRouteImport
       parentRoute: typeof MarketingRoute
     }
+    '/_marketing/legal/terms': {
+      id: '/_marketing/legal/terms'
+      path: '/terms'
+      fullPath: '/legal/terms'
+      preLoaderRoute: typeof MarketingLegalTermsRouteImport
+      parentRoute: typeof MarketingLegalRoute
+    }
+    '/_marketing/legal/sla': {
+      id: '/_marketing/legal/sla'
+      path: '/sla'
+      fullPath: '/legal/sla'
+      preLoaderRoute: typeof MarketingLegalSlaRouteImport
+      parentRoute: typeof MarketingLegalRoute
+    }
+    '/_marketing/legal/privacy': {
+      id: '/_marketing/legal/privacy'
+      path: '/privacy'
+      fullPath: '/legal/privacy'
+      preLoaderRoute: typeof MarketingLegalPrivacyRouteImport
+      parentRoute: typeof MarketingLegalRoute
+    }
+    '/_marketing/legal/cookies': {
+      id: '/_marketing/legal/cookies'
+      path: '/cookies'
+      fullPath: '/legal/cookies'
+      preLoaderRoute: typeof MarketingLegalCookiesRouteImport
+      parentRoute: typeof MarketingLegalRoute
+    }
     '/_marketing/blog/$slug': {
       id: '/_marketing/blog/$slug'
       path: '/$slug'
@@ -271,6 +366,24 @@ const MarketingBlogRouteWithChildren = MarketingBlogRoute._addFileChildren(
   MarketingBlogRouteChildren,
 )
 
+interface MarketingLegalRouteChildren {
+  MarketingLegalCookiesRoute: typeof MarketingLegalCookiesRoute
+  MarketingLegalPrivacyRoute: typeof MarketingLegalPrivacyRoute
+  MarketingLegalSlaRoute: typeof MarketingLegalSlaRoute
+  MarketingLegalTermsRoute: typeof MarketingLegalTermsRoute
+}
+
+const MarketingLegalRouteChildren: MarketingLegalRouteChildren = {
+  MarketingLegalCookiesRoute: MarketingLegalCookiesRoute,
+  MarketingLegalPrivacyRoute: MarketingLegalPrivacyRoute,
+  MarketingLegalSlaRoute: MarketingLegalSlaRoute,
+  MarketingLegalTermsRoute: MarketingLegalTermsRoute,
+}
+
+const MarketingLegalRouteWithChildren = MarketingLegalRoute._addFileChildren(
+  MarketingLegalRouteChildren,
+)
+
 interface MarketingRouteChildren {
   MarketingAboutRoute: typeof MarketingAboutRoute
   MarketingBlogRoute: typeof MarketingBlogRouteWithChildren
@@ -279,6 +392,7 @@ interface MarketingRouteChildren {
   MarketingEmailRoute: typeof MarketingEmailRoute
   MarketingFeaturesRoute: typeof MarketingFeaturesRoute
   MarketingHostingRoute: typeof MarketingHostingRoute
+  MarketingLegalRoute: typeof MarketingLegalRouteWithChildren
   MarketingPricingRoute: typeof MarketingPricingRoute
   MarketingStatusRoute: typeof MarketingStatusRoute
   MarketingIndexRoute: typeof MarketingIndexRoute
@@ -292,6 +406,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingEmailRoute: MarketingEmailRoute,
   MarketingFeaturesRoute: MarketingFeaturesRoute,
   MarketingHostingRoute: MarketingHostingRoute,
+  MarketingLegalRoute: MarketingLegalRouteWithChildren,
   MarketingPricingRoute: MarketingPricingRoute,
   MarketingStatusRoute: MarketingStatusRoute,
   MarketingIndexRoute: MarketingIndexRoute,
@@ -307,3 +422,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
