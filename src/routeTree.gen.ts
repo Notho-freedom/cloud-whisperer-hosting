@@ -9,60 +9,587 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as MarketingRouteImport } from './routes/_marketing'
+import { Route as AuthRouteImport } from './routes/_auth'
+import { Route as MarketingIndexRouteImport } from './routes/_marketing.index'
+import { Route as MarketingStatusRouteImport } from './routes/_marketing.status'
+import { Route as MarketingPricingRouteImport } from './routes/_marketing.pricing'
+import { Route as MarketingLegalRouteImport } from './routes/_marketing.legal'
+import { Route as MarketingHostingRouteImport } from './routes/_marketing.hosting'
+import { Route as MarketingFeaturesRouteImport } from './routes/_marketing.features'
+import { Route as MarketingEmailRouteImport } from './routes/_marketing.email'
+import { Route as MarketingDomainsRouteImport } from './routes/_marketing.domains'
+import { Route as MarketingContactRouteImport } from './routes/_marketing.contact'
+import { Route as MarketingBlogRouteImport } from './routes/_marketing.blog'
+import { Route as MarketingAboutRouteImport } from './routes/_marketing.about'
+import { Route as AuthVerifyEmailRouteImport } from './routes/_auth.verify-email'
+import { Route as AuthSignupRouteImport } from './routes/_auth.signup'
+import { Route as AuthResetPasswordRouteImport } from './routes/_auth.reset-password'
+import { Route as AuthLoginRouteImport } from './routes/_auth.login'
+import { Route as AuthForgotPasswordRouteImport } from './routes/_auth.forgot-password'
+import { Route as Auth2faRouteImport } from './routes/_auth.2fa'
+import { Route as MarketingLegalTermsRouteImport } from './routes/_marketing.legal.terms'
+import { Route as MarketingLegalSlaRouteImport } from './routes/_marketing.legal.sla'
+import { Route as MarketingLegalPrivacyRouteImport } from './routes/_marketing.legal.privacy'
+import { Route as MarketingLegalCookiesRouteImport } from './routes/_marketing.legal.cookies'
+import { Route as MarketingBlogSlugRouteImport } from './routes/_marketing.blog.$slug'
 
-const IndexRoute = IndexRouteImport.update({
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketingRoute = MarketingRouteImport.update({
+  id: '/_marketing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketingIndexRoute = MarketingIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingStatusRoute = MarketingStatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingPricingRoute = MarketingPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingLegalRoute = MarketingLegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingHostingRoute = MarketingHostingRouteImport.update({
+  id: '/hosting',
+  path: '/hosting',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingFeaturesRoute = MarketingFeaturesRouteImport.update({
+  id: '/features',
+  path: '/features',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingEmailRoute = MarketingEmailRouteImport.update({
+  id: '/email',
+  path: '/email',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingDomainsRoute = MarketingDomainsRouteImport.update({
+  id: '/domains',
+  path: '/domains',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingContactRoute = MarketingContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingBlogRoute = MarketingBlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingAboutRoute = MarketingAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const Auth2faRoute = Auth2faRouteImport.update({
+  id: '/2fa',
+  path: '/2fa',
+  getParentRoute: () => AuthRoute,
+} as any)
+const MarketingLegalTermsRoute = MarketingLegalTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => MarketingLegalRoute,
+} as any)
+const MarketingLegalSlaRoute = MarketingLegalSlaRouteImport.update({
+  id: '/sla',
+  path: '/sla',
+  getParentRoute: () => MarketingLegalRoute,
+} as any)
+const MarketingLegalPrivacyRoute = MarketingLegalPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => MarketingLegalRoute,
+} as any)
+const MarketingLegalCookiesRoute = MarketingLegalCookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
+  getParentRoute: () => MarketingLegalRoute,
+} as any)
+const MarketingBlogSlugRoute = MarketingBlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => MarketingBlogRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof MarketingIndexRoute
+  '/app': typeof AppRoute
+  '/2fa': typeof Auth2faRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/login': typeof AuthLoginRoute
+  '/reset-password': typeof AuthResetPasswordRoute
+  '/signup': typeof AuthSignupRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
+  '/about': typeof MarketingAboutRoute
+  '/blog': typeof MarketingBlogRouteWithChildren
+  '/contact': typeof MarketingContactRoute
+  '/domains': typeof MarketingDomainsRoute
+  '/email': typeof MarketingEmailRoute
+  '/features': typeof MarketingFeaturesRoute
+  '/hosting': typeof MarketingHostingRoute
+  '/legal': typeof MarketingLegalRouteWithChildren
+  '/pricing': typeof MarketingPricingRoute
+  '/status': typeof MarketingStatusRoute
+  '/blog/$slug': typeof MarketingBlogSlugRoute
+  '/legal/cookies': typeof MarketingLegalCookiesRoute
+  '/legal/privacy': typeof MarketingLegalPrivacyRoute
+  '/legal/sla': typeof MarketingLegalSlaRoute
+  '/legal/terms': typeof MarketingLegalTermsRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/': typeof MarketingIndexRoute
+  '/app': typeof AppRoute
+  '/2fa': typeof Auth2faRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/login': typeof AuthLoginRoute
+  '/reset-password': typeof AuthResetPasswordRoute
+  '/signup': typeof AuthSignupRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
+  '/about': typeof MarketingAboutRoute
+  '/blog': typeof MarketingBlogRouteWithChildren
+  '/contact': typeof MarketingContactRoute
+  '/domains': typeof MarketingDomainsRoute
+  '/email': typeof MarketingEmailRoute
+  '/features': typeof MarketingFeaturesRoute
+  '/hosting': typeof MarketingHostingRoute
+  '/legal': typeof MarketingLegalRouteWithChildren
+  '/pricing': typeof MarketingPricingRoute
+  '/status': typeof MarketingStatusRoute
+  '/blog/$slug': typeof MarketingBlogSlugRoute
+  '/legal/cookies': typeof MarketingLegalCookiesRoute
+  '/legal/privacy': typeof MarketingLegalPrivacyRoute
+  '/legal/sla': typeof MarketingLegalSlaRoute
+  '/legal/terms': typeof MarketingLegalTermsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_auth': typeof AuthRouteWithChildren
+  '/_marketing': typeof MarketingRouteWithChildren
+  '/app': typeof AppRoute
+  '/_auth/2fa': typeof Auth2faRoute
+  '/_auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/_auth/login': typeof AuthLoginRoute
+  '/_auth/reset-password': typeof AuthResetPasswordRoute
+  '/_auth/signup': typeof AuthSignupRoute
+  '/_auth/verify-email': typeof AuthVerifyEmailRoute
+  '/_marketing/about': typeof MarketingAboutRoute
+  '/_marketing/blog': typeof MarketingBlogRouteWithChildren
+  '/_marketing/contact': typeof MarketingContactRoute
+  '/_marketing/domains': typeof MarketingDomainsRoute
+  '/_marketing/email': typeof MarketingEmailRoute
+  '/_marketing/features': typeof MarketingFeaturesRoute
+  '/_marketing/hosting': typeof MarketingHostingRoute
+  '/_marketing/legal': typeof MarketingLegalRouteWithChildren
+  '/_marketing/pricing': typeof MarketingPricingRoute
+  '/_marketing/status': typeof MarketingStatusRoute
+  '/_marketing/': typeof MarketingIndexRoute
+  '/_marketing/blog/$slug': typeof MarketingBlogSlugRoute
+  '/_marketing/legal/cookies': typeof MarketingLegalCookiesRoute
+  '/_marketing/legal/privacy': typeof MarketingLegalPrivacyRoute
+  '/_marketing/legal/sla': typeof MarketingLegalSlaRoute
+  '/_marketing/legal/terms': typeof MarketingLegalTermsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/2fa'
+    | '/forgot-password'
+    | '/login'
+    | '/reset-password'
+    | '/signup'
+    | '/verify-email'
+    | '/about'
+    | '/blog'
+    | '/contact'
+    | '/domains'
+    | '/email'
+    | '/features'
+    | '/hosting'
+    | '/legal'
+    | '/pricing'
+    | '/status'
+    | '/blog/$slug'
+    | '/legal/cookies'
+    | '/legal/privacy'
+    | '/legal/sla'
+    | '/legal/terms'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/app'
+    | '/2fa'
+    | '/forgot-password'
+    | '/login'
+    | '/reset-password'
+    | '/signup'
+    | '/verify-email'
+    | '/about'
+    | '/blog'
+    | '/contact'
+    | '/domains'
+    | '/email'
+    | '/features'
+    | '/hosting'
+    | '/legal'
+    | '/pricing'
+    | '/status'
+    | '/blog/$slug'
+    | '/legal/cookies'
+    | '/legal/privacy'
+    | '/legal/sla'
+    | '/legal/terms'
+  id:
+    | '__root__'
+    | '/_auth'
+    | '/_marketing'
+    | '/app'
+    | '/_auth/2fa'
+    | '/_auth/forgot-password'
+    | '/_auth/login'
+    | '/_auth/reset-password'
+    | '/_auth/signup'
+    | '/_auth/verify-email'
+    | '/_marketing/about'
+    | '/_marketing/blog'
+    | '/_marketing/contact'
+    | '/_marketing/domains'
+    | '/_marketing/email'
+    | '/_marketing/features'
+    | '/_marketing/hosting'
+    | '/_marketing/legal'
+    | '/_marketing/pricing'
+    | '/_marketing/status'
+    | '/_marketing/'
+    | '/_marketing/blog/$slug'
+    | '/_marketing/legal/cookies'
+    | '/_marketing/legal/privacy'
+    | '/_marketing/legal/sla'
+    | '/_marketing/legal/terms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRouteWithChildren
+  MarketingRoute: typeof MarketingRouteWithChildren
+  AppRoute: typeof AppRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_marketing': {
+      id: '/_marketing'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof MarketingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_marketing/': {
+      id: '/_marketing/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof MarketingIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/status': {
+      id: '/_marketing/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof MarketingStatusRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/pricing': {
+      id: '/_marketing/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof MarketingPricingRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/legal': {
+      id: '/_marketing/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof MarketingLegalRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/hosting': {
+      id: '/_marketing/hosting'
+      path: '/hosting'
+      fullPath: '/hosting'
+      preLoaderRoute: typeof MarketingHostingRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/features': {
+      id: '/_marketing/features'
+      path: '/features'
+      fullPath: '/features'
+      preLoaderRoute: typeof MarketingFeaturesRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/email': {
+      id: '/_marketing/email'
+      path: '/email'
+      fullPath: '/email'
+      preLoaderRoute: typeof MarketingEmailRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/domains': {
+      id: '/_marketing/domains'
+      path: '/domains'
+      fullPath: '/domains'
+      preLoaderRoute: typeof MarketingDomainsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/contact': {
+      id: '/_marketing/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof MarketingContactRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/blog': {
+      id: '/_marketing/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof MarketingBlogRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/about': {
+      id: '/_marketing/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof MarketingAboutRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_auth/verify-email': {
+      id: '/_auth/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/signup': {
+      id: '/_auth/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/reset-password': {
+      id: '/_auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/login': {
+      id: '/_auth/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/forgot-password': {
+      id: '/_auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/2fa': {
+      id: '/_auth/2fa'
+      path: '/2fa'
+      fullPath: '/2fa'
+      preLoaderRoute: typeof Auth2faRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_marketing/legal/terms': {
+      id: '/_marketing/legal/terms'
+      path: '/terms'
+      fullPath: '/legal/terms'
+      preLoaderRoute: typeof MarketingLegalTermsRouteImport
+      parentRoute: typeof MarketingLegalRoute
+    }
+    '/_marketing/legal/sla': {
+      id: '/_marketing/legal/sla'
+      path: '/sla'
+      fullPath: '/legal/sla'
+      preLoaderRoute: typeof MarketingLegalSlaRouteImport
+      parentRoute: typeof MarketingLegalRoute
+    }
+    '/_marketing/legal/privacy': {
+      id: '/_marketing/legal/privacy'
+      path: '/privacy'
+      fullPath: '/legal/privacy'
+      preLoaderRoute: typeof MarketingLegalPrivacyRouteImport
+      parentRoute: typeof MarketingLegalRoute
+    }
+    '/_marketing/legal/cookies': {
+      id: '/_marketing/legal/cookies'
+      path: '/cookies'
+      fullPath: '/legal/cookies'
+      preLoaderRoute: typeof MarketingLegalCookiesRouteImport
+      parentRoute: typeof MarketingLegalRoute
+    }
+    '/_marketing/blog/$slug': {
+      id: '/_marketing/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof MarketingBlogSlugRouteImport
+      parentRoute: typeof MarketingBlogRoute
     }
   }
 }
 
+interface AuthRouteChildren {
+  Auth2faRoute: typeof Auth2faRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  AuthSignupRoute: typeof AuthSignupRoute
+  AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  Auth2faRoute: Auth2faRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
+  AuthSignupRoute: AuthSignupRoute,
+  AuthVerifyEmailRoute: AuthVerifyEmailRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
+interface MarketingBlogRouteChildren {
+  MarketingBlogSlugRoute: typeof MarketingBlogSlugRoute
+}
+
+const MarketingBlogRouteChildren: MarketingBlogRouteChildren = {
+  MarketingBlogSlugRoute: MarketingBlogSlugRoute,
+}
+
+const MarketingBlogRouteWithChildren = MarketingBlogRoute._addFileChildren(
+  MarketingBlogRouteChildren,
+)
+
+interface MarketingLegalRouteChildren {
+  MarketingLegalCookiesRoute: typeof MarketingLegalCookiesRoute
+  MarketingLegalPrivacyRoute: typeof MarketingLegalPrivacyRoute
+  MarketingLegalSlaRoute: typeof MarketingLegalSlaRoute
+  MarketingLegalTermsRoute: typeof MarketingLegalTermsRoute
+}
+
+const MarketingLegalRouteChildren: MarketingLegalRouteChildren = {
+  MarketingLegalCookiesRoute: MarketingLegalCookiesRoute,
+  MarketingLegalPrivacyRoute: MarketingLegalPrivacyRoute,
+  MarketingLegalSlaRoute: MarketingLegalSlaRoute,
+  MarketingLegalTermsRoute: MarketingLegalTermsRoute,
+}
+
+const MarketingLegalRouteWithChildren = MarketingLegalRoute._addFileChildren(
+  MarketingLegalRouteChildren,
+)
+
+interface MarketingRouteChildren {
+  MarketingAboutRoute: typeof MarketingAboutRoute
+  MarketingBlogRoute: typeof MarketingBlogRouteWithChildren
+  MarketingContactRoute: typeof MarketingContactRoute
+  MarketingDomainsRoute: typeof MarketingDomainsRoute
+  MarketingEmailRoute: typeof MarketingEmailRoute
+  MarketingFeaturesRoute: typeof MarketingFeaturesRoute
+  MarketingHostingRoute: typeof MarketingHostingRoute
+  MarketingLegalRoute: typeof MarketingLegalRouteWithChildren
+  MarketingPricingRoute: typeof MarketingPricingRoute
+  MarketingStatusRoute: typeof MarketingStatusRoute
+  MarketingIndexRoute: typeof MarketingIndexRoute
+}
+
+const MarketingRouteChildren: MarketingRouteChildren = {
+  MarketingAboutRoute: MarketingAboutRoute,
+  MarketingBlogRoute: MarketingBlogRouteWithChildren,
+  MarketingContactRoute: MarketingContactRoute,
+  MarketingDomainsRoute: MarketingDomainsRoute,
+  MarketingEmailRoute: MarketingEmailRoute,
+  MarketingFeaturesRoute: MarketingFeaturesRoute,
+  MarketingHostingRoute: MarketingHostingRoute,
+  MarketingLegalRoute: MarketingLegalRouteWithChildren,
+  MarketingPricingRoute: MarketingPricingRoute,
+  MarketingStatusRoute: MarketingStatusRoute,
+  MarketingIndexRoute: MarketingIndexRoute,
+}
+
+const MarketingRouteWithChildren = MarketingRoute._addFileChildren(
+  MarketingRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AuthRoute: AuthRouteWithChildren,
+  MarketingRoute: MarketingRouteWithChildren,
+  AppRoute: AppRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
