@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MarketingRouteImport } from './routes/_marketing'
+import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as MarketingIndexRouteImport } from './routes/_marketing.index'
 import { Route as MarketingStatusRouteImport } from './routes/_marketing.status'
 import { Route as MarketingPricingRouteImport } from './routes/_marketing.pricing'
@@ -21,6 +22,12 @@ import { Route as MarketingDomainsRouteImport } from './routes/_marketing.domain
 import { Route as MarketingContactRouteImport } from './routes/_marketing.contact'
 import { Route as MarketingBlogRouteImport } from './routes/_marketing.blog'
 import { Route as MarketingAboutRouteImport } from './routes/_marketing.about'
+import { Route as AuthVerifyEmailRouteImport } from './routes/_auth.verify-email'
+import { Route as AuthSignupRouteImport } from './routes/_auth.signup'
+import { Route as AuthResetPasswordRouteImport } from './routes/_auth.reset-password'
+import { Route as AuthLoginRouteImport } from './routes/_auth.login'
+import { Route as AuthForgotPasswordRouteImport } from './routes/_auth.forgot-password'
+import { Route as Auth2faRouteImport } from './routes/_auth.2fa'
 import { Route as MarketingLegalTermsRouteImport } from './routes/_marketing.legal.terms'
 import { Route as MarketingLegalSlaRouteImport } from './routes/_marketing.legal.sla'
 import { Route as MarketingLegalPrivacyRouteImport } from './routes/_marketing.legal.privacy'
@@ -29,6 +36,10 @@ import { Route as MarketingBlogSlugRouteImport } from './routes/_marketing.blog.
 
 const MarketingRoute = MarketingRouteImport.update({
   id: '/_marketing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketingIndexRoute = MarketingIndexRouteImport.update({
@@ -86,6 +97,36 @@ const MarketingAboutRoute = MarketingAboutRouteImport.update({
   path: '/about',
   getParentRoute: () => MarketingRoute,
 } as any)
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const Auth2faRoute = Auth2faRouteImport.update({
+  id: '/2fa',
+  path: '/2fa',
+  getParentRoute: () => AuthRoute,
+} as any)
 const MarketingLegalTermsRoute = MarketingLegalTermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -114,6 +155,12 @@ const MarketingBlogSlugRoute = MarketingBlogSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
+  '/2fa': typeof Auth2faRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/login': typeof AuthLoginRoute
+  '/reset-password': typeof AuthResetPasswordRoute
+  '/signup': typeof AuthSignupRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
   '/about': typeof MarketingAboutRoute
   '/blog': typeof MarketingBlogRouteWithChildren
   '/contact': typeof MarketingContactRoute
@@ -131,6 +178,13 @@ export interface FileRoutesByFullPath {
   '/legal/terms': typeof MarketingLegalTermsRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof MarketingIndexRoute
+  '/2fa': typeof Auth2faRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/login': typeof AuthLoginRoute
+  '/reset-password': typeof AuthResetPasswordRoute
+  '/signup': typeof AuthSignupRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
   '/about': typeof MarketingAboutRoute
   '/blog': typeof MarketingBlogRouteWithChildren
   '/contact': typeof MarketingContactRoute
@@ -141,7 +195,6 @@ export interface FileRoutesByTo {
   '/legal': typeof MarketingLegalRouteWithChildren
   '/pricing': typeof MarketingPricingRoute
   '/status': typeof MarketingStatusRoute
-  '/': typeof MarketingIndexRoute
   '/blog/$slug': typeof MarketingBlogSlugRoute
   '/legal/cookies': typeof MarketingLegalCookiesRoute
   '/legal/privacy': typeof MarketingLegalPrivacyRoute
@@ -150,7 +203,14 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_auth': typeof AuthRouteWithChildren
   '/_marketing': typeof MarketingRouteWithChildren
+  '/_auth/2fa': typeof Auth2faRoute
+  '/_auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/_auth/login': typeof AuthLoginRoute
+  '/_auth/reset-password': typeof AuthResetPasswordRoute
+  '/_auth/signup': typeof AuthSignupRoute
+  '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/_marketing/about': typeof MarketingAboutRoute
   '/_marketing/blog': typeof MarketingBlogRouteWithChildren
   '/_marketing/contact': typeof MarketingContactRoute
@@ -172,6 +232,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/2fa'
+    | '/forgot-password'
+    | '/login'
+    | '/reset-password'
+    | '/signup'
+    | '/verify-email'
     | '/about'
     | '/blog'
     | '/contact'
@@ -189,6 +255,13 @@ export interface FileRouteTypes {
     | '/legal/terms'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
+    | '/2fa'
+    | '/forgot-password'
+    | '/login'
+    | '/reset-password'
+    | '/signup'
+    | '/verify-email'
     | '/about'
     | '/blog'
     | '/contact'
@@ -199,7 +272,6 @@ export interface FileRouteTypes {
     | '/legal'
     | '/pricing'
     | '/status'
-    | '/'
     | '/blog/$slug'
     | '/legal/cookies'
     | '/legal/privacy'
@@ -207,7 +279,14 @@ export interface FileRouteTypes {
     | '/legal/terms'
   id:
     | '__root__'
+    | '/_auth'
     | '/_marketing'
+    | '/_auth/2fa'
+    | '/_auth/forgot-password'
+    | '/_auth/login'
+    | '/_auth/reset-password'
+    | '/_auth/signup'
+    | '/_auth/verify-email'
     | '/_marketing/about'
     | '/_marketing/blog'
     | '/_marketing/contact'
@@ -227,6 +306,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AuthRoute: typeof AuthRouteWithChildren
   MarketingRoute: typeof MarketingRouteWithChildren
 }
 
@@ -237,6 +317,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof MarketingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_marketing/': {
@@ -316,6 +403,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingAboutRouteImport
       parentRoute: typeof MarketingRoute
     }
+    '/_auth/verify-email': {
+      id: '/_auth/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/signup': {
+      id: '/_auth/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/reset-password': {
+      id: '/_auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/login': {
+      id: '/_auth/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/forgot-password': {
+      id: '/_auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/2fa': {
+      id: '/_auth/2fa'
+      path: '/2fa'
+      fullPath: '/2fa'
+      preLoaderRoute: typeof Auth2faRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_marketing/legal/terms': {
       id: '/_marketing/legal/terms'
       path: '/terms'
@@ -353,6 +482,26 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthRouteChildren {
+  Auth2faRoute: typeof Auth2faRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  AuthSignupRoute: typeof AuthSignupRoute
+  AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  Auth2faRoute: Auth2faRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
+  AuthSignupRoute: AuthSignupRoute,
+  AuthVerifyEmailRoute: AuthVerifyEmailRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface MarketingBlogRouteChildren {
   MarketingBlogSlugRoute: typeof MarketingBlogSlugRoute
@@ -417,6 +566,7 @@ const MarketingRouteWithChildren = MarketingRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  AuthRoute: AuthRouteWithChildren,
   MarketingRoute: MarketingRouteWithChildren,
 }
 export const routeTree = rootRouteImport
