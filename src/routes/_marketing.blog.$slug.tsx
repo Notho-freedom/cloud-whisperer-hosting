@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_marketing/blog/$slug")({
 
 function BlogPostPage() {
   const { slug } = Route.useParams();
-  const title = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const title = slug.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
 
   return (
     <article className="container mx-auto max-w-3xl px-4 py-16">
