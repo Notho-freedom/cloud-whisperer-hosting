@@ -9,9 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AppRouteImport } from './routes/app'
 import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as AuthRouteImport } from './routes/_auth'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as MarketingIndexRouteImport } from './routes/_marketing.index'
 import { Route as MarketingStatusRouteImport } from './routes/_marketing.status'
 import { Route as MarketingPricingRouteImport } from './routes/_marketing.pricing'
@@ -29,23 +30,84 @@ import { Route as AuthResetPasswordRouteImport } from './routes/_auth.reset-pass
 import { Route as AuthLoginRouteImport } from './routes/_auth.login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth.forgot-password'
 import { Route as Auth2faRouteImport } from './routes/_auth.2fa'
+import { Route as AppAppIndexRouteImport } from './routes/_app.app.index'
+import { Route as AdminAdminIndexRouteImport } from './routes/_admin.admin.index'
 import { Route as MarketingLegalTermsRouteImport } from './routes/_marketing.legal.terms'
 import { Route as MarketingLegalSlaRouteImport } from './routes/_marketing.legal.sla'
 import { Route as MarketingLegalPrivacyRouteImport } from './routes/_marketing.legal.privacy'
 import { Route as MarketingLegalCookiesRouteImport } from './routes/_marketing.legal.cookies'
 import { Route as MarketingBlogSlugRouteImport } from './routes/_marketing.blog.$slug'
+import { Route as AppAppSettingsRouteImport } from './routes/_app.app.settings'
+import { Route as AppAppNotificationsRouteImport } from './routes/_app.app.notifications'
+import { Route as AppAppBillingRouteImport } from './routes/_app.app.billing'
+import { Route as AppAppApiKeysRouteImport } from './routes/_app.app.api-keys'
+import { Route as AdminAdminStatusRouteImport } from './routes/_admin.admin.status'
+import { Route as AdminAdminSitesRouteImport } from './routes/_admin.admin.sites'
+import { Route as AdminAdminSettingsRouteImport } from './routes/_admin.admin.settings'
+import { Route as AdminAdminProvidersRouteImport } from './routes/_admin.admin.providers'
+import { Route as AdminAdminPlansRouteImport } from './routes/_admin.admin.plans'
+import { Route as AdminAdminEmailRouteImport } from './routes/_admin.admin.email'
+import { Route as AdminAdminDomainsRouteImport } from './routes/_admin.admin.domains'
+import { Route as AdminAdminBlogRouteImport } from './routes/_admin.admin.blog'
+import { Route as AdminAdminBillingRouteImport } from './routes/_admin.admin.billing'
+import { Route as AdminAdminAuditRouteImport } from './routes/_admin.admin.audit'
+import { Route as AdminAdminApiLogsRouteImport } from './routes/_admin.admin.api-logs'
+import { Route as AdminAdminAnnouncementsRouteImport } from './routes/_admin.admin.announcements'
+import { Route as AppAppTeamIndexRouteImport } from './routes/_app.app.team.index'
+import { Route as AppAppSupportIndexRouteImport } from './routes/_app.app.support.index'
+import { Route as AppAppSitesIndexRouteImport } from './routes/_app.app.sites.index'
+import { Route as AppAppEmailIndexRouteImport } from './routes/_app.app.email.index'
+import { Route as AppAppDomainsIndexRouteImport } from './routes/_app.app.domains.index'
+import { Route as AppAppBillingIndexRouteImport } from './routes/_app.app.billing.index'
+import { Route as AdminAdminUsersIndexRouteImport } from './routes/_admin.admin.users.index'
+import { Route as AdminAdminSupportIndexRouteImport } from './routes/_admin.admin.support.index'
+import { Route as AppAppTeamInviteRouteImport } from './routes/_app.app.team.invite'
+import { Route as AppAppSupportNewRouteImport } from './routes/_app.app.support.new'
+import { Route as AppAppSupportTicketIdRouteImport } from './routes/_app.app.support.$ticketId'
+import { Route as AppAppSitesNewRouteImport } from './routes/_app.app.sites.new'
+import { Route as AppAppSitesProjectIdRouteImport } from './routes/_app.app.sites.$projectId'
+import { Route as AppAppSettingsSecurityRouteImport } from './routes/_app.app.settings.security'
+import { Route as AppAppSettingsProfileRouteImport } from './routes/_app.app.settings.profile'
+import { Route as AppAppSettingsPreferencesRouteImport } from './routes/_app.app.settings.preferences'
+import { Route as AppAppSettingsIntegrationsRouteImport } from './routes/_app.app.settings.integrations'
+import { Route as AppAppSettingsDangerRouteImport } from './routes/_app.app.settings.danger'
+import { Route as AppAppEmailProvidersRouteImport } from './routes/_app.app.email.providers'
+import { Route as AppAppEmailNewRouteImport } from './routes/_app.app.email.new'
+import { Route as AppAppEmailMailboxIdRouteImport } from './routes/_app.app.email.$mailboxId'
+import { Route as AppAppDomainsSearchRouteImport } from './routes/_app.app.domains.search'
+import { Route as AppAppDomainsDomainRouteImport } from './routes/_app.app.domains.$domain'
+import { Route as AppAppBillingUsageRouteImport } from './routes/_app.app.billing.usage'
+import { Route as AppAppBillingPlanRouteImport } from './routes/_app.app.billing.plan'
+import { Route as AppAppBillingPaymentMethodsRouteImport } from './routes/_app.app.billing.payment-methods'
+import { Route as AppAppBillingInvoicesRouteImport } from './routes/_app.app.billing.invoices'
+import { Route as AdminAdminUsersRolesRouteImport } from './routes/_admin.admin.users.roles'
+import { Route as AdminAdminUsersUserIdRouteImport } from './routes/_admin.admin.users.$userId'
+import { Route as AdminAdminSupportMacrosRouteImport } from './routes/_admin.admin.support.macros'
+import { Route as AppAppSitesProjectIdIndexRouteImport } from './routes/_app.app.sites.$projectId.index'
+import { Route as AppAppSitesProjectIdSettingsRouteImport } from './routes/_app.app.sites.$projectId.settings'
+import { Route as AppAppSitesProjectIdLogsRouteImport } from './routes/_app.app.sites.$projectId.logs'
+import { Route as AppAppSitesProjectIdEnvRouteImport } from './routes/_app.app.sites.$projectId.env'
+import { Route as AppAppSitesProjectIdDomainsRouteImport } from './routes/_app.app.sites.$projectId.domains'
+import { Route as AppAppSitesProjectIdDeploymentsRouteImport } from './routes/_app.app.sites.$projectId.deployments'
+import { Route as AppAppSitesProjectIdAnalyticsRouteImport } from './routes/_app.app.sites.$projectId.analytics'
+import { Route as AppAppDomainsDomainDnsRouteImport } from './routes/_app.app.domains.$domain.dns'
+import { Route as AppAppBillingInvoicesIdRouteImport } from './routes/_app.app.billing.invoices.$id'
+import { Route as AppAppSitesProjectIdDeploymentsDeploymentIdRouteImport } from './routes/_app.app.sites.$projectId.deployments.$deploymentId'
 
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const MarketingRoute = MarketingRouteImport.update({
   id: '/_marketing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/_admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketingIndexRoute = MarketingIndexRouteImport.update({
@@ -133,6 +195,16 @@ const Auth2faRoute = Auth2faRouteImport.update({
   path: '/2fa',
   getParentRoute: () => AuthRoute,
 } as any)
+const AppAppIndexRoute = AppAppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AdminAdminIndexRoute = AdminAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const MarketingLegalTermsRoute = MarketingLegalTermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -158,10 +230,299 @@ const MarketingBlogSlugRoute = MarketingBlogSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => MarketingBlogRoute,
 } as any)
+const AppAppSettingsRoute = AppAppSettingsRouteImport.update({
+  id: '/app/settings',
+  path: '/app/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppNotificationsRoute = AppAppNotificationsRouteImport.update({
+  id: '/app/notifications',
+  path: '/app/notifications',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppBillingRoute = AppAppBillingRouteImport.update({
+  id: '/app/billing',
+  path: '/app/billing',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppApiKeysRoute = AppAppApiKeysRouteImport.update({
+  id: '/app/api-keys',
+  path: '/app/api-keys',
+  getParentRoute: () => AppRoute,
+} as any)
+const AdminAdminStatusRoute = AdminAdminStatusRouteImport.update({
+  id: '/admin/status',
+  path: '/admin/status',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminSitesRoute = AdminAdminSitesRouteImport.update({
+  id: '/admin/sites',
+  path: '/admin/sites',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminSettingsRoute = AdminAdminSettingsRouteImport.update({
+  id: '/admin/settings',
+  path: '/admin/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminProvidersRoute = AdminAdminProvidersRouteImport.update({
+  id: '/admin/providers',
+  path: '/admin/providers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminPlansRoute = AdminAdminPlansRouteImport.update({
+  id: '/admin/plans',
+  path: '/admin/plans',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminEmailRoute = AdminAdminEmailRouteImport.update({
+  id: '/admin/email',
+  path: '/admin/email',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminDomainsRoute = AdminAdminDomainsRouteImport.update({
+  id: '/admin/domains',
+  path: '/admin/domains',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminBlogRoute = AdminAdminBlogRouteImport.update({
+  id: '/admin/blog',
+  path: '/admin/blog',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminBillingRoute = AdminAdminBillingRouteImport.update({
+  id: '/admin/billing',
+  path: '/admin/billing',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminAuditRoute = AdminAdminAuditRouteImport.update({
+  id: '/admin/audit',
+  path: '/admin/audit',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminApiLogsRoute = AdminAdminApiLogsRouteImport.update({
+  id: '/admin/api-logs',
+  path: '/admin/api-logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminAnnouncementsRoute = AdminAdminAnnouncementsRouteImport.update({
+  id: '/admin/announcements',
+  path: '/admin/announcements',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AppAppTeamIndexRoute = AppAppTeamIndexRouteImport.update({
+  id: '/app/team/',
+  path: '/app/team/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppSupportIndexRoute = AppAppSupportIndexRouteImport.update({
+  id: '/app/support/',
+  path: '/app/support/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppSitesIndexRoute = AppAppSitesIndexRouteImport.update({
+  id: '/app/sites/',
+  path: '/app/sites/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppEmailIndexRoute = AppAppEmailIndexRouteImport.update({
+  id: '/app/email/',
+  path: '/app/email/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppDomainsIndexRoute = AppAppDomainsIndexRouteImport.update({
+  id: '/app/domains/',
+  path: '/app/domains/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppBillingIndexRoute = AppAppBillingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAppBillingRoute,
+} as any)
+const AdminAdminUsersIndexRoute = AdminAdminUsersIndexRouteImport.update({
+  id: '/admin/users/',
+  path: '/admin/users/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminSupportIndexRoute = AdminAdminSupportIndexRouteImport.update({
+  id: '/admin/support/',
+  path: '/admin/support/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AppAppTeamInviteRoute = AppAppTeamInviteRouteImport.update({
+  id: '/app/team/invite',
+  path: '/app/team/invite',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppSupportNewRoute = AppAppSupportNewRouteImport.update({
+  id: '/app/support/new',
+  path: '/app/support/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppSupportTicketIdRoute = AppAppSupportTicketIdRouteImport.update({
+  id: '/app/support/$ticketId',
+  path: '/app/support/$ticketId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppSitesNewRoute = AppAppSitesNewRouteImport.update({
+  id: '/app/sites/new',
+  path: '/app/sites/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppSitesProjectIdRoute = AppAppSitesProjectIdRouteImport.update({
+  id: '/app/sites/$projectId',
+  path: '/app/sites/$projectId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppSettingsSecurityRoute = AppAppSettingsSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AppAppSettingsRoute,
+} as any)
+const AppAppSettingsProfileRoute = AppAppSettingsProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppAppSettingsRoute,
+} as any)
+const AppAppSettingsPreferencesRoute =
+  AppAppSettingsPreferencesRouteImport.update({
+    id: '/preferences',
+    path: '/preferences',
+    getParentRoute: () => AppAppSettingsRoute,
+  } as any)
+const AppAppSettingsIntegrationsRoute =
+  AppAppSettingsIntegrationsRouteImport.update({
+    id: '/integrations',
+    path: '/integrations',
+    getParentRoute: () => AppAppSettingsRoute,
+  } as any)
+const AppAppSettingsDangerRoute = AppAppSettingsDangerRouteImport.update({
+  id: '/danger',
+  path: '/danger',
+  getParentRoute: () => AppAppSettingsRoute,
+} as any)
+const AppAppEmailProvidersRoute = AppAppEmailProvidersRouteImport.update({
+  id: '/app/email/providers',
+  path: '/app/email/providers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppEmailNewRoute = AppAppEmailNewRouteImport.update({
+  id: '/app/email/new',
+  path: '/app/email/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppEmailMailboxIdRoute = AppAppEmailMailboxIdRouteImport.update({
+  id: '/app/email/$mailboxId',
+  path: '/app/email/$mailboxId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppDomainsSearchRoute = AppAppDomainsSearchRouteImport.update({
+  id: '/app/domains/search',
+  path: '/app/domains/search',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppDomainsDomainRoute = AppAppDomainsDomainRouteImport.update({
+  id: '/app/domains/$domain',
+  path: '/app/domains/$domain',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppBillingUsageRoute = AppAppBillingUsageRouteImport.update({
+  id: '/usage',
+  path: '/usage',
+  getParentRoute: () => AppAppBillingRoute,
+} as any)
+const AppAppBillingPlanRoute = AppAppBillingPlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => AppAppBillingRoute,
+} as any)
+const AppAppBillingPaymentMethodsRoute =
+  AppAppBillingPaymentMethodsRouteImport.update({
+    id: '/payment-methods',
+    path: '/payment-methods',
+    getParentRoute: () => AppAppBillingRoute,
+  } as any)
+const AppAppBillingInvoicesRoute = AppAppBillingInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => AppAppBillingRoute,
+} as any)
+const AdminAdminUsersRolesRoute = AdminAdminUsersRolesRouteImport.update({
+  id: '/admin/users/roles',
+  path: '/admin/users/roles',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminUsersUserIdRoute = AdminAdminUsersUserIdRouteImport.update({
+  id: '/admin/users/$userId',
+  path: '/admin/users/$userId',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminSupportMacrosRoute = AdminAdminSupportMacrosRouteImport.update({
+  id: '/admin/support/macros',
+  path: '/admin/support/macros',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AppAppSitesProjectIdIndexRoute =
+  AppAppSitesProjectIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppAppSitesProjectIdRoute,
+  } as any)
+const AppAppSitesProjectIdSettingsRoute =
+  AppAppSitesProjectIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AppAppSitesProjectIdRoute,
+  } as any)
+const AppAppSitesProjectIdLogsRoute =
+  AppAppSitesProjectIdLogsRouteImport.update({
+    id: '/logs',
+    path: '/logs',
+    getParentRoute: () => AppAppSitesProjectIdRoute,
+  } as any)
+const AppAppSitesProjectIdEnvRoute = AppAppSitesProjectIdEnvRouteImport.update({
+  id: '/env',
+  path: '/env',
+  getParentRoute: () => AppAppSitesProjectIdRoute,
+} as any)
+const AppAppSitesProjectIdDomainsRoute =
+  AppAppSitesProjectIdDomainsRouteImport.update({
+    id: '/domains',
+    path: '/domains',
+    getParentRoute: () => AppAppSitesProjectIdRoute,
+  } as any)
+const AppAppSitesProjectIdDeploymentsRoute =
+  AppAppSitesProjectIdDeploymentsRouteImport.update({
+    id: '/deployments',
+    path: '/deployments',
+    getParentRoute: () => AppAppSitesProjectIdRoute,
+  } as any)
+const AppAppSitesProjectIdAnalyticsRoute =
+  AppAppSitesProjectIdAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AppAppSitesProjectIdRoute,
+  } as any)
+const AppAppDomainsDomainDnsRoute = AppAppDomainsDomainDnsRouteImport.update({
+  id: '/dns',
+  path: '/dns',
+  getParentRoute: () => AppAppDomainsDomainRoute,
+} as any)
+const AppAppBillingInvoicesIdRoute = AppAppBillingInvoicesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppAppBillingInvoicesRoute,
+} as any)
+const AppAppSitesProjectIdDeploymentsDeploymentIdRoute =
+  AppAppSitesProjectIdDeploymentsDeploymentIdRouteImport.update({
+    id: '/$deploymentId',
+    path: '/$deploymentId',
+    getParentRoute: () => AppAppSitesProjectIdDeploymentsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
-  '/app': typeof AppRoute
   '/2fa': typeof Auth2faRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
@@ -178,15 +539,72 @@ export interface FileRoutesByFullPath {
   '/legal': typeof MarketingLegalRouteWithChildren
   '/pricing': typeof MarketingPricingRoute
   '/status': typeof MarketingStatusRoute
+  '/admin/announcements': typeof AdminAdminAnnouncementsRoute
+  '/admin/api-logs': typeof AdminAdminApiLogsRoute
+  '/admin/audit': typeof AdminAdminAuditRoute
+  '/admin/billing': typeof AdminAdminBillingRoute
+  '/admin/blog': typeof AdminAdminBlogRoute
+  '/admin/domains': typeof AdminAdminDomainsRoute
+  '/admin/email': typeof AdminAdminEmailRoute
+  '/admin/plans': typeof AdminAdminPlansRoute
+  '/admin/providers': typeof AdminAdminProvidersRoute
+  '/admin/settings': typeof AdminAdminSettingsRoute
+  '/admin/sites': typeof AdminAdminSitesRoute
+  '/admin/status': typeof AdminAdminStatusRoute
+  '/app/api-keys': typeof AppAppApiKeysRoute
+  '/app/billing': typeof AppAppBillingRouteWithChildren
+  '/app/notifications': typeof AppAppNotificationsRoute
+  '/app/settings': typeof AppAppSettingsRouteWithChildren
   '/blog/$slug': typeof MarketingBlogSlugRoute
   '/legal/cookies': typeof MarketingLegalCookiesRoute
   '/legal/privacy': typeof MarketingLegalPrivacyRoute
   '/legal/sla': typeof MarketingLegalSlaRoute
   '/legal/terms': typeof MarketingLegalTermsRoute
+  '/admin/': typeof AdminAdminIndexRoute
+  '/app/': typeof AppAppIndexRoute
+  '/admin/support/macros': typeof AdminAdminSupportMacrosRoute
+  '/admin/users/$userId': typeof AdminAdminUsersUserIdRoute
+  '/admin/users/roles': typeof AdminAdminUsersRolesRoute
+  '/app/billing/invoices': typeof AppAppBillingInvoicesRouteWithChildren
+  '/app/billing/payment-methods': typeof AppAppBillingPaymentMethodsRoute
+  '/app/billing/plan': typeof AppAppBillingPlanRoute
+  '/app/billing/usage': typeof AppAppBillingUsageRoute
+  '/app/domains/$domain': typeof AppAppDomainsDomainRouteWithChildren
+  '/app/domains/search': typeof AppAppDomainsSearchRoute
+  '/app/email/$mailboxId': typeof AppAppEmailMailboxIdRoute
+  '/app/email/new': typeof AppAppEmailNewRoute
+  '/app/email/providers': typeof AppAppEmailProvidersRoute
+  '/app/settings/danger': typeof AppAppSettingsDangerRoute
+  '/app/settings/integrations': typeof AppAppSettingsIntegrationsRoute
+  '/app/settings/preferences': typeof AppAppSettingsPreferencesRoute
+  '/app/settings/profile': typeof AppAppSettingsProfileRoute
+  '/app/settings/security': typeof AppAppSettingsSecurityRoute
+  '/app/sites/$projectId': typeof AppAppSitesProjectIdRouteWithChildren
+  '/app/sites/new': typeof AppAppSitesNewRoute
+  '/app/support/$ticketId': typeof AppAppSupportTicketIdRoute
+  '/app/support/new': typeof AppAppSupportNewRoute
+  '/app/team/invite': typeof AppAppTeamInviteRoute
+  '/admin/support/': typeof AdminAdminSupportIndexRoute
+  '/admin/users/': typeof AdminAdminUsersIndexRoute
+  '/app/billing/': typeof AppAppBillingIndexRoute
+  '/app/domains/': typeof AppAppDomainsIndexRoute
+  '/app/email/': typeof AppAppEmailIndexRoute
+  '/app/sites/': typeof AppAppSitesIndexRoute
+  '/app/support/': typeof AppAppSupportIndexRoute
+  '/app/team/': typeof AppAppTeamIndexRoute
+  '/app/billing/invoices/$id': typeof AppAppBillingInvoicesIdRoute
+  '/app/domains/$domain/dns': typeof AppAppDomainsDomainDnsRoute
+  '/app/sites/$projectId/analytics': typeof AppAppSitesProjectIdAnalyticsRoute
+  '/app/sites/$projectId/deployments': typeof AppAppSitesProjectIdDeploymentsRouteWithChildren
+  '/app/sites/$projectId/domains': typeof AppAppSitesProjectIdDomainsRoute
+  '/app/sites/$projectId/env': typeof AppAppSitesProjectIdEnvRoute
+  '/app/sites/$projectId/logs': typeof AppAppSitesProjectIdLogsRoute
+  '/app/sites/$projectId/settings': typeof AppAppSitesProjectIdSettingsRoute
+  '/app/sites/$projectId/': typeof AppAppSitesProjectIdIndexRoute
+  '/app/sites/$projectId/deployments/$deploymentId': typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
-  '/app': typeof AppRoute
   '/2fa': typeof Auth2faRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
@@ -203,17 +621,74 @@ export interface FileRoutesByTo {
   '/legal': typeof MarketingLegalRouteWithChildren
   '/pricing': typeof MarketingPricingRoute
   '/status': typeof MarketingStatusRoute
+  '/admin/announcements': typeof AdminAdminAnnouncementsRoute
+  '/admin/api-logs': typeof AdminAdminApiLogsRoute
+  '/admin/audit': typeof AdminAdminAuditRoute
+  '/admin/billing': typeof AdminAdminBillingRoute
+  '/admin/blog': typeof AdminAdminBlogRoute
+  '/admin/domains': typeof AdminAdminDomainsRoute
+  '/admin/email': typeof AdminAdminEmailRoute
+  '/admin/plans': typeof AdminAdminPlansRoute
+  '/admin/providers': typeof AdminAdminProvidersRoute
+  '/admin/settings': typeof AdminAdminSettingsRoute
+  '/admin/sites': typeof AdminAdminSitesRoute
+  '/admin/status': typeof AdminAdminStatusRoute
+  '/app/api-keys': typeof AppAppApiKeysRoute
+  '/app/notifications': typeof AppAppNotificationsRoute
+  '/app/settings': typeof AppAppSettingsRouteWithChildren
   '/blog/$slug': typeof MarketingBlogSlugRoute
   '/legal/cookies': typeof MarketingLegalCookiesRoute
   '/legal/privacy': typeof MarketingLegalPrivacyRoute
   '/legal/sla': typeof MarketingLegalSlaRoute
   '/legal/terms': typeof MarketingLegalTermsRoute
+  '/admin': typeof AdminAdminIndexRoute
+  '/app': typeof AppAppIndexRoute
+  '/admin/support/macros': typeof AdminAdminSupportMacrosRoute
+  '/admin/users/$userId': typeof AdminAdminUsersUserIdRoute
+  '/admin/users/roles': typeof AdminAdminUsersRolesRoute
+  '/app/billing/invoices': typeof AppAppBillingInvoicesRouteWithChildren
+  '/app/billing/payment-methods': typeof AppAppBillingPaymentMethodsRoute
+  '/app/billing/plan': typeof AppAppBillingPlanRoute
+  '/app/billing/usage': typeof AppAppBillingUsageRoute
+  '/app/domains/$domain': typeof AppAppDomainsDomainRouteWithChildren
+  '/app/domains/search': typeof AppAppDomainsSearchRoute
+  '/app/email/$mailboxId': typeof AppAppEmailMailboxIdRoute
+  '/app/email/new': typeof AppAppEmailNewRoute
+  '/app/email/providers': typeof AppAppEmailProvidersRoute
+  '/app/settings/danger': typeof AppAppSettingsDangerRoute
+  '/app/settings/integrations': typeof AppAppSettingsIntegrationsRoute
+  '/app/settings/preferences': typeof AppAppSettingsPreferencesRoute
+  '/app/settings/profile': typeof AppAppSettingsProfileRoute
+  '/app/settings/security': typeof AppAppSettingsSecurityRoute
+  '/app/sites/new': typeof AppAppSitesNewRoute
+  '/app/support/$ticketId': typeof AppAppSupportTicketIdRoute
+  '/app/support/new': typeof AppAppSupportNewRoute
+  '/app/team/invite': typeof AppAppTeamInviteRoute
+  '/admin/support': typeof AdminAdminSupportIndexRoute
+  '/admin/users': typeof AdminAdminUsersIndexRoute
+  '/app/billing': typeof AppAppBillingIndexRoute
+  '/app/domains': typeof AppAppDomainsIndexRoute
+  '/app/email': typeof AppAppEmailIndexRoute
+  '/app/sites': typeof AppAppSitesIndexRoute
+  '/app/support': typeof AppAppSupportIndexRoute
+  '/app/team': typeof AppAppTeamIndexRoute
+  '/app/billing/invoices/$id': typeof AppAppBillingInvoicesIdRoute
+  '/app/domains/$domain/dns': typeof AppAppDomainsDomainDnsRoute
+  '/app/sites/$projectId/analytics': typeof AppAppSitesProjectIdAnalyticsRoute
+  '/app/sites/$projectId/deployments': typeof AppAppSitesProjectIdDeploymentsRouteWithChildren
+  '/app/sites/$projectId/domains': typeof AppAppSitesProjectIdDomainsRoute
+  '/app/sites/$projectId/env': typeof AppAppSitesProjectIdEnvRoute
+  '/app/sites/$projectId/logs': typeof AppAppSitesProjectIdLogsRoute
+  '/app/sites/$projectId/settings': typeof AppAppSitesProjectIdSettingsRoute
+  '/app/sites/$projectId': typeof AppAppSitesProjectIdIndexRoute
+  '/app/sites/$projectId/deployments/$deploymentId': typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_admin': typeof AdminRouteWithChildren
+  '/_app': typeof AppRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
   '/_marketing': typeof MarketingRouteWithChildren
-  '/app': typeof AppRoute
   '/_auth/2fa': typeof Auth2faRoute
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
@@ -231,17 +706,74 @@ export interface FileRoutesById {
   '/_marketing/pricing': typeof MarketingPricingRoute
   '/_marketing/status': typeof MarketingStatusRoute
   '/_marketing/': typeof MarketingIndexRoute
+  '/_admin/admin/announcements': typeof AdminAdminAnnouncementsRoute
+  '/_admin/admin/api-logs': typeof AdminAdminApiLogsRoute
+  '/_admin/admin/audit': typeof AdminAdminAuditRoute
+  '/_admin/admin/billing': typeof AdminAdminBillingRoute
+  '/_admin/admin/blog': typeof AdminAdminBlogRoute
+  '/_admin/admin/domains': typeof AdminAdminDomainsRoute
+  '/_admin/admin/email': typeof AdminAdminEmailRoute
+  '/_admin/admin/plans': typeof AdminAdminPlansRoute
+  '/_admin/admin/providers': typeof AdminAdminProvidersRoute
+  '/_admin/admin/settings': typeof AdminAdminSettingsRoute
+  '/_admin/admin/sites': typeof AdminAdminSitesRoute
+  '/_admin/admin/status': typeof AdminAdminStatusRoute
+  '/_app/app/api-keys': typeof AppAppApiKeysRoute
+  '/_app/app/billing': typeof AppAppBillingRouteWithChildren
+  '/_app/app/notifications': typeof AppAppNotificationsRoute
+  '/_app/app/settings': typeof AppAppSettingsRouteWithChildren
   '/_marketing/blog/$slug': typeof MarketingBlogSlugRoute
   '/_marketing/legal/cookies': typeof MarketingLegalCookiesRoute
   '/_marketing/legal/privacy': typeof MarketingLegalPrivacyRoute
   '/_marketing/legal/sla': typeof MarketingLegalSlaRoute
   '/_marketing/legal/terms': typeof MarketingLegalTermsRoute
+  '/_admin/admin/': typeof AdminAdminIndexRoute
+  '/_app/app/': typeof AppAppIndexRoute
+  '/_admin/admin/support/macros': typeof AdminAdminSupportMacrosRoute
+  '/_admin/admin/users/$userId': typeof AdminAdminUsersUserIdRoute
+  '/_admin/admin/users/roles': typeof AdminAdminUsersRolesRoute
+  '/_app/app/billing/invoices': typeof AppAppBillingInvoicesRouteWithChildren
+  '/_app/app/billing/payment-methods': typeof AppAppBillingPaymentMethodsRoute
+  '/_app/app/billing/plan': typeof AppAppBillingPlanRoute
+  '/_app/app/billing/usage': typeof AppAppBillingUsageRoute
+  '/_app/app/domains/$domain': typeof AppAppDomainsDomainRouteWithChildren
+  '/_app/app/domains/search': typeof AppAppDomainsSearchRoute
+  '/_app/app/email/$mailboxId': typeof AppAppEmailMailboxIdRoute
+  '/_app/app/email/new': typeof AppAppEmailNewRoute
+  '/_app/app/email/providers': typeof AppAppEmailProvidersRoute
+  '/_app/app/settings/danger': typeof AppAppSettingsDangerRoute
+  '/_app/app/settings/integrations': typeof AppAppSettingsIntegrationsRoute
+  '/_app/app/settings/preferences': typeof AppAppSettingsPreferencesRoute
+  '/_app/app/settings/profile': typeof AppAppSettingsProfileRoute
+  '/_app/app/settings/security': typeof AppAppSettingsSecurityRoute
+  '/_app/app/sites/$projectId': typeof AppAppSitesProjectIdRouteWithChildren
+  '/_app/app/sites/new': typeof AppAppSitesNewRoute
+  '/_app/app/support/$ticketId': typeof AppAppSupportTicketIdRoute
+  '/_app/app/support/new': typeof AppAppSupportNewRoute
+  '/_app/app/team/invite': typeof AppAppTeamInviteRoute
+  '/_admin/admin/support/': typeof AdminAdminSupportIndexRoute
+  '/_admin/admin/users/': typeof AdminAdminUsersIndexRoute
+  '/_app/app/billing/': typeof AppAppBillingIndexRoute
+  '/_app/app/domains/': typeof AppAppDomainsIndexRoute
+  '/_app/app/email/': typeof AppAppEmailIndexRoute
+  '/_app/app/sites/': typeof AppAppSitesIndexRoute
+  '/_app/app/support/': typeof AppAppSupportIndexRoute
+  '/_app/app/team/': typeof AppAppTeamIndexRoute
+  '/_app/app/billing/invoices/$id': typeof AppAppBillingInvoicesIdRoute
+  '/_app/app/domains/$domain/dns': typeof AppAppDomainsDomainDnsRoute
+  '/_app/app/sites/$projectId/analytics': typeof AppAppSitesProjectIdAnalyticsRoute
+  '/_app/app/sites/$projectId/deployments': typeof AppAppSitesProjectIdDeploymentsRouteWithChildren
+  '/_app/app/sites/$projectId/domains': typeof AppAppSitesProjectIdDomainsRoute
+  '/_app/app/sites/$projectId/env': typeof AppAppSitesProjectIdEnvRoute
+  '/_app/app/sites/$projectId/logs': typeof AppAppSitesProjectIdLogsRoute
+  '/_app/app/sites/$projectId/settings': typeof AppAppSitesProjectIdSettingsRoute
+  '/_app/app/sites/$projectId/': typeof AppAppSitesProjectIdIndexRoute
+  '/_app/app/sites/$projectId/deployments/$deploymentId': typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/app'
     | '/2fa'
     | '/forgot-password'
     | '/login'
@@ -258,15 +790,72 @@ export interface FileRouteTypes {
     | '/legal'
     | '/pricing'
     | '/status'
+    | '/admin/announcements'
+    | '/admin/api-logs'
+    | '/admin/audit'
+    | '/admin/billing'
+    | '/admin/blog'
+    | '/admin/domains'
+    | '/admin/email'
+    | '/admin/plans'
+    | '/admin/providers'
+    | '/admin/settings'
+    | '/admin/sites'
+    | '/admin/status'
+    | '/app/api-keys'
+    | '/app/billing'
+    | '/app/notifications'
+    | '/app/settings'
     | '/blog/$slug'
     | '/legal/cookies'
     | '/legal/privacy'
     | '/legal/sla'
     | '/legal/terms'
+    | '/admin/'
+    | '/app/'
+    | '/admin/support/macros'
+    | '/admin/users/$userId'
+    | '/admin/users/roles'
+    | '/app/billing/invoices'
+    | '/app/billing/payment-methods'
+    | '/app/billing/plan'
+    | '/app/billing/usage'
+    | '/app/domains/$domain'
+    | '/app/domains/search'
+    | '/app/email/$mailboxId'
+    | '/app/email/new'
+    | '/app/email/providers'
+    | '/app/settings/danger'
+    | '/app/settings/integrations'
+    | '/app/settings/preferences'
+    | '/app/settings/profile'
+    | '/app/settings/security'
+    | '/app/sites/$projectId'
+    | '/app/sites/new'
+    | '/app/support/$ticketId'
+    | '/app/support/new'
+    | '/app/team/invite'
+    | '/admin/support/'
+    | '/admin/users/'
+    | '/app/billing/'
+    | '/app/domains/'
+    | '/app/email/'
+    | '/app/sites/'
+    | '/app/support/'
+    | '/app/team/'
+    | '/app/billing/invoices/$id'
+    | '/app/domains/$domain/dns'
+    | '/app/sites/$projectId/analytics'
+    | '/app/sites/$projectId/deployments'
+    | '/app/sites/$projectId/domains'
+    | '/app/sites/$projectId/env'
+    | '/app/sites/$projectId/logs'
+    | '/app/sites/$projectId/settings'
+    | '/app/sites/$projectId/'
+    | '/app/sites/$projectId/deployments/$deploymentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/app'
     | '/2fa'
     | '/forgot-password'
     | '/login'
@@ -283,16 +872,73 @@ export interface FileRouteTypes {
     | '/legal'
     | '/pricing'
     | '/status'
+    | '/admin/announcements'
+    | '/admin/api-logs'
+    | '/admin/audit'
+    | '/admin/billing'
+    | '/admin/blog'
+    | '/admin/domains'
+    | '/admin/email'
+    | '/admin/plans'
+    | '/admin/providers'
+    | '/admin/settings'
+    | '/admin/sites'
+    | '/admin/status'
+    | '/app/api-keys'
+    | '/app/notifications'
+    | '/app/settings'
     | '/blog/$slug'
     | '/legal/cookies'
     | '/legal/privacy'
     | '/legal/sla'
     | '/legal/terms'
+    | '/admin'
+    | '/app'
+    | '/admin/support/macros'
+    | '/admin/users/$userId'
+    | '/admin/users/roles'
+    | '/app/billing/invoices'
+    | '/app/billing/payment-methods'
+    | '/app/billing/plan'
+    | '/app/billing/usage'
+    | '/app/domains/$domain'
+    | '/app/domains/search'
+    | '/app/email/$mailboxId'
+    | '/app/email/new'
+    | '/app/email/providers'
+    | '/app/settings/danger'
+    | '/app/settings/integrations'
+    | '/app/settings/preferences'
+    | '/app/settings/profile'
+    | '/app/settings/security'
+    | '/app/sites/new'
+    | '/app/support/$ticketId'
+    | '/app/support/new'
+    | '/app/team/invite'
+    | '/admin/support'
+    | '/admin/users'
+    | '/app/billing'
+    | '/app/domains'
+    | '/app/email'
+    | '/app/sites'
+    | '/app/support'
+    | '/app/team'
+    | '/app/billing/invoices/$id'
+    | '/app/domains/$domain/dns'
+    | '/app/sites/$projectId/analytics'
+    | '/app/sites/$projectId/deployments'
+    | '/app/sites/$projectId/domains'
+    | '/app/sites/$projectId/env'
+    | '/app/sites/$projectId/logs'
+    | '/app/sites/$projectId/settings'
+    | '/app/sites/$projectId'
+    | '/app/sites/$projectId/deployments/$deploymentId'
   id:
     | '__root__'
+    | '/_admin'
+    | '/_app'
     | '/_auth'
     | '/_marketing'
-    | '/app'
     | '/_auth/2fa'
     | '/_auth/forgot-password'
     | '/_auth/login'
@@ -310,28 +956,80 @@ export interface FileRouteTypes {
     | '/_marketing/pricing'
     | '/_marketing/status'
     | '/_marketing/'
+    | '/_admin/admin/announcements'
+    | '/_admin/admin/api-logs'
+    | '/_admin/admin/audit'
+    | '/_admin/admin/billing'
+    | '/_admin/admin/blog'
+    | '/_admin/admin/domains'
+    | '/_admin/admin/email'
+    | '/_admin/admin/plans'
+    | '/_admin/admin/providers'
+    | '/_admin/admin/settings'
+    | '/_admin/admin/sites'
+    | '/_admin/admin/status'
+    | '/_app/app/api-keys'
+    | '/_app/app/billing'
+    | '/_app/app/notifications'
+    | '/_app/app/settings'
     | '/_marketing/blog/$slug'
     | '/_marketing/legal/cookies'
     | '/_marketing/legal/privacy'
     | '/_marketing/legal/sla'
     | '/_marketing/legal/terms'
+    | '/_admin/admin/'
+    | '/_app/app/'
+    | '/_admin/admin/support/macros'
+    | '/_admin/admin/users/$userId'
+    | '/_admin/admin/users/roles'
+    | '/_app/app/billing/invoices'
+    | '/_app/app/billing/payment-methods'
+    | '/_app/app/billing/plan'
+    | '/_app/app/billing/usage'
+    | '/_app/app/domains/$domain'
+    | '/_app/app/domains/search'
+    | '/_app/app/email/$mailboxId'
+    | '/_app/app/email/new'
+    | '/_app/app/email/providers'
+    | '/_app/app/settings/danger'
+    | '/_app/app/settings/integrations'
+    | '/_app/app/settings/preferences'
+    | '/_app/app/settings/profile'
+    | '/_app/app/settings/security'
+    | '/_app/app/sites/$projectId'
+    | '/_app/app/sites/new'
+    | '/_app/app/support/$ticketId'
+    | '/_app/app/support/new'
+    | '/_app/app/team/invite'
+    | '/_admin/admin/support/'
+    | '/_admin/admin/users/'
+    | '/_app/app/billing/'
+    | '/_app/app/domains/'
+    | '/_app/app/email/'
+    | '/_app/app/sites/'
+    | '/_app/app/support/'
+    | '/_app/app/team/'
+    | '/_app/app/billing/invoices/$id'
+    | '/_app/app/domains/$domain/dns'
+    | '/_app/app/sites/$projectId/analytics'
+    | '/_app/app/sites/$projectId/deployments'
+    | '/_app/app/sites/$projectId/domains'
+    | '/_app/app/sites/$projectId/env'
+    | '/_app/app/sites/$projectId/logs'
+    | '/_app/app/sites/$projectId/settings'
+    | '/_app/app/sites/$projectId/'
+    | '/_app/app/sites/$projectId/deployments/$deploymentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AdminRoute: typeof AdminRouteWithChildren
+  AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   MarketingRoute: typeof MarketingRouteWithChildren
-  AppRoute: typeof AppRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_marketing': {
       id: '/_marketing'
       path: ''
@@ -344,6 +1042,20 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_admin': {
+      id: '/_admin'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_marketing/': {
@@ -465,6 +1177,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Auth2faRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_app/app/': {
+      id: '/_app/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppAppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_admin/admin/': {
+      id: '/_admin/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminAdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_marketing/legal/terms': {
       id: '/_marketing/legal/terms'
       path: '/terms'
@@ -500,8 +1226,595 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingBlogSlugRouteImport
       parentRoute: typeof MarketingBlogRoute
     }
+    '/_app/app/settings': {
+      id: '/_app/app/settings'
+      path: '/app/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppAppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/notifications': {
+      id: '/_app/app/notifications'
+      path: '/app/notifications'
+      fullPath: '/app/notifications'
+      preLoaderRoute: typeof AppAppNotificationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/billing': {
+      id: '/_app/app/billing'
+      path: '/app/billing'
+      fullPath: '/app/billing'
+      preLoaderRoute: typeof AppAppBillingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/api-keys': {
+      id: '/_app/app/api-keys'
+      path: '/app/api-keys'
+      fullPath: '/app/api-keys'
+      preLoaderRoute: typeof AppAppApiKeysRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_admin/admin/status': {
+      id: '/_admin/admin/status'
+      path: '/admin/status'
+      fullPath: '/admin/status'
+      preLoaderRoute: typeof AdminAdminStatusRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/sites': {
+      id: '/_admin/admin/sites'
+      path: '/admin/sites'
+      fullPath: '/admin/sites'
+      preLoaderRoute: typeof AdminAdminSitesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/settings': {
+      id: '/_admin/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminAdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/providers': {
+      id: '/_admin/admin/providers'
+      path: '/admin/providers'
+      fullPath: '/admin/providers'
+      preLoaderRoute: typeof AdminAdminProvidersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/plans': {
+      id: '/_admin/admin/plans'
+      path: '/admin/plans'
+      fullPath: '/admin/plans'
+      preLoaderRoute: typeof AdminAdminPlansRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/email': {
+      id: '/_admin/admin/email'
+      path: '/admin/email'
+      fullPath: '/admin/email'
+      preLoaderRoute: typeof AdminAdminEmailRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/domains': {
+      id: '/_admin/admin/domains'
+      path: '/admin/domains'
+      fullPath: '/admin/domains'
+      preLoaderRoute: typeof AdminAdminDomainsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/blog': {
+      id: '/_admin/admin/blog'
+      path: '/admin/blog'
+      fullPath: '/admin/blog'
+      preLoaderRoute: typeof AdminAdminBlogRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/billing': {
+      id: '/_admin/admin/billing'
+      path: '/admin/billing'
+      fullPath: '/admin/billing'
+      preLoaderRoute: typeof AdminAdminBillingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/audit': {
+      id: '/_admin/admin/audit'
+      path: '/admin/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAdminAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/api-logs': {
+      id: '/_admin/admin/api-logs'
+      path: '/admin/api-logs'
+      fullPath: '/admin/api-logs'
+      preLoaderRoute: typeof AdminAdminApiLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/announcements': {
+      id: '/_admin/admin/announcements'
+      path: '/admin/announcements'
+      fullPath: '/admin/announcements'
+      preLoaderRoute: typeof AdminAdminAnnouncementsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_app/app/team/': {
+      id: '/_app/app/team/'
+      path: '/app/team'
+      fullPath: '/app/team/'
+      preLoaderRoute: typeof AppAppTeamIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/support/': {
+      id: '/_app/app/support/'
+      path: '/app/support'
+      fullPath: '/app/support/'
+      preLoaderRoute: typeof AppAppSupportIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/sites/': {
+      id: '/_app/app/sites/'
+      path: '/app/sites'
+      fullPath: '/app/sites/'
+      preLoaderRoute: typeof AppAppSitesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/email/': {
+      id: '/_app/app/email/'
+      path: '/app/email'
+      fullPath: '/app/email/'
+      preLoaderRoute: typeof AppAppEmailIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/domains/': {
+      id: '/_app/app/domains/'
+      path: '/app/domains'
+      fullPath: '/app/domains/'
+      preLoaderRoute: typeof AppAppDomainsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/billing/': {
+      id: '/_app/app/billing/'
+      path: '/'
+      fullPath: '/app/billing/'
+      preLoaderRoute: typeof AppAppBillingIndexRouteImport
+      parentRoute: typeof AppAppBillingRoute
+    }
+    '/_admin/admin/users/': {
+      id: '/_admin/admin/users/'
+      path: '/admin/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AdminAdminUsersIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/support/': {
+      id: '/_admin/admin/support/'
+      path: '/admin/support'
+      fullPath: '/admin/support/'
+      preLoaderRoute: typeof AdminAdminSupportIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_app/app/team/invite': {
+      id: '/_app/app/team/invite'
+      path: '/app/team/invite'
+      fullPath: '/app/team/invite'
+      preLoaderRoute: typeof AppAppTeamInviteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/support/new': {
+      id: '/_app/app/support/new'
+      path: '/app/support/new'
+      fullPath: '/app/support/new'
+      preLoaderRoute: typeof AppAppSupportNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/support/$ticketId': {
+      id: '/_app/app/support/$ticketId'
+      path: '/app/support/$ticketId'
+      fullPath: '/app/support/$ticketId'
+      preLoaderRoute: typeof AppAppSupportTicketIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/sites/new': {
+      id: '/_app/app/sites/new'
+      path: '/app/sites/new'
+      fullPath: '/app/sites/new'
+      preLoaderRoute: typeof AppAppSitesNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/sites/$projectId': {
+      id: '/_app/app/sites/$projectId'
+      path: '/app/sites/$projectId'
+      fullPath: '/app/sites/$projectId'
+      preLoaderRoute: typeof AppAppSitesProjectIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/settings/security': {
+      id: '/_app/app/settings/security'
+      path: '/security'
+      fullPath: '/app/settings/security'
+      preLoaderRoute: typeof AppAppSettingsSecurityRouteImport
+      parentRoute: typeof AppAppSettingsRoute
+    }
+    '/_app/app/settings/profile': {
+      id: '/_app/app/settings/profile'
+      path: '/profile'
+      fullPath: '/app/settings/profile'
+      preLoaderRoute: typeof AppAppSettingsProfileRouteImport
+      parentRoute: typeof AppAppSettingsRoute
+    }
+    '/_app/app/settings/preferences': {
+      id: '/_app/app/settings/preferences'
+      path: '/preferences'
+      fullPath: '/app/settings/preferences'
+      preLoaderRoute: typeof AppAppSettingsPreferencesRouteImport
+      parentRoute: typeof AppAppSettingsRoute
+    }
+    '/_app/app/settings/integrations': {
+      id: '/_app/app/settings/integrations'
+      path: '/integrations'
+      fullPath: '/app/settings/integrations'
+      preLoaderRoute: typeof AppAppSettingsIntegrationsRouteImport
+      parentRoute: typeof AppAppSettingsRoute
+    }
+    '/_app/app/settings/danger': {
+      id: '/_app/app/settings/danger'
+      path: '/danger'
+      fullPath: '/app/settings/danger'
+      preLoaderRoute: typeof AppAppSettingsDangerRouteImport
+      parentRoute: typeof AppAppSettingsRoute
+    }
+    '/_app/app/email/providers': {
+      id: '/_app/app/email/providers'
+      path: '/app/email/providers'
+      fullPath: '/app/email/providers'
+      preLoaderRoute: typeof AppAppEmailProvidersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/email/new': {
+      id: '/_app/app/email/new'
+      path: '/app/email/new'
+      fullPath: '/app/email/new'
+      preLoaderRoute: typeof AppAppEmailNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/email/$mailboxId': {
+      id: '/_app/app/email/$mailboxId'
+      path: '/app/email/$mailboxId'
+      fullPath: '/app/email/$mailboxId'
+      preLoaderRoute: typeof AppAppEmailMailboxIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/domains/search': {
+      id: '/_app/app/domains/search'
+      path: '/app/domains/search'
+      fullPath: '/app/domains/search'
+      preLoaderRoute: typeof AppAppDomainsSearchRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/domains/$domain': {
+      id: '/_app/app/domains/$domain'
+      path: '/app/domains/$domain'
+      fullPath: '/app/domains/$domain'
+      preLoaderRoute: typeof AppAppDomainsDomainRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/billing/usage': {
+      id: '/_app/app/billing/usage'
+      path: '/usage'
+      fullPath: '/app/billing/usage'
+      preLoaderRoute: typeof AppAppBillingUsageRouteImport
+      parentRoute: typeof AppAppBillingRoute
+    }
+    '/_app/app/billing/plan': {
+      id: '/_app/app/billing/plan'
+      path: '/plan'
+      fullPath: '/app/billing/plan'
+      preLoaderRoute: typeof AppAppBillingPlanRouteImport
+      parentRoute: typeof AppAppBillingRoute
+    }
+    '/_app/app/billing/payment-methods': {
+      id: '/_app/app/billing/payment-methods'
+      path: '/payment-methods'
+      fullPath: '/app/billing/payment-methods'
+      preLoaderRoute: typeof AppAppBillingPaymentMethodsRouteImport
+      parentRoute: typeof AppAppBillingRoute
+    }
+    '/_app/app/billing/invoices': {
+      id: '/_app/app/billing/invoices'
+      path: '/invoices'
+      fullPath: '/app/billing/invoices'
+      preLoaderRoute: typeof AppAppBillingInvoicesRouteImport
+      parentRoute: typeof AppAppBillingRoute
+    }
+    '/_admin/admin/users/roles': {
+      id: '/_admin/admin/users/roles'
+      path: '/admin/users/roles'
+      fullPath: '/admin/users/roles'
+      preLoaderRoute: typeof AdminAdminUsersRolesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/users/$userId': {
+      id: '/_admin/admin/users/$userId'
+      path: '/admin/users/$userId'
+      fullPath: '/admin/users/$userId'
+      preLoaderRoute: typeof AdminAdminUsersUserIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/support/macros': {
+      id: '/_admin/admin/support/macros'
+      path: '/admin/support/macros'
+      fullPath: '/admin/support/macros'
+      preLoaderRoute: typeof AdminAdminSupportMacrosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_app/app/sites/$projectId/': {
+      id: '/_app/app/sites/$projectId/'
+      path: '/'
+      fullPath: '/app/sites/$projectId/'
+      preLoaderRoute: typeof AppAppSitesProjectIdIndexRouteImport
+      parentRoute: typeof AppAppSitesProjectIdRoute
+    }
+    '/_app/app/sites/$projectId/settings': {
+      id: '/_app/app/sites/$projectId/settings'
+      path: '/settings'
+      fullPath: '/app/sites/$projectId/settings'
+      preLoaderRoute: typeof AppAppSitesProjectIdSettingsRouteImport
+      parentRoute: typeof AppAppSitesProjectIdRoute
+    }
+    '/_app/app/sites/$projectId/logs': {
+      id: '/_app/app/sites/$projectId/logs'
+      path: '/logs'
+      fullPath: '/app/sites/$projectId/logs'
+      preLoaderRoute: typeof AppAppSitesProjectIdLogsRouteImport
+      parentRoute: typeof AppAppSitesProjectIdRoute
+    }
+    '/_app/app/sites/$projectId/env': {
+      id: '/_app/app/sites/$projectId/env'
+      path: '/env'
+      fullPath: '/app/sites/$projectId/env'
+      preLoaderRoute: typeof AppAppSitesProjectIdEnvRouteImport
+      parentRoute: typeof AppAppSitesProjectIdRoute
+    }
+    '/_app/app/sites/$projectId/domains': {
+      id: '/_app/app/sites/$projectId/domains'
+      path: '/domains'
+      fullPath: '/app/sites/$projectId/domains'
+      preLoaderRoute: typeof AppAppSitesProjectIdDomainsRouteImport
+      parentRoute: typeof AppAppSitesProjectIdRoute
+    }
+    '/_app/app/sites/$projectId/deployments': {
+      id: '/_app/app/sites/$projectId/deployments'
+      path: '/deployments'
+      fullPath: '/app/sites/$projectId/deployments'
+      preLoaderRoute: typeof AppAppSitesProjectIdDeploymentsRouteImport
+      parentRoute: typeof AppAppSitesProjectIdRoute
+    }
+    '/_app/app/sites/$projectId/analytics': {
+      id: '/_app/app/sites/$projectId/analytics'
+      path: '/analytics'
+      fullPath: '/app/sites/$projectId/analytics'
+      preLoaderRoute: typeof AppAppSitesProjectIdAnalyticsRouteImport
+      parentRoute: typeof AppAppSitesProjectIdRoute
+    }
+    '/_app/app/domains/$domain/dns': {
+      id: '/_app/app/domains/$domain/dns'
+      path: '/dns'
+      fullPath: '/app/domains/$domain/dns'
+      preLoaderRoute: typeof AppAppDomainsDomainDnsRouteImport
+      parentRoute: typeof AppAppDomainsDomainRoute
+    }
+    '/_app/app/billing/invoices/$id': {
+      id: '/_app/app/billing/invoices/$id'
+      path: '/$id'
+      fullPath: '/app/billing/invoices/$id'
+      preLoaderRoute: typeof AppAppBillingInvoicesIdRouteImport
+      parentRoute: typeof AppAppBillingInvoicesRoute
+    }
+    '/_app/app/sites/$projectId/deployments/$deploymentId': {
+      id: '/_app/app/sites/$projectId/deployments/$deploymentId'
+      path: '/$deploymentId'
+      fullPath: '/app/sites/$projectId/deployments/$deploymentId'
+      preLoaderRoute: typeof AppAppSitesProjectIdDeploymentsDeploymentIdRouteImport
+      parentRoute: typeof AppAppSitesProjectIdDeploymentsRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminAdminAnnouncementsRoute: typeof AdminAdminAnnouncementsRoute
+  AdminAdminApiLogsRoute: typeof AdminAdminApiLogsRoute
+  AdminAdminAuditRoute: typeof AdminAdminAuditRoute
+  AdminAdminBillingRoute: typeof AdminAdminBillingRoute
+  AdminAdminBlogRoute: typeof AdminAdminBlogRoute
+  AdminAdminDomainsRoute: typeof AdminAdminDomainsRoute
+  AdminAdminEmailRoute: typeof AdminAdminEmailRoute
+  AdminAdminPlansRoute: typeof AdminAdminPlansRoute
+  AdminAdminProvidersRoute: typeof AdminAdminProvidersRoute
+  AdminAdminSettingsRoute: typeof AdminAdminSettingsRoute
+  AdminAdminSitesRoute: typeof AdminAdminSitesRoute
+  AdminAdminStatusRoute: typeof AdminAdminStatusRoute
+  AdminAdminIndexRoute: typeof AdminAdminIndexRoute
+  AdminAdminSupportMacrosRoute: typeof AdminAdminSupportMacrosRoute
+  AdminAdminUsersUserIdRoute: typeof AdminAdminUsersUserIdRoute
+  AdminAdminUsersRolesRoute: typeof AdminAdminUsersRolesRoute
+  AdminAdminSupportIndexRoute: typeof AdminAdminSupportIndexRoute
+  AdminAdminUsersIndexRoute: typeof AdminAdminUsersIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAdminAnnouncementsRoute: AdminAdminAnnouncementsRoute,
+  AdminAdminApiLogsRoute: AdminAdminApiLogsRoute,
+  AdminAdminAuditRoute: AdminAdminAuditRoute,
+  AdminAdminBillingRoute: AdminAdminBillingRoute,
+  AdminAdminBlogRoute: AdminAdminBlogRoute,
+  AdminAdminDomainsRoute: AdminAdminDomainsRoute,
+  AdminAdminEmailRoute: AdminAdminEmailRoute,
+  AdminAdminPlansRoute: AdminAdminPlansRoute,
+  AdminAdminProvidersRoute: AdminAdminProvidersRoute,
+  AdminAdminSettingsRoute: AdminAdminSettingsRoute,
+  AdminAdminSitesRoute: AdminAdminSitesRoute,
+  AdminAdminStatusRoute: AdminAdminStatusRoute,
+  AdminAdminIndexRoute: AdminAdminIndexRoute,
+  AdminAdminSupportMacrosRoute: AdminAdminSupportMacrosRoute,
+  AdminAdminUsersUserIdRoute: AdminAdminUsersUserIdRoute,
+  AdminAdminUsersRolesRoute: AdminAdminUsersRolesRoute,
+  AdminAdminSupportIndexRoute: AdminAdminSupportIndexRoute,
+  AdminAdminUsersIndexRoute: AdminAdminUsersIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface AppAppBillingInvoicesRouteChildren {
+  AppAppBillingInvoicesIdRoute: typeof AppAppBillingInvoicesIdRoute
+}
+
+const AppAppBillingInvoicesRouteChildren: AppAppBillingInvoicesRouteChildren = {
+  AppAppBillingInvoicesIdRoute: AppAppBillingInvoicesIdRoute,
+}
+
+const AppAppBillingInvoicesRouteWithChildren =
+  AppAppBillingInvoicesRoute._addFileChildren(
+    AppAppBillingInvoicesRouteChildren,
+  )
+
+interface AppAppBillingRouteChildren {
+  AppAppBillingInvoicesRoute: typeof AppAppBillingInvoicesRouteWithChildren
+  AppAppBillingPaymentMethodsRoute: typeof AppAppBillingPaymentMethodsRoute
+  AppAppBillingPlanRoute: typeof AppAppBillingPlanRoute
+  AppAppBillingUsageRoute: typeof AppAppBillingUsageRoute
+  AppAppBillingIndexRoute: typeof AppAppBillingIndexRoute
+}
+
+const AppAppBillingRouteChildren: AppAppBillingRouteChildren = {
+  AppAppBillingInvoicesRoute: AppAppBillingInvoicesRouteWithChildren,
+  AppAppBillingPaymentMethodsRoute: AppAppBillingPaymentMethodsRoute,
+  AppAppBillingPlanRoute: AppAppBillingPlanRoute,
+  AppAppBillingUsageRoute: AppAppBillingUsageRoute,
+  AppAppBillingIndexRoute: AppAppBillingIndexRoute,
+}
+
+const AppAppBillingRouteWithChildren = AppAppBillingRoute._addFileChildren(
+  AppAppBillingRouteChildren,
+)
+
+interface AppAppSettingsRouteChildren {
+  AppAppSettingsDangerRoute: typeof AppAppSettingsDangerRoute
+  AppAppSettingsIntegrationsRoute: typeof AppAppSettingsIntegrationsRoute
+  AppAppSettingsPreferencesRoute: typeof AppAppSettingsPreferencesRoute
+  AppAppSettingsProfileRoute: typeof AppAppSettingsProfileRoute
+  AppAppSettingsSecurityRoute: typeof AppAppSettingsSecurityRoute
+}
+
+const AppAppSettingsRouteChildren: AppAppSettingsRouteChildren = {
+  AppAppSettingsDangerRoute: AppAppSettingsDangerRoute,
+  AppAppSettingsIntegrationsRoute: AppAppSettingsIntegrationsRoute,
+  AppAppSettingsPreferencesRoute: AppAppSettingsPreferencesRoute,
+  AppAppSettingsProfileRoute: AppAppSettingsProfileRoute,
+  AppAppSettingsSecurityRoute: AppAppSettingsSecurityRoute,
+}
+
+const AppAppSettingsRouteWithChildren = AppAppSettingsRoute._addFileChildren(
+  AppAppSettingsRouteChildren,
+)
+
+interface AppAppDomainsDomainRouteChildren {
+  AppAppDomainsDomainDnsRoute: typeof AppAppDomainsDomainDnsRoute
+}
+
+const AppAppDomainsDomainRouteChildren: AppAppDomainsDomainRouteChildren = {
+  AppAppDomainsDomainDnsRoute: AppAppDomainsDomainDnsRoute,
+}
+
+const AppAppDomainsDomainRouteWithChildren =
+  AppAppDomainsDomainRoute._addFileChildren(AppAppDomainsDomainRouteChildren)
+
+interface AppAppSitesProjectIdDeploymentsRouteChildren {
+  AppAppSitesProjectIdDeploymentsDeploymentIdRoute: typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
+}
+
+const AppAppSitesProjectIdDeploymentsRouteChildren: AppAppSitesProjectIdDeploymentsRouteChildren =
+  {
+    AppAppSitesProjectIdDeploymentsDeploymentIdRoute:
+      AppAppSitesProjectIdDeploymentsDeploymentIdRoute,
+  }
+
+const AppAppSitesProjectIdDeploymentsRouteWithChildren =
+  AppAppSitesProjectIdDeploymentsRoute._addFileChildren(
+    AppAppSitesProjectIdDeploymentsRouteChildren,
+  )
+
+interface AppAppSitesProjectIdRouteChildren {
+  AppAppSitesProjectIdAnalyticsRoute: typeof AppAppSitesProjectIdAnalyticsRoute
+  AppAppSitesProjectIdDeploymentsRoute: typeof AppAppSitesProjectIdDeploymentsRouteWithChildren
+  AppAppSitesProjectIdDomainsRoute: typeof AppAppSitesProjectIdDomainsRoute
+  AppAppSitesProjectIdEnvRoute: typeof AppAppSitesProjectIdEnvRoute
+  AppAppSitesProjectIdLogsRoute: typeof AppAppSitesProjectIdLogsRoute
+  AppAppSitesProjectIdSettingsRoute: typeof AppAppSitesProjectIdSettingsRoute
+  AppAppSitesProjectIdIndexRoute: typeof AppAppSitesProjectIdIndexRoute
+}
+
+const AppAppSitesProjectIdRouteChildren: AppAppSitesProjectIdRouteChildren = {
+  AppAppSitesProjectIdAnalyticsRoute: AppAppSitesProjectIdAnalyticsRoute,
+  AppAppSitesProjectIdDeploymentsRoute:
+    AppAppSitesProjectIdDeploymentsRouteWithChildren,
+  AppAppSitesProjectIdDomainsRoute: AppAppSitesProjectIdDomainsRoute,
+  AppAppSitesProjectIdEnvRoute: AppAppSitesProjectIdEnvRoute,
+  AppAppSitesProjectIdLogsRoute: AppAppSitesProjectIdLogsRoute,
+  AppAppSitesProjectIdSettingsRoute: AppAppSitesProjectIdSettingsRoute,
+  AppAppSitesProjectIdIndexRoute: AppAppSitesProjectIdIndexRoute,
+}
+
+const AppAppSitesProjectIdRouteWithChildren =
+  AppAppSitesProjectIdRoute._addFileChildren(AppAppSitesProjectIdRouteChildren)
+
+interface AppRouteChildren {
+  AppAppApiKeysRoute: typeof AppAppApiKeysRoute
+  AppAppBillingRoute: typeof AppAppBillingRouteWithChildren
+  AppAppNotificationsRoute: typeof AppAppNotificationsRoute
+  AppAppSettingsRoute: typeof AppAppSettingsRouteWithChildren
+  AppAppIndexRoute: typeof AppAppIndexRoute
+  AppAppDomainsDomainRoute: typeof AppAppDomainsDomainRouteWithChildren
+  AppAppDomainsSearchRoute: typeof AppAppDomainsSearchRoute
+  AppAppEmailMailboxIdRoute: typeof AppAppEmailMailboxIdRoute
+  AppAppEmailNewRoute: typeof AppAppEmailNewRoute
+  AppAppEmailProvidersRoute: typeof AppAppEmailProvidersRoute
+  AppAppSitesProjectIdRoute: typeof AppAppSitesProjectIdRouteWithChildren
+  AppAppSitesNewRoute: typeof AppAppSitesNewRoute
+  AppAppSupportTicketIdRoute: typeof AppAppSupportTicketIdRoute
+  AppAppSupportNewRoute: typeof AppAppSupportNewRoute
+  AppAppTeamInviteRoute: typeof AppAppTeamInviteRoute
+  AppAppDomainsIndexRoute: typeof AppAppDomainsIndexRoute
+  AppAppEmailIndexRoute: typeof AppAppEmailIndexRoute
+  AppAppSitesIndexRoute: typeof AppAppSitesIndexRoute
+  AppAppSupportIndexRoute: typeof AppAppSupportIndexRoute
+  AppAppTeamIndexRoute: typeof AppAppTeamIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAppApiKeysRoute: AppAppApiKeysRoute,
+  AppAppBillingRoute: AppAppBillingRouteWithChildren,
+  AppAppNotificationsRoute: AppAppNotificationsRoute,
+  AppAppSettingsRoute: AppAppSettingsRouteWithChildren,
+  AppAppIndexRoute: AppAppIndexRoute,
+  AppAppDomainsDomainRoute: AppAppDomainsDomainRouteWithChildren,
+  AppAppDomainsSearchRoute: AppAppDomainsSearchRoute,
+  AppAppEmailMailboxIdRoute: AppAppEmailMailboxIdRoute,
+  AppAppEmailNewRoute: AppAppEmailNewRoute,
+  AppAppEmailProvidersRoute: AppAppEmailProvidersRoute,
+  AppAppSitesProjectIdRoute: AppAppSitesProjectIdRouteWithChildren,
+  AppAppSitesNewRoute: AppAppSitesNewRoute,
+  AppAppSupportTicketIdRoute: AppAppSupportTicketIdRoute,
+  AppAppSupportNewRoute: AppAppSupportNewRoute,
+  AppAppTeamInviteRoute: AppAppTeamInviteRoute,
+  AppAppDomainsIndexRoute: AppAppDomainsIndexRoute,
+  AppAppEmailIndexRoute: AppAppEmailIndexRoute,
+  AppAppSitesIndexRoute: AppAppSitesIndexRoute,
+  AppAppSupportIndexRoute: AppAppSupportIndexRoute,
+  AppAppTeamIndexRoute: AppAppTeamIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AuthRouteChildren {
   Auth2faRoute: typeof Auth2faRoute
@@ -586,9 +1899,10 @@ const MarketingRouteWithChildren = MarketingRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  AdminRoute: AdminRouteWithChildren,
+  AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   MarketingRoute: MarketingRouteWithChildren,
-  AppRoute: AppRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
