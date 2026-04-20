@@ -89,7 +89,7 @@ function DomainDetail() {
             <Card>
               <CardHeader><CardTitle className="text-base">Nameservers</CardTitle></CardHeader>
               <CardContent className="space-y-2">
-                {d.nameservers.map((ns, i) => (
+                {d.nameservers.map((ns: string, i: number) => (
                   <div key={i} className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-4 py-2">
                     <span className="font-mono text-sm">{ns}</span>
                     <Button variant="ghost" size="icon"><Copy className="h-3.5 w-3.5" /></Button>
