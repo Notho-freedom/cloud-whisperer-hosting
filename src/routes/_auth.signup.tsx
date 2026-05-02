@@ -30,8 +30,10 @@ function SignupPage() {
     setLoading(true);
     try {
       await auth.signup(email, password, name);
-      toast.success("Compte créé ! Bienvenue.");
+      toast.success("Compte créé ! Vérifiez votre email.");
       navigate({ to: "/verify-email" });
+    } catch (err: any) {
+      toast.error(err?.message ?? "Erreur lors de la création");
     } finally {
       setLoading(false);
     }
