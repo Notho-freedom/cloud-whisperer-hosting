@@ -31,11 +31,15 @@ function LoginPage() {
       await auth.login(email, password);
       toast.success("Connecté !");
       navigate({ to: "/app" });
-    } catch {
-      toast.error("Erreur de connexion");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Erreur de connexion");
     } finally {
       setLoading(false);
     }
+  };
+
+  const onGoogle = async () => {
+    try { await auth.signInWithGoogle(); } catch (e: any) { toast.error(e?.message ?? "Erreur Google"); }
   };
 
   return (
@@ -67,11 +71,8 @@ function LoginPage() {
         <div className="h-px flex-1 bg-border" />
       </div>
       <div className="mt-6 grid gap-2">
-        <Button variant="outline" type="button" onClick={() => toast.info("OAuth à brancher")}>
+        <Button variant="outline" type="button" onClick={onGoogle}>
           Continuer avec Google
-        </Button>
-        <Button variant="outline" type="button" onClick={() => toast.info("OAuth à brancher")}>
-          Continuer avec GitHub
         </Button>
       </div>
       <p className="mt-6 text-center text-sm text-muted-foreground">

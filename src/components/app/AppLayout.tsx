@@ -265,11 +265,6 @@ function AppHeader({ onOpenMobile }: { onOpenMobile: () => void }) {
             <DropdownMenuItem onSelect={() => navigate({ to: "/app/billing" })}>
               <CreditCard className="mr-2 h-4 w-4" /> Facturation
             </DropdownMenuItem>
-            {!auth.hasRole("admin") && (
-              <DropdownMenuItem onSelect={() => auth.loginAsAdmin()}>
-                <ShieldCheck className="mr-2 h-4 w-4" /> Devenir admin (demo)
-              </DropdownMenuItem>
-            )}
             {auth.hasRole("admin") && (
               <DropdownMenuItem onSelect={() => navigate({ to: "/admin" })}>
                 <ShieldCheck className="mr-2 h-4 w-4" /> Console admin

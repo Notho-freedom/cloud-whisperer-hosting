@@ -1,6 +1,8 @@
 import * as React from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
-export type UserRole = "user" | "admin";
+export type UserRole = "user" | "admin" | "support";
 
 export interface AuthUser {
   id: string;
@@ -12,82 +14,121 @@ export interface AuthUser {
 
 interface AuthContextValue {
   user: AuthUser | null;
+  session: Session | null;
+  loading: boolean;
   isAuthenticated: boolean;
   hasRole: (role: UserRole) => boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => void;
-  loginAsAdmin: () => void;
+  logout: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  refreshRoles: () => Promise<void>;
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null);
 
-const STORAGE_KEY = "hostiq.auth.user";
-
-function readStoredUser(): AuthUser | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as AuthUser) : null;
-  } catch {
-    return null;
-  }
+async function fetchUserData(supaUser: User): Promise<AuthUser> {
+  const [{ data: profile }, { data: rolesData }] = await Promise.all([
+    supabase.from("profiles").select("name, avatar_url").eq("id", supaUser.id).maybeSingle(),
+    supabase.from("user_roles").select("role").eq("user_id", supaUser.id),
+  ]);
+  return {
+    id: supaUser.id,
+    email: supaUser.email ?? "",
+    name: profile?.name ?? supaUser.email?.split("@")[0] ?? "Utilisateur",
+    avatarUrl: profile?.avatar_url ?? undefined,
+    roles: (rolesData?.map((r) => r.role as UserRole)) ?? ["user"],
+  };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [session, setSession] = React.useState<Session | null>(null);
   const [user, setUser] = React.useState<AuthUser | null>(null);
+  const [loading, setLoading] = React.useState(true);
 
-  React.useEffect(() => {
-    setUser(readStoredUser());
-  }, []);
-
-  const persist = React.useCallback((next: AuthUser | null) => {
-    setUser(next);
-    if (typeof window === "undefined") return;
-    if (next) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    else window.localStorage.removeItem(STORAGE_KEY);
-  }, []);
-
-  const login = React.useCallback(
-    async (email: string, _password: string) => {
-      await new Promise((r) => setTimeout(r, 600));
-      persist({
-        id: "u_demo",
-        email,
-        name: email.split("@")[0] || "Utilisateur",
+  const loadUser = React.useCallback(async (s: Session | null) => {
+    if (!s?.user) {
+      setUser(null);
+      return;
+    }
+    try {
+      const u = await fetchUserData(s.user);
+      setUser(u);
+    } catch (e) {
+      console.error("loadUser failed", e);
+      setUser({
+        id: s.user.id,
+        email: s.user.email ?? "",
+        name: s.user.email?.split("@")[0] ?? "Utilisateur",
         roles: ["user"],
       });
-    },
-    [persist],
-  );
+    }
+  }, []);
 
-  const signup = React.useCallback(
-    async (email: string, _password: string, name: string) => {
-      await new Promise((r) => setTimeout(r, 800));
-      persist({ id: "u_new", email, name, roles: ["user"] });
-    },
-    [persist],
-  );
-
-  const logout = React.useCallback(() => persist(null), [persist]);
-
-  const loginAsAdmin = React.useCallback(() => {
-    persist({
-      id: "u_admin",
-      email: "admin@hostiq.io",
-      name: "Admin",
-      roles: ["user", "admin"],
+  React.useEffect(() => {
+    // Listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      // Defer Supabase calls to avoid deadlock
+      setTimeout(() => { void loadUser(s); }, 0);
     });
-  }, [persist]);
+
+    // THEN check existing session
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      void loadUser(s).finally(() => setLoading(false));
+    });
+
+    return () => subscription.unsubscribe();
+  }, [loadUser]);
+
+  const login = React.useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  }, []);
+
+  const signup = React.useCallback(async (email: string, password: string, name: string) => {
+    const redirectUrl = `${window.location.origin}/app`;
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: { name },
+      },
+    });
+    if (error) throw error;
+  }, []);
+
+  const logout = React.useCallback(async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+  }, []);
+
+  const signInWithGoogle = React.useCallback(async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/app` },
+    });
+    if (error) throw error;
+  }, []);
+
+  const refreshRoles = React.useCallback(async () => {
+    if (session) await loadUser(session);
+  }, [session, loadUser]);
 
   const value: AuthContextValue = {
     user,
-    isAuthenticated: !!user,
+    session,
+    loading,
+    isAuthenticated: !!session,
     hasRole: (role) => !!user?.roles.includes(role),
     login,
     signup,
     logout,
-    loginAsAdmin,
+    signInWithGoogle,
+    refreshRoles,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
