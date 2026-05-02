@@ -1,118 +1,158 @@
+# Bascule Hostiq vers un vrai backend
+
+Aujourd'hui, l'app est 100% UI + mocks (`src/lib/mocks.ts`) et l'auth est en `localStorage`. On passe à une architecture serveur réelle, sans casser l'UI existante.
+
+## Stack cible
+
+- **Lovable Cloud** (Supabase managé) → base de données, auth, RLS, storage
+- **TanStack Start `createServerFn**` → toute la logique serveur (jamais d'appels API tiers depuis le client)
+- **APIs externes branchées via server functions** :
+  - PlanetHoster API → recherche / achat / DNS / WHOIS de domaines
+  - Vercel API → projets, déploiements, domaines, env vars, logs, analytics
+  - Stripe → plans, abonnements, factures, moyens de paiement
+  - Resend → emails transactionnels
+  - Google Workspace / Microsoft 365 / Zoho → mailboxes (Phase 6)
+- **Secrets** : stockés via Lovable Secrets, lus uniquement dans `.handler()` côté serveur
+
+## Architecture serveur
+
+```text
+src/
+├── server/
+│   ├── auth.server.ts            # helpers session Supabase
+│   ├── auth.functions.ts         # signup/login/logout/2fa
+│   ├── domains.server.ts         # client PlanetHoster
+│   ├── domains.functions.ts      # search, register, dns, whois, transfer
+│   ├── sites.server.ts           # client Vercel
+│   ├── sites.functions.ts        # projects, deployments, env, domains
+│   ├── email.server.ts           # adapters multi-providers
+│   ├── email.functions.ts        # mailboxes, aliases, forwards
+│   ├── billing.server.ts         # client Stripe
+│   ├── billing.functions.ts      # plan, invoices, payment methods, usage
+│   ├── support.functions.ts      # tickets (DB)
+│   ├── team.functions.ts         # membres + invites (Resend)
+│   ├── apikeys.functions.ts      # gen/revoke clés API Hostiq
+│   ├── notifications.functions.ts
+│   └── admin.functions.ts        # KPIs, users, audit, providers status
+└── routes/api/public/
+    ├── webhooks.stripe.ts        # signature vérifiée
+    ├── webhooks.vercel.ts        # deploy events
+    └── webhooks.planethoster.ts  # domain events
+```
+
+Toutes les routes UI restent — on remplace juste l'import des mocks par un appel `useQuery(serverFn)` via TanStack Query (déjà installé).
+
+## Schéma base de données (Lovable Cloud)
+
+Tables principales (toutes avec RLS `user_id = auth.uid()` sauf admin) :
+
+- `profiles` (id ↔ auth.users, name, avatar_url, locale, created_at)
+- `app_role` enum (`user`, `admin`, `support`) + `user_roles` table + fonction `has_role()` security definer (jamais sur profiles)
+- `organizations` + `organization_members` (rôles owner/admin/member/billing/viewer)
+- `domains` (org_id, name, planethoster_id, status, expires_at, autorenew, locked, privacy)
+- `dns_records` (domain_id, type, name, value, ttl, priority) — miroir cache
+- `sites` (org_id, vercel_project_id, name, framework, prod_url, git_repo, region)
+- `deployments` (site_id, vercel_deployment_id, status, sha, msg, target, url) — cache
+- `mailboxes` (org_id, address, domain, provider, plan, quota_gb, used_gb, provider_account_id)
+- `email_aliases`, `email_forwards`
+- `subscriptions` (org_id, stripe_customer_id, stripe_sub_id, plan_id, status, current_period_end)
+- `invoices` (org_id, stripe_invoice_id, number, amount, status, pdf_url)
+- `payment_methods` (org_id, stripe_pm_id, brand, last4, default)
+- `usage_metrics` (org_id, period, bandwidth_gb, build_minutes, …)
+- `tickets` + `ticket_messages` (org_id, status, priority, category)
+- `team_invites` (org_id, email, role, token, expires_at)
+- `api_keys` (org_id, name, hashed_key, prefix, scopes[], last_used_at)
+- `notifications` (user_id, type, title, body, read)
+- `audit_log` (actor_id, action, target, ip, ua, ts) — admin only
+- `api_call_logs` (provider, endpoint, status, latency_ms, user_id) — admin
+- `announcements`, `blog_posts`, `promo_codes`, `incidents`
+
+Chaque table avec policies RLS strictes + triggers `updated_at`.
+
+## Phases d'implémentation
+
+### Phase 1 — Cloud + Auth réelle
+
+- Activer Lovable Cloud
+- Schéma : profiles, user_roles, has_role(), organizations, trigger handle_new_user
+- Remplacer `src/lib/auth.tsx` par un client Supabase réel (`onAuthStateChange` + `getSession`)
+- Pages `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/verify-email`, `/2fa` câblées sur Supabase Auth (email+password + Google)
+- Guard route `_app` et `_admin` (redirect si non connecté / pas admin via `has_role`)
+
+### Phase 2 — Domaines (PlanetHoster)
+
+- Demander la clé API PlanetHoster (secret)
+- `domains.server.ts` : client typé (search, register, renew, transfer, getDns, setDns, whois, lock/unlock, privacy)
+- Server functions + cache DB
+- Brancher `/app/domains/*` (index, search, $domain, dns)
+
+### Phase 3 — Sites (Vercel)
+
+- Token Vercel + Team ID (secrets)
+- `sites.server.ts` : projects, deployments (poll/webhook), domains, env vars, logs, analytics
+- Webhook `/api/public/webhooks/vercel` (signature)
+- Brancher toutes les pages `/app/sites/*`
+
+### Phase 4 — Billing (Stripe)
+
+- Activer l'intégration Stripe Lovable (recommandée) → produits/prix par plan
+- Customer portal pour cartes/factures
+- Webhook `/api/public/webhooks/stripe` → maj `subscriptions`, `invoices`
+- Brancher `/app/billing/*` + gating limites par plan
+- Add-ons (mailboxes, bande passante) via metered billing
+
+### Phase 5 — Support, Team, API Keys, Notifications
+
+- Tickets : tables + realtime Supabase (channel par ticket)
+- Team : invites par email (Resend), accept-invite route
+- API keys Hostiq : génération `hq_live_xxx`, hash en DB, middleware vérif sur futurs endpoints publics
+- Notifications : insert serveur + subscribe realtime côté client
+
+### Phase 6 — Email multi-providers + Admin
+
+- Adapter pattern `EmailProvider` : Google Workspace Admin SDK / Microsoft Graph / Zoho Mail API
+- OAuth par-utilisateur stocké en DB chiffré (chaque org connecte SON compte provider)
+- UI multi-fournisseurs déjà prête → branchement via `email.server.ts`
+- Admin : KPIs réels (vues SQL), user management, audit log, api_call_logs, providers status (ping périodique cron via `/api/public/cron/health`), CMS blog/annonces sur tables existantes
+
+## Sécurité (non négociable)
+
+- Rôles dans `user_roles` séparé, jamais sur profiles
+- `has_role()` SECURITY DEFINER pour éviter récursion RLS
+- Tous les secrets API serveur uniquement (`process.env` dans `.handler()`)
+- Webhooks : vérification signature HMAC obligatoire avant tout traitement
+- Validation Zod systématique sur `inputValidator`
+- Rate-limit sur endpoints publics (api keys + webhooks)
+- Audit log automatique sur actions sensibles (suspend user, delete site, transfer domain…)
+
+## Ce qui change pour l'UI
+
+- `src/lib/mocks.ts` reste comme **fallback dev** mais n'est plus importé en prod
+- Chaque page `useQuery({ queryKey, queryFn: () => serverFn() })`
+- Mutations via `useMutation` + `invalidateQueries`
+- Skeletons pendant le loading (déjà dans shadcn)
+
+## Secrets à demander au fil des phases
 
 
-# Hostiq — Plateforme d'hébergement sans infrastructure
+| Phase | Secret                                                                                                                                                                                 |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2     | `PLANETHOSTER_API_KEY` (+ account ID) ***API User :*** 03752290defc9dcaddc3d8d49d12cd02***API Key :*** 9cc717f8bfd553c46425755dab02456a300a6cc34c60436f9a9391c72bf6c575               |
+| 3     | `VERCEL_TOKEN : vcp_6l4HjQ0Pkv0L6N6uN4FP0cEkIxXgLwuexYwgFVpLvvs5DMkMTJ09I3VI`, `VERCEL_TEAM_ID : team_JGG2UHn4dAimYHRpEkYljnKv`, `VERCEL_WEBHOOK_SECRET :` hostiq_vercel_secret_2026 |
+| 4     | Stripe via intégration Lovable (pas de clé manuelle)                                                                                                                                   |
+| 5     | `RESEND_API_KEY : re_aCxNUbE6_BbqWbX5eN5YK18cCwDFm8SgP`                                                                                                                                |
+| 6     | OAuth client IDs Google/Microsoft/Zoho (par-utilisateur, pas un secret unique)                                                                                                         |
 
-Service complet basé uniquement sur des APIs : **PlanetHoster** (domaines), **Vercel** (hébergement/projets), et **multi-providers email** (Google Workspace / Microsoft 365 / Zoho — UI agnostique).
 
-## Identité visuelle
+## Ordre d'exécution proposé après approbation
 
-- **Nom** : Hostiq
-- **Palette** : émeraude (#10B981 primaire) sur slate sombre + blanc, accents teal. Pro et confiance.
-- **Typo** : Inter (UI) + JetBrains Mono (code/domaines/DNS)
-- **Style** : SaaS moderne, dense mais lisible (inspiration Vercel/Linear), thème clair + sombre
-- **Logo** : monogramme "H" géométrique avec bouclier discret
+1. Phase 1 complète (Cloud + auth) — base de tout le reste
+2. Phase 2 (domaines) — demande clé PlanetHoster
+3. Phase 3 (sites) — demande token Vercel
+4. Phase 4 (billing Stripe)
+5. Phase 5 (support/team/keys/notifs)
+6. Phase 6 (email + admin polish)
 
-## Architecture des routes (TanStack Router, fichiers séparés, SEO + SSR)
+Je peux enchaîner les phases sans m'arrêter, en demandant les secrets juste avant la phase qui en a besoin.
 
-### 🌐 Site public (marketing)
-- `/` — Landing : hero, propositions de valeur, logos, comparatif
-- `/domains` — Recherche & achat de domaines (preview live)
-- `/hosting` — Présentation hébergement (Vercel-powered)
-- `/email` — Boîtes mail pro
-- `/pricing` — Plans hybrides + add-ons
-- `/features` — Fonctionnalités détaillées
-- `/about`, `/contact`, `/blog`, `/blog/$slug`
-- `/legal/terms`, `/legal/privacy`, `/legal/cookies`, `/legal/sla`
-- `/status` — Statut des services
-
-### 🔐 Authentification
-- `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/verify-email`, `/2fa`
-
-### 👤 Espace membre `/_authenticated/app/*`
-- `/app` — Dashboard (vue d'ensemble : domaines, sites, mails, factures, alertes)
-- `/app/domains` — Liste des domaines
-- `/app/domains/search` — Recherche & achat (multi-TLD, suggestions)
-- `/app/domains/$domain` — Détail (overview, DNS, nameservers, contacts WHOIS, transfert, renouvellement, auto-renew, sécurité/lock, redirections)
-- `/app/domains/$domain/dns` — Éditeur DNS (A, AAAA, CNAME, MX, TXT, SRV, CAA), import/export zone
-- `/app/sites` — Liste des projets Vercel
-- `/app/sites/new` — Création (Git import, template, blank, upload zip)
-- `/app/sites/$projectId` — Vue projet (deployments, prod URL, screenshot)
-- `/app/sites/$projectId/deployments` + `/deployments/$deploymentId` (logs, build output, redeploy, rollback)
-- `/app/sites/$projectId/domains` — Domaines liés + vérification SSL
-- `/app/sites/$projectId/env` — Variables d'environnement (par env)
-- `/app/sites/$projectId/settings` — Build, framework, regions, danger zone
-- `/app/sites/$projectId/analytics` — Trafic, perf, web vitals
-- `/app/sites/$projectId/logs` — Runtime logs
-- `/app/email` — Boîtes mail (toutes provider confondus)
-- `/app/email/new` — Création (sélection provider, domaine, plan)
-- `/app/email/$mailboxId` — Détail (alias, transferts, mot de passe, quotas)
-- `/app/email/providers` — Connexion comptes Google/MS/Zoho (UI prête multi-provider)
-- `/app/billing` — Vue d'ensemble (solde, prochaine facture, usage)
-- `/app/billing/plan` — Choix/changement de plan + add-ons
-- `/app/billing/invoices` + `/invoices/$id` (PDF view)
-- `/app/billing/payment-methods` — Cartes, SEPA
-- `/app/billing/usage` — Consommation détaillée
-- `/app/support` — Liste tickets
-- `/app/support/new`, `/app/support/$ticketId`
-- `/app/notifications` — Centre de notifications
-- `/app/team` — Membres & rôles (multi-utilisateurs par compte)
-- `/app/team/invite`
-- `/app/api-keys` — Clés API personnelles + webhooks
-- `/app/settings/profile`, `/settings/security` (2FA, sessions, password), `/settings/preferences`, `/settings/integrations`, `/settings/danger`
-
-### 🛠️ Espace administration `/_authenticated/_admin/admin/*`
-- `/admin` — Dashboard global (KPIs : MRR, utilisateurs, domaines, sites, tickets, incidents, marges)
-- `/admin/users` + `/users/$userId` (profil, ressources, factures, impersonate, suspend)
-- `/admin/users/roles` — Gestion rôles & permissions
-- `/admin/domains` — Tous les domaines vendus (filtres TLD, expiration, statut)
-- `/admin/sites` — Tous les projets hébergés
-- `/admin/email` — Toutes les boîtes mail
-- `/admin/billing` — Revenus, factures, refunds, échecs de paiement
-- `/admin/plans` — CRUD plans + add-ons + promo codes
-- `/admin/support` — File de tickets, assignations, SLA
-- `/admin/support/macros` — Réponses prédéfinies
-- `/admin/providers` — État des intégrations (PlanetHoster, Vercel, email providers) + clés API
-- `/admin/api-logs` — Logs d'appels API (filtre par provider, statut, latence)
-- `/admin/audit` — Audit trail complet
-- `/admin/announcements` — Bannières & emails broadcast
-- `/admin/blog` — CMS articles
-- `/admin/status` — Gestion incidents & maintenance
-- `/admin/settings` — Config plateforme (taxes, devises, branding)
-
-## Principes UI prévus pour les APIs
-
-Chaque écran est conçu en miroir des payloads attendus :
-
-- **PlanetHoster API** : recherche TLD, vérification dispo, prix par TLD/an, contacts WHOIS (registrant/admin/tech/billing), nameservers, EPP code, lock domain, renouvellement, transfert in/out
-- **Vercel API** : projects, deployments (status: ready/building/error), domains/aliases, env vars (target: production/preview/development), build logs, runtime logs, analytics, frameworks détectés, git integration
-- **Email (multi)** : abstraction commune `mailbox { domain, address, quota, aliases[], forwards[] }` avec adapter par provider, écran de connexion OAuth générique
-
-Tous les formulaires incluent : validation Zod, états loading/empty/error/success, skeletons, toasts, confirmations destructives, mock data réaliste.
-
-## Composants transverses
-
-- Layouts : MarketingLayout, AuthLayout, AppLayout (sidebar collapsible + header avec switcher de compte), AdminLayout (sidebar distincte rouge/admin)
-- Command palette (⌘K), notifications dropdown, theme toggle, breadcrumbs
-- DataTables réutilisables (tri, filtres, pagination, bulk actions, export CSV)
-- Empty states illustrés, error boundaries par route, 404 custom
-- Composants spécialisés : DomainSearchBox, DNSRecordEditor, EnvVarEditor, DeploymentTimeline, PriceCard, UsageMeter, TicketThread, InvoicePDFViewer
-
-## Données
-
-Mock data centralisé (`src/lib/mocks/`) imitant fidèlement les réponses APIs réelles → branchement futur = remplacer un fetcher, zéro refonte UI.
-
-## Hors-scope (à brancher après validation)
-
-- Backend, paiements réels, vrais appels API, envoi d'emails transactionnels
-- Auth réelle (mockée via context auth en attendant)
-
-## Livraison par phases (pour ne pas tout générer en un seul coup)
-
-1. **Phase 1** : Branding + design system + site public complet + auth
-2. **Phase 2** : Espace membre — Dashboard, Domaines (search/detail/DNS), Sites (CRUD/deployments)
-3. **Phase 3** : Espace membre — Email, Billing, Support, Team, Settings, API keys
-4. **Phase 4** : Espace administration complet
-5. **Phase 5** : Pages légales, status, blog, polish & responsive
-
-Je commencerai par la **Phase 1** dès validation, puis enchaînerai les phases.
-
+**Validez-vous ce plan global, ou voulez-vous ajuster l'ordre / le périmètre d'une phase ?**
