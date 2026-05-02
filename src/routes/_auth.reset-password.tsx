@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_auth/reset-password")({
   head: () => ({
@@ -22,18 +23,18 @@ function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (pwd !== confirm) {
       toast.error("Les mots de passe ne correspondent pas.");
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast.success("Mot de passe mis à jour.");
-      navigate({ to: "/login" });
-    }, 700);
+    const { error } = await supabase.auth.updateUser({ password: pwd });
+    setLoading(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Mot de passe mis à jour.");
+    navigate({ to: "/app" });
   };
 
   return (
