@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAuth } from "@/lib/auth";
@@ -18,9 +18,5 @@ function AdminGuard() {
   }
   if (!isAuthenticated) return <Navigate to="/login" />;
   if (!hasRole("admin")) return <Navigate to="/app" />;
-  return (
-    <AdminLayout>
-      <Outlet />
-    </AdminLayout>
-  );
+  return <AdminLayout />;
 }

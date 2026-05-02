@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/app/AppLayout";
 import { useAuth } from "@/lib/auth";
@@ -17,9 +17,5 @@ function AppGuard() {
     );
   }
   if (!isAuthenticated) return <Navigate to="/login" />;
-  return (
-    <AppLayout>
-      <Outlet />
-    </AppLayout>
-  );
+  return <AppLayout />;
 }
