@@ -42,14 +42,14 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Hostiq — Hébergement, domaines & email pro sans infra" },
+      { title: "Hostiq" },
       {
         name: "description",
         content:
           "Hostiq : achetez un domaine, déployez un site et créez vos emails pro depuis un seul tableau de bord. Powered by APIs.",
       },
       { name: "author", content: "Hostiq" },
-      { property: "og:title", content: "Hostiq — Hébergement & domaines simplifiés" },
+      { property: "og:title", content: "Hostiq" },
       {
         property: "og:description",
         content: "Domaines, hosting et emails pro depuis une seule console. Sans infra.",
@@ -57,6 +57,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Hostiq" },
+      { name: "twitter:title", content: "Hostiq" },
+      { name: "description", content: "Cloud Companion is a full-stack web hosting service built entirely on APIs." },
+      { property: "og:description", content: "Cloud Companion is a full-stack web hosting service built entirely on APIs." },
+      { name: "twitter:description", content: "Cloud Companion is a full-stack web hosting service built entirely on APIs." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/95f68fbe-7f7f-44e8-b55a-d229bc0cc822/id-preview-6f19afc5--80e0e3ce-362a-4144-927b-8ab1a934dd23.lovable.app-1776718300742.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/95f68fbe-7f7f-44e8-b55a-d229bc0cc822/id-preview-6f19afc5--80e0e3ce-362a-4144-927b-8ab1a934dd23.lovable.app-1776718300742.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
