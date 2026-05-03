@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getUserOrgId } from "./_helpers.server";
-import { createVercelProject, listDeployments, triggerDeployment } from "./sites.server";
+import { createVercelProject, listDeployments, triggerDeployment, type VercelDeployment } from "./sites.server";
 
 export const listSites = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -79,7 +79,7 @@ export const listSiteDeployments = createServerFn({ method: "GET" })
       .select("*")
       .eq("site_id", data.siteId)
       .order("created_at", { ascending: false });
-    let live: Array<Record<string, unknown>> = [];
+    let live: VercelDeployment[] = [];
     if (site?.vercel_project_id) {
       try {
         live = await listDeployments(site.vercel_project_id);
