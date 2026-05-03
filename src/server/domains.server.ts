@@ -60,9 +60,12 @@ export async function searchDomain(query: string, tlds: string[]): Promise<Domai
   }
 }
 
-export async function whois(domain: string) {
+export async function whois(domain: string): Promise<{ domain: string; registrar: string; status: string }> {
   try {
-    return await ph<Record<string, unknown>>(`/domains/whois?domain=${encodeURIComponent(domain)}`);
+    const r = await ph<{ domain?: string; registrar?: string; status?: string }>(
+      `/domains/whois?domain=${encodeURIComponent(domain)}`,
+    );
+    return { domain: r.domain ?? domain, registrar: r.registrar ?? "PlanetHoster", status: r.status ?? "active" };
   } catch {
     return { domain, registrar: "PlanetHoster", status: "active" };
   }

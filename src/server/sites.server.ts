@@ -35,6 +35,15 @@ async function vc<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
 }
 
+export type VercelDeployment = {
+  uid?: string;
+  name?: string;
+  url?: string;
+  state?: string;
+  createdAt?: number;
+  meta?: Record<string, string>;
+};
+
 export async function listVercelProjects() {
   const data = await vc<{ projects: Array<{ id: string; name: string; framework?: string }> }>(
     "/v10/projects?limit=50",
@@ -55,15 +64,15 @@ export async function createVercelProject(name: string, framework?: string, gitR
   });
 }
 
-export async function listDeployments(projectId: string) {
-  const data = await vc<{ deployments: Array<Record<string, unknown>> }>(
+export async function listDeployments(projectId: string): Promise<VercelDeployment[]> {
+  const data = await vc<{ deployments: VercelDeployment[] }>(
     `/v6/deployments?projectId=${projectId}&limit=20`,
   );
   return data.deployments ?? [];
 }
 
-export async function triggerDeployment(projectId: string, name: string) {
-  return vc("/v13/deployments", {
+export async function triggerDeployment(projectId: string, name: string): Promise<{ id?: string; url?: string }> {
+  return vc<{ id?: string; url?: string }>("/v13/deployments", {
     method: "POST",
     body: JSON.stringify({ name, project: projectId, target: "production" }),
   });
