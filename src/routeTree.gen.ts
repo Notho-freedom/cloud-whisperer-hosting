@@ -61,6 +61,8 @@ import { Route as AppAppDomainsIndexRouteImport } from './routes/_app.app.domain
 import { Route as AppAppBillingIndexRouteImport } from './routes/_app.app.billing.index'
 import { Route as AdminAdminUsersIndexRouteImport } from './routes/_admin.admin.users.index'
 import { Route as AdminAdminSupportIndexRouteImport } from './routes/_admin.admin.support.index'
+import { Route as ApiPublicWebhooksVercelRouteImport } from './routes/api/public/webhooks.vercel'
+import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks.stripe'
 import { Route as AppAppTeamInviteRouteImport } from './routes/_app.app.team.invite'
 import { Route as AppAppSupportNewRouteImport } from './routes/_app.app.support.new'
 import { Route as AppAppSupportTicketIdRouteImport } from './routes/_app.app.support.$ticketId'
@@ -350,6 +352,16 @@ const AdminAdminSupportIndexRoute = AdminAdminSupportIndexRouteImport.update({
   path: '/admin/support/',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicWebhooksVercelRoute = ApiPublicWebhooksVercelRouteImport.update({
+  id: '/api/public/webhooks/vercel',
+  path: '/api/public/webhooks/vercel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
+  id: '/api/public/webhooks/stripe',
+  path: '/api/public/webhooks/stripe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppAppTeamInviteRoute = AppAppTeamInviteRouteImport.update({
   id: '/app/team/invite',
   path: '/app/team/invite',
@@ -584,6 +596,8 @@ export interface FileRoutesByFullPath {
   '/app/support/$ticketId': typeof AppAppSupportTicketIdRoute
   '/app/support/new': typeof AppAppSupportNewRoute
   '/app/team/invite': typeof AppAppTeamInviteRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
+  '/api/public/webhooks/vercel': typeof ApiPublicWebhooksVercelRoute
   '/admin/support/': typeof AdminAdminSupportIndexRoute
   '/admin/users/': typeof AdminAdminUsersIndexRoute
   '/app/billing/': typeof AppAppBillingIndexRoute
@@ -664,6 +678,8 @@ export interface FileRoutesByTo {
   '/app/support/$ticketId': typeof AppAppSupportTicketIdRoute
   '/app/support/new': typeof AppAppSupportNewRoute
   '/app/team/invite': typeof AppAppTeamInviteRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
+  '/api/public/webhooks/vercel': typeof ApiPublicWebhooksVercelRoute
   '/admin/support': typeof AdminAdminSupportIndexRoute
   '/admin/users': typeof AdminAdminUsersIndexRoute
   '/app/billing': typeof AppAppBillingIndexRoute
@@ -751,6 +767,8 @@ export interface FileRoutesById {
   '/_app/app/support/$ticketId': typeof AppAppSupportTicketIdRoute
   '/_app/app/support/new': typeof AppAppSupportNewRoute
   '/_app/app/team/invite': typeof AppAppTeamInviteRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
+  '/api/public/webhooks/vercel': typeof ApiPublicWebhooksVercelRoute
   '/_admin/admin/support/': typeof AdminAdminSupportIndexRoute
   '/_admin/admin/users/': typeof AdminAdminUsersIndexRoute
   '/_app/app/billing/': typeof AppAppBillingIndexRoute
@@ -835,6 +853,8 @@ export interface FileRouteTypes {
     | '/app/support/$ticketId'
     | '/app/support/new'
     | '/app/team/invite'
+    | '/api/public/webhooks/stripe'
+    | '/api/public/webhooks/vercel'
     | '/admin/support/'
     | '/admin/users/'
     | '/app/billing/'
@@ -915,6 +935,8 @@ export interface FileRouteTypes {
     | '/app/support/$ticketId'
     | '/app/support/new'
     | '/app/team/invite'
+    | '/api/public/webhooks/stripe'
+    | '/api/public/webhooks/vercel'
     | '/admin/support'
     | '/admin/users'
     | '/app/billing'
@@ -1001,6 +1023,8 @@ export interface FileRouteTypes {
     | '/_app/app/support/$ticketId'
     | '/_app/app/support/new'
     | '/_app/app/team/invite'
+    | '/api/public/webhooks/stripe'
+    | '/api/public/webhooks/vercel'
     | '/_admin/admin/support/'
     | '/_admin/admin/users/'
     | '/_app/app/billing/'
@@ -1026,6 +1050,8 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   MarketingRoute: typeof MarketingRouteWithChildren
+  ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
+  ApiPublicWebhooksVercelRoute: typeof ApiPublicWebhooksVercelRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1393,6 +1419,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/support/'
       preLoaderRoute: typeof AdminAdminSupportIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/api/public/webhooks/vercel': {
+      id: '/api/public/webhooks/vercel'
+      path: '/api/public/webhooks/vercel'
+      fullPath: '/api/public/webhooks/vercel'
+      preLoaderRoute: typeof ApiPublicWebhooksVercelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks/stripe': {
+      id: '/api/public/webhooks/stripe'
+      path: '/api/public/webhooks/stripe'
+      fullPath: '/api/public/webhooks/stripe'
+      preLoaderRoute: typeof ApiPublicWebhooksStripeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/app/team/invite': {
       id: '/_app/app/team/invite'
@@ -1903,16 +1943,9 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   MarketingRoute: MarketingRouteWithChildren,
+  ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
+  ApiPublicWebhooksVercelRoute: ApiPublicWebhooksVercelRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
