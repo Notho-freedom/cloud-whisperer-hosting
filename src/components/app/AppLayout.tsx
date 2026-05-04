@@ -120,8 +120,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 function AppHeader({ onOpenMobile }: { onOpenMobile: () => void }) {
   const auth = useAuth();
   const navigate = useNavigate();
-  const { data: notifs } = useQuery({ queryKey: ["notifications"], queryFn: () => listNotifications() });
-  const list = notifs ?? [];
+  const { data: notifs, isLoading } = useQuery({ 
+    queryKey: ["notifications"], 
+    queryFn: () => listNotifications(),
+    retry: 1,
+  });
+  const list = Array.isArray(notifs) ? notifs : [];
   const unread = list.filter((n) => !n.read).length;
 
   return (

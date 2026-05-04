@@ -28,7 +28,15 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
       throw new Response('Unauthorized: No request headers available', { status: 401 });
     }
 
-    const authHeader = request.headers.get('authorization');
+    let authHeader = request.headers.get('authorization');
+
+    // If no Authorization header, try to get token from cookie or x-auth-token header
+    if (!authHeader) {
+      const xAuthToken = request.headers.get('x-auth-token');
+      if (xAuthToken) {
+        authHeader = `Bearer ${xAuthToken}`;
+      }
+    }
 
     if (!authHeader) {
       throw new Response('Unauthorized: No authorization header provided', { status: 401 });
