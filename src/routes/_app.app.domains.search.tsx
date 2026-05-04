@@ -7,7 +7,7 @@ import { PageHeader, PageContent } from "@/components/app/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { searchDomains, registerDomain } from "@/server/domains.functions";
+import { searchDomains, registerDomain } from "@/server/domains.server";
 
 export const Route = createFileRoute("/_app/app/domains/search")({
   head: () => ({ meta: [{ title: "Acheter un domaine | Hostiq" }] }),

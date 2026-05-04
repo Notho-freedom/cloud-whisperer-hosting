@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Trash2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { getMailbox, createAlias, deleteAlias, createForward, deleteForward } from "@/server/email.functions";
+import { getMailbox, createAlias, deleteAlias, createForward, deleteForward } from "@/server/email.server";
 
 export const Route = createFileRoute("/_app/app/email/$mailboxId")({
   head: () => ({ meta: [{ title: "Boîte mail | Hostiq" }] }),

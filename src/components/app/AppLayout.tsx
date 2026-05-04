@@ -17,7 +17,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { listNotifications } from "@/server/notifications.functions";
+import { listNotifications } from "@/server/notifications.server";
 
 const NAV_GROUPS: Array<{
   label: string;

@@ -4,9 +4,9 @@ import { PageContent } from "@/components/app/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { getBillingOverview } from "@/server/billing.functions";
+import { getBillingOverview } from "@/server/billing.server";
 import { listSites } from "@/server/sites.server";
-import { listMailboxes } from "@/server/email.functions";
+import { listMailboxes } from "@/server/email.server";
 
 export const Route = createFileRoute("/_app/app/billing/")({ component: BillingOverview });
 

@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Building2, Trash2 } from "lucide-react";
-import { listPaymentMethods, removePaymentMethod, setDefaultPaymentMethod } from "@/server/billing.functions";
+import { listPaymentMethods, removePaymentMethod, setDefaultPaymentMethod } from "@/server/billing.server";
 
 export const Route = createFileRoute("/_app/app/billing/payment-methods")({ component: PaymentMethodsPage });
 

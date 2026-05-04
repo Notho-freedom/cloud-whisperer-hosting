@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/StatusBadge";
-import { getTicket, replyTicket } from "@/server/support.functions";
+import { getTicket, replyTicket } from "@/server/support.server";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/app/support/$ticketId")({ component: TicketDetail });

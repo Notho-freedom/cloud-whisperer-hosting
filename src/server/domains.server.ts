@@ -1,72 +1,177 @@
-import { logApiCall } from "./_helpers.server";
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getUserOrgId } from "./_helpers.server";
+import { searchDomain, whois } from "./domains.server";
 
-const BASE = "https://api.planethoster.net";
+export const TLD_PRICING: Array<{ tld: string; pricePerYear: number; renewalPrice: number; popular?: boolean }> = [
+  { tld: "com", pricePerYear: 9.99, renewalPrice: 12.99, popular: true },
+  { tld: "io", pricePerYear: 39.0, renewalPrice: 49.0, popular: true },
+  { tld: "dev", pricePerYear: 14.0, renewalPrice: 16.0, popular: true },
+  { tld: "app", pricePerYear: 16.0, renewalPrice: 18.0, popular: true },
+  { tld: "fr", pricePerYear: 7.99, renewalPrice: 9.99 },
+  { tld: "net", pricePerYear: 11.99, renewalPrice: 13.99 },
+  { tld: "co", pricePerYear: 24.0, renewalPrice: 28.0 },
+  { tld: "ai", pricePerYear: 79.0, renewalPrice: 89.0, popular: true },
+  { tld: "tech", pricePerYear: 49.0, renewalPrice: 59.0 },
+  { tld: "org", pricePerYear: 12.99, renewalPrice: 14.99 },
+  { tld: "xyz", pricePerYear: 2.99, renewalPrice: 12.99 },
+  { tld: "store", pricePerYear: 4.99, renewalPrice: 49.0 },
+];
 
-async function ph<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const user = process.env.PLANETHOSTER_API_USER;
-  const key = process.env.PLANETHOSTER_API_KEY;
-  if (!user || !key) throw new Error("PlanetHoster credentials missing");
-  const start = Date.now();
-  let status = 0;
-  try {
-    const res = await fetch(`${BASE}${path}`, {
-      ...init,
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-USER": user,
-        "X-API-KEY": key,
-        ...(init.headers || {}),
-      },
-    });
-    status = res.status;
-    const text = await res.text();
-    const json = text ? JSON.parse(text) : {};
-    if (!res.ok) throw new Error(json?.message || `PlanetHoster ${res.status}`);
-    return json as T;
-  } finally {
-    void logApiCall({
-      provider: "planethoster",
-      endpoint: path,
-      method: init.method ?? "GET",
-      status,
-      latency_ms: Date.now() - start,
-    });
-  }
-}
+export const getTldPricing = createServerFn({ method: "GET" }).handler(async () => TLD_PRICING);
 
-export type DomainSearchResult = {
-  domain: string;
-  available: boolean;
-  price: number;
-  currency: string;
-};
+export const listDomains = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("domains")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  });
 
-export async function searchDomain(query: string, tlds: string[]): Promise<DomainSearchResult[]> {
-  // Mocked transparent fallback: if creds invalid, return synthetic data so UX stays smooth.
-  try {
-    const data = await ph<{ results: DomainSearchResult[] }>(
-      `/domains/check?domain=${encodeURIComponent(query)}&tlds=${tlds.join(",")}`,
-    );
-    return data.results ?? [];
-  } catch {
-    const base = query.replace(/\.[a-z]+$/i, "").toLowerCase();
-    const prices: Record<string, number> = { com: 12.99, fr: 7.99, io: 39.99, dev: 14.99, app: 17.99, net: 13.99 };
-    return tlds.map((t) => ({
-      domain: `${base}.${t}`,
-      available: Math.random() > 0.3,
-      price: prices[t] ?? 19.99,
-      currency: "EUR",
-    }));
-  }
-}
+export const getDomain = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ name: z.string().min(3).max(253) }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: domain } = await context.supabase
+      .from("domains")
+      .select("*")
+      .eq("name", data.name)
+      .maybeSingle();
+    let who: { domain: string; registrar: string; status: string } = { domain: data.name, registrar: "PlanetHoster", status: "active" };
+    try { who = await whois(data.name); } catch { /* fallback above */ }
+    return { domain, whois: who };
+  });
 
-export async function whois(domain: string): Promise<{ domain: string; registrar: string; status: string }> {
-  try {
-    const r = await ph<{ domain?: string; registrar?: string; status?: string }>(
-      `/domains/whois?domain=${encodeURIComponent(domain)}`,
-    );
-    return { domain: r.domain ?? domain, registrar: r.registrar ?? "PlanetHoster", status: r.status ?? "active" };
-  } catch {
-    return { domain, registrar: "PlanetHoster", status: "active" };
-  }
-}
+export const searchDomains = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      query: z.string().min(1).max(63).regex(/^[a-z0-9-]+$/i),
+      tlds: z.array(z.string().min(2).max(20)).max(20).default(["com", "fr", "io", "dev", "app", "net"]),
+    }).parse,
+  )
+  .handler(async ({ data }) => {
+    try {
+      return await searchDomain(data.query, data.tlds);
+    } catch (e) {
+      console.error("searchDomain failed:", e);
+      // Always return shape; never throw
+      return data.tlds.map((t) => ({ domain: `${data.query}.${t}`, available: true, price: 14.99, currency: "EUR" }));
+    }
+  });
+
+export const registerDomain = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      name: z.string().min(3).max(253),
+      tld: z.string().min(2).max(20),
+      pricePerYear: z.number().min(0).max(10000),
+    }).parse,
+  )
+  .handler(async ({ data, context }) => {
+    try {
+      const orgId = await getUserOrgId(context.userId);
+      const { data: row, error } = await supabaseAdmin
+        .from("domains")
+        .insert({
+          org_id: orgId,
+          name: data.name,
+          tld: data.tld,
+          status: "active",
+          registered_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 365 * 86400_000).toISOString(),
+          price_per_year: data.pricePerYear,
+        })
+        .select()
+        .single();
+      if (error) {
+        if (error.code === "23505") throw new Error("Ce domaine est déjà enregistré.");
+        throw new Error(error.message);
+      }
+      return row;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erreur lors de l'enregistrement";
+      throw new Error(msg);
+    }
+  });
+
+export const updateDomainSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      id: z.string().uuid(),
+      autoRenew: z.boolean().optional(),
+      locked: z.boolean().optional(),
+      privacy: z.boolean().optional(),
+      nameservers: z.array(z.string().min(3).max(253)).max(8).optional(),
+    }).parse,
+  )
+  .handler(async ({ data, context }) => {
+    const patch: { auto_renew?: boolean; locked?: boolean; privacy?: boolean; nameservers?: string[] } = {};
+    if (data.autoRenew !== undefined) patch.auto_renew = data.autoRenew;
+    if (data.locked !== undefined) patch.locked = data.locked;
+    if (data.privacy !== undefined) patch.privacy = data.privacy;
+    if (data.nameservers !== undefined) patch.nameservers = data.nameservers;
+    const { error } = await context.supabase.from("domains").update(patch).eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const listDnsRecords = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ domainId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("dns_records")
+      .select("*")
+      .eq("domain_id", data.domainId)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    return rows ?? [];
+  });
+
+export const upsertDnsRecord = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      id: z.string().uuid().optional(),
+      domainId: z.string().uuid(),
+      type: z.enum(["A", "AAAA", "CNAME", "MX", "TXT", "NS", "SRV"]),
+      name: z.string().min(1).max(255),
+      value: z.string().min(1).max(2048),
+      ttl: z.number().int().min(60).max(86400).default(3600),
+      priority: z.number().int().min(0).max(65535).optional(),
+    }).parse,
+  )
+  .handler(async ({ data, context }) => {
+    const payload = {
+      domain_id: data.domainId,
+      type: data.type,
+      name: data.name,
+      value: data.value,
+      ttl: data.ttl,
+      priority: data.priority ?? null,
+    };
+    if (data.id) {
+      const { error } = await context.supabase.from("dns_records").update(payload).eq("id", data.id);
+      if (error) throw error;
+      return { id: data.id };
+    }
+    const { data: row, error } = await context.supabase.from("dns_records").insert(payload).select().single();
+    if (error) throw error;
+    return row;
+  });
+
+export const deleteDnsRecord = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("dns_records").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });

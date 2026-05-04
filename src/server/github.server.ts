@@ -1,51 +1,67 @@
-import { logApiCall } from "./_helpers.server";
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { randomBytes } from "crypto";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { gh, type GhRepo } from "./github.server";
 
-const BASE = "https://api.github.com";
+const REDIRECT_URI = "https://hostinq.lovable.app/api/public/github/callback";
 
-export async function gh<T>(path: string, token: string, init: RequestInit = {}): Promise<T> {
-  const start = Date.now();
-  let status = 0;
-  try {
-    const res = await fetch(`${BASE}${path}`, {
-      ...init,
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${token}`,
-        "User-Agent": "Hostiq",
-        ...(init.headers || {}),
-      },
-    });
-    status = res.status;
-    const text = await res.text();
-    const json = text ? JSON.parse(text) : {};
-    if (!res.ok) throw new Error(json?.message || `GitHub ${res.status}`);
-    return json as T;
-  } finally {
-    void logApiCall({ provider: "github", endpoint: path, method: init.method ?? "GET", status, latency_ms: Date.now() - start });
-  }
-}
-
-export type GhRepo = {
-  id: number;
-  name: string;
-  full_name: string;
-  private: boolean;
-  default_branch: string;
-  html_url: string;
-  description: string | null;
-  updated_at: string;
-};
-
-export async function exchangeCodeForToken(code: string): Promise<{ access_token: string; scope: string }> {
-  const id = process.env.GITHUB_CLIENT_ID;
-  const secret = process.env.GITHUB_CLIENT_SECRET;
-  if (!id || !secret) throw new Error("GitHub OAuth credentials missing");
-  const res = await fetch("https://github.com/login/oauth/access_token", {
-    method: "POST",
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
-    body: JSON.stringify({ client_id: id, client_secret: secret, code }),
+export const startGithubOAuth = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const clientId = process.env.GITHUB_CLIENT_ID;
+    if (!clientId) throw new Error("GITHUB_CLIENT_ID not configured");
+    const state = `${context.userId}.${randomBytes(16).toString("hex")}`;
+    const url = new URL("https://github.com/login/oauth/authorize");
+    url.searchParams.set("client_id", clientId);
+    url.searchParams.set("redirect_uri", REDIRECT_URI);
+    url.searchParams.set("scope", "repo read:user");
+    url.searchParams.set("state", state);
+    return { url: url.toString() };
   });
-  const json = await res.json();
-  if (!json.access_token) throw new Error(json?.error_description || "OAuth exchange failed");
-  return json;
-}
+
+export const getGithubConnection = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await supabaseAdmin
+      .from("github_connections")
+      .select("id, username, avatar_url, scopes, created_at")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    return data;
+  });
+
+export const listGithubRepos = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: conn } = await supabaseAdmin
+      .from("github_connections")
+      .select("access_token")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!conn) return [];
+    try {
+      const repos = await gh<GhRepo[]>("/user/repos?per_page=100&sort=updated", conn.access_token);
+      return repos.map((r) => ({
+        id: r.id,
+        name: r.name,
+        fullName: r.full_name,
+        private: r.private,
+        defaultBranch: r.default_branch,
+        url: r.html_url,
+        description: r.description,
+        updatedAt: r.updated_at,
+      }));
+    } catch (e) {
+      console.error("GitHub list repos failed", e);
+      return [];
+    }
+  });
+
+export const disconnectGithub = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await supabaseAdmin.from("github_connections").delete().eq("user_id", context.userId);
+    return { ok: true };
+  });

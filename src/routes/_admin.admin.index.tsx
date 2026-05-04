@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AdminPageHeader, AdminPageContent } from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Globe2, Server, LifeBuoy, Mail, Building2, Loader2 } from "lucide-react";
-import { adminKpis } from "@/server/admin.functions";
+import { adminKpis } from "@/server/admin.server";
 
 export const Route = createFileRoute("/_admin/admin/")({
   head: () => ({ meta: [{ title: "Admin · Hostiq" }] }),

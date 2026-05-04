@@ -4,7 +4,7 @@ import { PageHeader, PageContent } from "@/components/app/AppLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bell, AlertTriangle, CheckCircle2, CreditCard, Globe2 } from "lucide-react";
-import { listNotifications, markAllRead, markNotificationRead } from "@/server/notifications.functions";
+import { listNotifications, markAllRead, markNotificationRead } from "@/server/notifications.server";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
