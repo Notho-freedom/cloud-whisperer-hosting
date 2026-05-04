@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { listMailboxes } from "@/server/email.server";
+import { listMailboxes } from "@/api/email-api.server";
 
 const PROVIDER_LABEL: Record<string, string> = { google: "Google Workspace", microsoft: "Microsoft 365", zoho: "Zoho Mail" };
 

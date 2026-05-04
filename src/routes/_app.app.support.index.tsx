@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/StatusBadge";
-import { listTickets } from "@/server/support.server";
+import { listTickets } from "@/api/support-api.server";
 
 export const Route = createFileRoute("/_app/app/support/")({
   head: () => ({ meta: [{ title: "Support | Hostiq" }] }),

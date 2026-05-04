@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
-import { listEnvVars, upsertEnvVar, deleteEnvVar } from "@/server/sites.server";
+import { listEnvVars, upsertEnvVar, deleteEnvVar } from "@/api/sites-api.server";
 
 export const Route = createFileRoute("/_app/app/sites/$projectId/env")({ component: EnvVars });
 

@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { listTeam } from "@/server/team.server";
+import { listTeam } from "@/api/team-api.server";
 
 export const Route = createFileRoute("/_app/app/team/")({
   component: TeamPage,

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Plus, Trash2 } from "lucide-react";
-import { getSite, addSiteDomain, removeSiteDomain } from "@/server/sites.server";
+import { getSite, addSiteDomain, removeSiteDomain } from "@/api/sites-api.server";
 
 export const Route = createFileRoute("/_app/app/sites/$projectId/domains")({ component: SiteDomains });
 

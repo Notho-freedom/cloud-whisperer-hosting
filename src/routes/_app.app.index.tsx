@@ -8,11 +8,11 @@ import { PageHeader, PageContent } from "@/components/app/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
-import { listDomains } from "@/server/domains.server";
-import { listSites } from "@/server/sites.server";
-import { listMailboxes } from "@/server/email.server";
-import { listNotifications } from "@/server/notifications.server";
-import { getBillingOverview } from "@/server/billing.server";
+import { listDomains } from "@/api/domains-api.server";
+import { listSites } from "@/api/sites-api.server";
+import { listMailboxes } from "@/api/email-api.server";
+import { listNotifications } from "@/api/notifications-api.server";
+import { getBillingOverview } from "@/api/billing-api.server";
 
 export const Route = createFileRoute("/_app/app/")({
   head: () => ({ meta: [{ title: "Dashboard | Hostiq" }] }),

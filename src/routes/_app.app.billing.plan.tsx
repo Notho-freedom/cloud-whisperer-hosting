@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Sparkles, Loader2 } from "lucide-react";
-import { listPlans, createCheckoutSession, getBillingOverview } from "@/server/billing.server";
+import { listPlans, createCheckoutSession, getBillingOverview } from "@/api/billing-api.server";
 
 export const Route = createFileRoute("/_app/app/billing/plan")({ component: PlanPicker });
 

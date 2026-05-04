@@ -5,7 +5,7 @@ import { PageHeader, PageContent } from "@/components/app/AppLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { listSites } from "@/server/sites.server";
+import { listSites } from "@/api/sites-api.server";
 
 export const Route = createFileRoute("/_app/app/sites/")({
   head: () => ({ meta: [{ title: "Sites | Hostiq" }] }),

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PageContent } from "@/components/app/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
-import { getSite, listSiteDeployments } from "@/server/sites.server";
+import { getSite, listSiteDeployments } from "@/api/sites-api.server";
 import { Rocket } from "lucide-react";
 
 export const Route = createFileRoute("/_app/app/sites/$projectId/")({ component: SiteOverview });
