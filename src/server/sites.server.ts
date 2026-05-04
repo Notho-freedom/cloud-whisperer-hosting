@@ -1,79 +1,240 @@
-import { logApiCall } from "./_helpers.server";
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getUserOrgId } from "./_helpers.server";
+import {
+  createVercelProject,
+  listDeployments,
+  triggerDeployment,
+  type VercelDeployment,
+} from "./sites.server";
+import { gh } from "./github.server";
 
-const BASE = "https://api.vercel.com";
-
-async function vc<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const token = process.env.VERCEL_TOKEN;
-  const team = process.env.VERCEL_TEAM_ID;
-  if (!token) throw new Error("VERCEL_TOKEN missing");
-  const sep = path.includes("?") ? "&" : "?";
-  const url = `${BASE}${path}${team ? `${sep}teamId=${team}` : ""}`;
-  const start = Date.now();
-  let status = 0;
-  try {
-    const res = await fetch(url, {
-      ...init,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        ...(init.headers || {}),
-      },
-    });
-    status = res.status;
-    const text = await res.text();
-    const json = text ? JSON.parse(text) : {};
-    if (!res.ok) throw new Error(json?.error?.message || `Vercel ${res.status}`);
-    return json as T;
-  } finally {
-    void logApiCall({
-      provider: "vercel",
-      endpoint: path.split("?")[0],
-      method: init.method ?? "GET",
-      status,
-      latency_ms: Date.now() - start,
-    });
-  }
-}
-
-export type VercelDeployment = {
-  uid?: string;
-  name?: string;
-  url?: string;
-  state?: string;
-  createdAt?: number;
-  meta?: Record<string, string>;
-};
-
-export async function listVercelProjects() {
-  const data = await vc<{ projects: Array<{ id: string; name: string; framework?: string }> }>(
-    "/v10/projects?limit=50",
-  );
-  return data.projects ?? [];
-}
-
-export async function createVercelProject(name: string, framework?: string, gitRepo?: string) {
-  const body: Record<string, unknown> = { name };
-  if (framework) body.framework = framework;
-  if (gitRepo) {
-    const [, repo] = gitRepo.split("github.com/");
-    if (repo) body.gitRepository = { type: "github", repo: repo.replace(/\.git$/, "") };
-  }
-  return vc<{ id: string; name: string }>("/v11/projects", {
-    method: "POST",
-    body: JSON.stringify(body),
+export const listSites = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("sites")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
   });
-}
 
-export async function listDeployments(projectId: string): Promise<VercelDeployment[]> {
-  const data = await vc<{ deployments: VercelDeployment[] }>(
-    `/v6/deployments?projectId=${projectId}&limit=20`,
-  );
-  return data.deployments ?? [];
-}
-
-export async function triggerDeployment(projectId: string, name: string): Promise<{ id?: string; url?: string }> {
-  return vc<{ id?: string; url?: string }>("/v13/deployments", {
-    method: "POST",
-    body: JSON.stringify({ name, project: projectId, target: "production" }),
+export const getSite = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: site, error } = await context.supabase
+      .from("sites").select("*").eq("id", data.id).maybeSingle();
+    if (error) throw error;
+    return site;
   });
-}
+
+export const createSite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      name: z.string().min(1).max(60).regex(/^[a-z0-9-]+$/),
+      framework: z.string().max(40).default("nextjs"),
+      gitRepo: z.string().url().optional(),
+      githubRepoFullName: z.string().max(200).optional(),
+    }).parse,
+  )
+  .handler(async ({ data, context }) => {
+    try {
+      const orgId = await getUserOrgId(context.userId);
+      let vercelId: string | null = null;
+      let prodUrl: string | null = null;
+      let gitRepoUrl = data.gitRepo ?? (data.githubRepoFullName ? `https://github.com/${data.githubRepoFullName}` : undefined);
+      try {
+        const project = await createVercelProject(data.name, data.framework, gitRepoUrl);
+        vercelId = project.id;
+        prodUrl = `https://${data.name}.vercel.app`;
+      } catch (e) {
+        console.error("Vercel project creation failed:", e);
+      }
+      const { data: site, error } = await supabaseAdmin
+        .from("sites")
+        .insert({
+          org_id: orgId,
+          name: data.name,
+          framework: data.framework,
+          git_repo: gitRepoUrl ?? null,
+          vercel_project_id: vercelId,
+          prod_url: prodUrl,
+        })
+        .select()
+        .single();
+      if (error) throw new Error(error.message);
+      // trigger first deployment if linked
+      if (vercelId) {
+        try {
+          const dep = await triggerDeployment(vercelId, data.name);
+          if (dep?.id) {
+            await supabaseAdmin.from("deployments").insert({
+              site_id: site.id,
+              vercel_deployment_id: dep.id,
+              url: dep.url ? `https://${dep.url}` : null,
+              status: "queued",
+              target: "production",
+              author: "system",
+            });
+          }
+        } catch (e) { console.error("Initial deploy failed", e); }
+      }
+      return site;
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : "Erreur de création");
+    }
+  });
+
+export const updateSite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({
+    id: z.string().uuid(),
+    framework: z.string().max(40).optional(),
+    region: z.string().max(20).optional(),
+    git_branch: z.string().max(100).optional(),
+  }).parse)
+  .handler(async ({ data, context }) => {
+    const { id, ...patch } = data;
+    const { error } = await context.supabase.from("sites").update(patch).eq("id", id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const deleteSite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("sites").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const listSiteDeployments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ siteId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: site } = await context.supabase
+      .from("sites").select("vercel_project_id").eq("id", data.siteId).maybeSingle();
+    const { data: db } = await context.supabase
+      .from("deployments").select("*").eq("site_id", data.siteId).order("created_at", { ascending: false });
+    let live: VercelDeployment[] = [];
+    if (site?.vercel_project_id) {
+      try { live = await listDeployments(site.vercel_project_id); } catch (e) { console.error(e); }
+    }
+    return { db: db ?? [], live };
+  });
+
+export const getDeployment = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: dep } = await context.supabase.from("deployments").select("*").eq("id", data.id).maybeSingle();
+    return dep;
+  });
+
+export const redeploySite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ siteId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: site } = await context.supabase
+      .from("sites").select("name, vercel_project_id").eq("id", data.siteId).maybeSingle();
+    if (!site?.vercel_project_id) throw new Error("Aucun projet Vercel lié");
+    const dep = await triggerDeployment(site.vercel_project_id, site.name);
+    if (dep?.id) {
+      await supabaseAdmin.from("deployments").insert({
+        site_id: data.siteId,
+        vercel_deployment_id: dep.id,
+        url: dep.url ? `https://${dep.url}` : null,
+        status: "queued",
+        target: "production",
+        author: "manual",
+      });
+    }
+    return dep;
+  });
+
+// Env vars
+export const listEnvVars = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ siteId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("env_vars").select("*").eq("site_id", data.siteId).order("key");
+    if (error) throw error;
+    return rows ?? [];
+  });
+
+export const upsertEnvVar = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({
+    id: z.string().uuid().optional(),
+    siteId: z.string().uuid(),
+    key: z.string().min(1).max(120).regex(/^[A-Z0-9_]+$/),
+    value: z.string().max(8000),
+    target: z.array(z.enum(["production", "preview", "development"])).default(["production"]),
+    type: z.enum(["plain", "secret"]).default("plain"),
+  }).parse)
+  .handler(async ({ data, context }) => {
+    const payload = { site_id: data.siteId, key: data.key, value: data.value, target: data.target, type: data.type, updated_at: new Date().toISOString() };
+    if (data.id) {
+      const { error } = await context.supabase.from("env_vars").update(payload).eq("id", data.id);
+      if (error) throw error;
+      return { id: data.id };
+    }
+    const { data: row, error } = await context.supabase.from("env_vars").insert(payload).select().single();
+    if (error) throw error;
+    return row;
+  });
+
+export const deleteEnvVar = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("env_vars").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+// Site domains
+export const addSiteDomain = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ siteId: z.string().uuid(), domain: z.string().min(3).max(253) }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: site } = await context.supabase.from("sites").select("domains").eq("id", data.siteId).maybeSingle();
+    const next = Array.from(new Set([...(site?.domains ?? []), data.domain]));
+    const { error } = await context.supabase.from("sites").update({ domains: next }).eq("id", data.siteId);
+    if (error) throw error;
+    return { domains: next };
+  });
+
+export const removeSiteDomain = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ siteId: z.string().uuid(), domain: z.string() }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: site } = await context.supabase.from("sites").select("domains").eq("id", data.siteId).maybeSingle();
+    const next = (site?.domains ?? []).filter((d: string) => d !== data.domain);
+    const { error } = await context.supabase.from("sites").update({ domains: next }).eq("id", data.siteId);
+    if (error) throw error;
+    return { domains: next };
+  });
+
+// Deploy from a GitHub repo
+export const deployFromGithub = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({
+    name: z.string().min(1).max(60).regex(/^[a-z0-9-]+$/),
+    fullName: z.string().min(3).max(200),
+    framework: z.string().max(40).default("nextjs"),
+  }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: conn } = await supabaseAdmin
+      .from("github_connections").select("access_token, username").eq("user_id", context.userId).maybeSingle();
+    if (!conn) throw new Error("Connectez d'abord votre compte GitHub");
+    try { await gh(`/repos/${data.fullName}`, conn.access_token); } catch { throw new Error("Repo introuvable ou inaccessible"); }
+    return { ok: true, name: data.name, fullName: data.fullName };
+  });
