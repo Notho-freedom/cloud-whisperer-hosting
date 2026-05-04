@@ -1,158 +1,90 @@
-# Bascule Hostiq vers un vrai backend
 
-Aujourd'hui, l'app est 100% UI + mocks (`src/lib/mocks.ts`) et l'auth est en `localStorage`. On passe à une architecture serveur réelle, sans casser l'UI existante.
+# Plan final — Câblage complet UI ↔ Backend
 
-## Stack cible
+Objectif: éliminer **toutes** les références à `src/lib/mocks.ts`, brancher chaque interface au backend réel (Supabase + PlanetHoster + Vercel + Stripe + Resend), ajouter le flux **GitHub** (OAuth + déploiement de repo), corriger le bug d'achat de domaine, puis tester chaque endpoint et garantir un build vert.
 
-- **Lovable Cloud** (Supabase managé) → base de données, auth, RLS, storage
-- **TanStack Start `createServerFn**` → toute la logique serveur (jamais d'appels API tiers depuis le client)
-- **APIs externes branchées via server functions** :
-  - PlanetHoster API → recherche / achat / DNS / WHOIS de domaines
-  - Vercel API → projets, déploiements, domaines, env vars, logs, analytics
-  - Stripe → plans, abonnements, factures, moyens de paiement
-  - Resend → emails transactionnels
-  - Google Workspace / Microsoft 365 / Zoho → mailboxes (Phase 6)
-- **Secrets** : stockés via Lovable Secrets, lus uniquement dans `.handler()` côté serveur
+## 1. Server functions manquantes
 
-## Architecture serveur
+Créer / compléter dans `src/server/`:
 
-```text
-src/
-├── server/
-│   ├── auth.server.ts            # helpers session Supabase
-│   ├── auth.functions.ts         # signup/login/logout/2fa
-│   ├── domains.server.ts         # client PlanetHoster
-│   ├── domains.functions.ts      # search, register, dns, whois, transfer
-│   ├── sites.server.ts           # client Vercel
-│   ├── sites.functions.ts        # projects, deployments, env, domains
-│   ├── email.server.ts           # adapters multi-providers
-│   ├── email.functions.ts        # mailboxes, aliases, forwards
-│   ├── billing.server.ts         # client Stripe
-│   ├── billing.functions.ts      # plan, invoices, payment methods, usage
-│   ├── support.functions.ts      # tickets (DB)
-│   ├── team.functions.ts         # membres + invites (Resend)
-│   ├── apikeys.functions.ts      # gen/revoke clés API Hostiq
-│   ├── notifications.functions.ts
-│   └── admin.functions.ts        # KPIs, users, audit, providers status
-└── routes/api/public/
-    ├── webhooks.stripe.ts        # signature vérifiée
-    ├── webhooks.vercel.ts        # deploy events
-    └── webhooks.planethoster.ts  # domain events
-```
+- **`domains.functions.ts`** — ajouter: `updateDomainSettings` (autoRenew, locked, privacy, nameservers), `transferDomain`, `getTldPricing` (table TLDS persistée en DB ou statique côté serveur).
+- **`sites.functions.ts`** — ajouter: `getSiteEnvVars` / `upsertEnvVar` / `deleteEnvVar` (table `env_vars`), `getDeployment` (détail), `addSiteDomain` / `removeSiteDomain` (lien domaine ↔ site Vercel), `updateSiteSettings`, `deleteSite`.
+- **`email.functions.ts`** — implémenter CRUD complet: `listMailboxes`, `createMailbox`, `getMailbox`, `deleteMailbox`, `listAliases`, `createAlias`, `listForwards`, `createForward`, `listEmailProviders` (Google Workspace / IONOS / interne).
+- **`billing.functions.ts`** — ajouter: `listInvoices`, `getInvoice`, `listPaymentMethods`, `setDefaultPaymentMethod`, `removePaymentMethod`, `getCurrentPlan`, `changePlan` (Stripe Checkout), `getUsage` (table `usage_metrics`).
+- **`notifications.functions.ts`** — `listNotifications`, `markRead`, `markAllRead`.
+- **`support.functions.ts`** — ajouter: `getTicket` + messages, `replyToTicket`, `closeTicket`.
+- **`admin.functions.ts`** — étendre: `listAllUsers`, `getUser` (avec orgs/sites/domaines), `setUserRole`, `listAllSites`, `listAllDomains`, `listAllInvoices`, `listAuditLog`, `listApiLogs`, `listIncidents`, `createIncident`, `listAnnouncements`, `createAnnouncement`, `listBlogPosts`, `upsertBlogPost`, `listProviders` (santé API: PlanetHoster, Vercel, Stripe, Resend via ping), `listPlans` / `upsertPlan` (nouvelle table `plans`).
 
-Toutes les routes UI restent — on remplace juste l'import des mocks par un appel `useQuery(serverFn)` via TanStack Query (déjà installé).
+## 2. Intégration GitHub
 
-## Schéma base de données (Lovable Cloud)
+- Ajouter une **table `github_connections`** (`user_id`, `github_user_id`, `access_token` (chiffré via service_role uniquement), `username`, `avatar_url`).
+- Server route OAuth: `src/routes/api/public/github.callback.ts` — échange code → token, stocke en DB.
+- Server fns: `startGithubOAuth` (génère URL `https://github.com/login/oauth/authorize` avec state), `getGithubConnection`, `listGithubRepos` (proxy `GET /user/repos`), `disconnectGithub`.
+- Demander à l'utilisateur les secrets **`GITHUB_CLIENT_ID`** et **`GITHUB_CLIENT_SECRET`** (callback URL: `https://hostinq.lovable.app/api/public/github/callback`).
+- UI:
+  - `_app.app.settings.integrations.tsx` — bouton "Connecter GitHub" réel (au lieu du badge statique).
+  - `_app.app.sites.new.tsx` — onglet "Importer depuis GitHub" avec liste de repos sélectionnable; createSite passe `gitRepo` à Vercel.
 
-Tables principales (toutes avec RLS `user_id = auth.uid()` sauf admin) :
+## 3. Correction bug achat de domaine
 
-- `profiles` (id ↔ auth.users, name, avatar_url, locale, created_at)
-- `app_role` enum (`user`, `admin`, `support`) + `user_roles` table + fonction `has_role()` security definer (jamais sur profiles)
-- `organizations` + `organization_members` (rôles owner/admin/member/billing/viewer)
-- `domains` (org_id, name, planethoster_id, status, expires_at, autorenew, locked, privacy)
-- `dns_records` (domain_id, type, name, value, ttl, priority) — miroir cache
-- `sites` (org_id, vercel_project_id, name, framework, prod_url, git_repo, region)
-- `deployments` (site_id, vercel_deployment_id, status, sha, msg, target, url) — cache
-- `mailboxes` (org_id, address, domain, provider, plan, quota_gb, used_gb, provider_account_id)
-- `email_aliases`, `email_forwards`
-- `subscriptions` (org_id, stripe_customer_id, stripe_sub_id, plan_id, status, current_period_end)
-- `invoices` (org_id, stripe_invoice_id, number, amount, status, pdf_url)
-- `payment_methods` (org_id, stripe_pm_id, brand, last4, default)
-- `usage_metrics` (org_id, period, bandwidth_gb, build_minutes, …)
-- `tickets` + `ticket_messages` (org_id, status, priority, category)
-- `team_invites` (org_id, email, role, token, expires_at)
-- `api_keys` (org_id, name, hashed_key, prefix, scopes[], last_used_at)
-- `notifications` (user_id, type, title, body, read)
-- `audit_log` (actor_id, action, target, ip, ua, ts) — admin only
-- `api_call_logs` (provider, endpoint, status, latency_ms, user_id) — admin
-- `announcements`, `blog_posts`, `promo_codes`, `incidents`
+Le bug actuel vient probablement de:
+- `searchDomain` qui throw au lieu de fallback propre quand PH renvoie 401/404,
+- `registerDomain` qui ne gère pas le cas "no organization for user" si trigger handle_new_user n'a pas tourné pour comptes existants.
 
-Chaque table avec policies RLS strictes + triggers `updated_at`.
+Corrections:
+- Wrapper `searchDomain` en mode strict-fallback (jamais throw côté handler).
+- `getUserOrgId`: si aucune org, en créer une à la volée (idempotent).
+- Ajouter `try/catch` global dans `registerDomain` retournant message FR clair via `toast`.
+- Validation TLD côté serveur (`z.enum`) pour éviter inputs invalides.
 
-## Phases d'implémentation
+## 4. Câblage UI complet (suppression de `mocks.ts`)
 
-### Phase 1 — Cloud + Auth réelle
+Pour chaque fichier listé, remplacer `import … from "@/lib/mocks"` par `useQuery`/`useMutation` sur les server fns ci-dessus. Pages concernées:
 
-- Activer Lovable Cloud
-- Schéma : profiles, user_roles, has_role(), organizations, trigger handle_new_user
-- Remplacer `src/lib/auth.tsx` par un client Supabase réel (`onAuthStateChange` + `getSession`)
-- Pages `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/verify-email`, `/2fa` câblées sur Supabase Auth (email+password + Google)
-- Guard route `_app` et `_admin` (redirect si non connecté / pas admin via `has_role`)
+**App utilisateur**
+- `_app.app.index.tsx` — dashboard: KPIs réels (counts domaines/sites/mailboxes + dernier déploiement).
+- `_app.app.notifications.tsx` — liste + mark read.
+- `_app.app.domains.$domain.tsx` + `.dns.tsx` — détail domaine, paramètres, DNS CRUD.
+- `_app.app.sites.$projectId.tsx` (+ `.index/.deployments/.deployments.$id/.env/.domains/.settings/.analytics/.logs`) — détail site, env vars CRUD, déploiements live, domaines liés, redéploiement, suppression, analytics (Vercel `/v1/analytics`), logs (`/v2/deployments/{id}/events`).
+- `_app.app.email.index.tsx` + `.$mailboxId.tsx` + `.new.tsx` + `.providers.tsx` — gestion mailbox réelle (table `mailboxes` + alias/forwards).
+- `_app.app.billing.index/.invoices/.invoices.$id/.payment-methods/.plan/.usage.tsx` — toutes données depuis Stripe + DB.
+- `_app.app.support.$ticketId.tsx` — thread messages réel.
 
-### Phase 2 — Domaines (PlanetHoster)
+**Admin**
+- `_admin.admin.users.index.tsx` + `.$userId.tsx` + `.roles.tsx` — gestion utilisateurs.
+- `_admin.admin.sites/.domains/.billing/.support.index/.audit/.api-logs/.status/.providers/.plans/.blog/.email/.announcements.tsx` — chaque page lit depuis ses tables réelles.
 
-- Demander la clé API PlanetHoster (secret)
-- `domains.server.ts` : client typé (search, register, renew, transfer, getDns, setDns, whois, lock/unlock, privacy)
-- Server functions + cache DB
-- Brancher `/app/domains/*` (index, search, $domain, dns)
+## 5. Suppression de `src/lib/mocks.ts`
 
-### Phase 3 — Sites (Vercel)
+Une fois zéro import restant, supprimer le fichier. La build TS échouera tant qu'un import subsiste — c'est notre garde-fou.
 
-- Token Vercel + Team ID (secrets)
-- `sites.server.ts` : projects, deployments (poll/webhook), domains, env vars, logs, analytics
-- Webhook `/api/public/webhooks/vercel` (signature)
-- Brancher toutes les pages `/app/sites/*`
+## 6. Tests
 
-### Phase 4 — Billing (Stripe)
+Après implémentation, pour chaque server fn critique:
+1. `stack_modern--invoke-server-function` POST sur `/_serverFn/<id>` ou via UI réelle.
+2. `supabase--read_query` pour vérifier persistence (domains, sites, mailboxes, invoices).
+3. `stack_modern--server-function-logs` pour confirmer absence d'erreur.
+4. Test manuel dans le preview du flux: signup → recherche domaine → achat → ajout DNS → création site → déploiement → mailbox → ticket → facture.
 
-- Activer l'intégration Stripe Lovable (recommandée) → produits/prix par plan
-- Customer portal pour cartes/factures
-- Webhook `/api/public/webhooks/stripe` → maj `subscriptions`, `invoices`
-- Brancher `/app/billing/*` + gating limites par plan
-- Add-ons (mailboxes, bande passante) via metered billing
+## 7. Détails techniques
 
-### Phase 5 — Support, Team, API Keys, Notifications
+- **Quotas / pagination**: ajouter `.limit(100)` + tri sur toutes les listes.
+- **RLS**: déjà OK; pour `github_connections` créer policies `self read/write`.
+- **Webhooks**: vérifier que `webhooks.vercel.ts` met bien à jour `deployments.status` et `sites.last_deploy_at`; idem `webhooks.stripe.ts` pour `subscriptions` + `invoices` insert.
+- **Migrations à créer**:
+  1. table `github_connections`
+  2. table `plans` (id text, name, price_cents, features jsonb, stripe_price_id)
+  3. seed initial des plans (starter / pro / business)
 
-- Tickets : tables + realtime Supabase (channel par ticket)
-- Team : invites par email (Resend), accept-invite route
-- API keys Hostiq : génération `hq_live_xxx`, hash en DB, middleware vérif sur futurs endpoints publics
-- Notifications : insert serveur + subscribe realtime côté client
+## 8. Livraison
 
-### Phase 6 — Email multi-providers + Admin
+À la fin du tour:
+- 0 import de `@/lib/mocks` (fichier supprimé).
+- Build TanStack vert.
+- GitHub OAuth fonctionnel (en attente du secret user).
+- Tous les flux promis cliquables et persistés.
+- Récap des tests effectués + URLs/IDs créés.
 
-- Adapter pattern `EmailProvider` : Google Workspace Admin SDK / Microsoft Graph / Zoho Mail API
-- OAuth par-utilisateur stocké en DB chiffré (chaque org connecte SON compte provider)
-- UI multi-fournisseurs déjà prête → branchement via `email.server.ts`
-- Admin : KPIs réels (vues SQL), user management, audit log, api_call_logs, providers status (ping périodique cron via `/api/public/cron/health`), CMS blog/annonces sur tables existantes
+---
 
-## Sécurité (non négociable)
-
-- Rôles dans `user_roles` séparé, jamais sur profiles
-- `has_role()` SECURITY DEFINER pour éviter récursion RLS
-- Tous les secrets API serveur uniquement (`process.env` dans `.handler()`)
-- Webhooks : vérification signature HMAC obligatoire avant tout traitement
-- Validation Zod systématique sur `inputValidator`
-- Rate-limit sur endpoints publics (api keys + webhooks)
-- Audit log automatique sur actions sensibles (suspend user, delete site, transfer domain…)
-
-## Ce qui change pour l'UI
-
-- `src/lib/mocks.ts` reste comme **fallback dev** mais n'est plus importé en prod
-- Chaque page `useQuery({ queryKey, queryFn: () => serverFn() })`
-- Mutations via `useMutation` + `invalidateQueries`
-- Skeletons pendant le loading (déjà dans shadcn)
-
-## Secrets à demander au fil des phases
-
-
-| Phase | Secret                                                                                                                                                                                 |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2     | `PLANETHOSTER_API_KEY` (+ account ID) ***API User :*** 03752290defc9dcaddc3d8d49d12cd02***API Key :*** 9cc717f8bfd553c46425755dab02456a300a6cc34c60436f9a9391c72bf6c575               |
-| 3     | `VERCEL_TOKEN : vcp_6l4HjQ0Pkv0L6N6uN4FP0cEkIxXgLwuexYwgFVpLvvs5DMkMTJ09I3VI`, `VERCEL_TEAM_ID : team_JGG2UHn4dAimYHRpEkYljnKv`, `VERCEL_WEBHOOK_SECRET :` hostiq_vercel_secret_2026 |
-| 4     | Stripe via intégration Lovable (pas de clé manuelle)                                                                                                                                   |
-| 5     | `RESEND_API_KEY : re_aCxNUbE6_BbqWbX5eN5YK18cCwDFm8SgP`                                                                                                                                |
-| 6     | OAuth client IDs Google/Microsoft/Zoho (par-utilisateur, pas un secret unique)                                                                                                         |
-
-
-## Ordre d'exécution proposé après approbation
-
-1. Phase 1 complète (Cloud + auth) — base de tout le reste
-2. Phase 2 (domaines) — demande clé PlanetHoster
-3. Phase 3 (sites) — demande token Vercel
-4. Phase 4 (billing Stripe)
-5. Phase 5 (support/team/keys/notifs)
-6. Phase 6 (email + admin polish)
-
-Je peux enchaîner les phases sans m'arrêter, en demandant les secrets juste avant la phase qui en a besoin.
-
-**Validez-vous ce plan global, ou voulez-vous ajuster l'ordre / le périmètre d'une phase ?**
+**Action requise utilisateur**: après approbation du plan, fournir `GITHUB_CLIENT_ID` + `GITHUB_CLIENT_SECRET` (créer une OAuth App sur https://github.com/settings/developers, callback `https://hostinq.lovable.app/api/public/github/callback`). Le reste s'enchaîne sans interruption.
