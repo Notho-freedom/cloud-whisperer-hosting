@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import { getDeployment } from "@/server/sites.functions";
+import { getDeployment } from "@/server/sites.server";
 
 export const Route = createFileRoute("/_app/app/sites/$projectId/deployments/$deploymentId")({ component: DeploymentDetail });
 

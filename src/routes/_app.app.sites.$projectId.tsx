@@ -5,7 +5,7 @@ import { ExternalLink, GitBranch, Rocket, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/app/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getSite, redeploySite } from "@/server/sites.functions";
+import { getSite, redeploySite } from "@/server/sites.server";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/app/sites/$projectId")({

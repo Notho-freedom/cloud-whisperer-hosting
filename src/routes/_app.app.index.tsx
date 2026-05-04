@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
 import { listDomains } from "@/server/domains.functions";
-import { listSites } from "@/server/sites.functions";
+import { listSites } from "@/server/sites.server";
 import { listMailboxes } from "@/server/email.functions";
 import { listNotifications } from "@/server/notifications.functions";
 import { getBillingOverview } from "@/server/billing.functions";
