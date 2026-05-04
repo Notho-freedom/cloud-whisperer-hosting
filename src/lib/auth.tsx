@@ -1,6 +1,7 @@
 import * as React from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthHeaderInterceptor } from "@/lib/use-auth-header";
 
 export type UserRole = "user" | "admin" | "support";
 
@@ -45,6 +46,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = React.useState<Session | null>(null);
   const [user, setUser] = React.useState<AuthUser | null>(null);
   const [loading, setLoading] = React.useState(true);
+  
+  // Activate auth header interceptor for server function calls
+  useAuthHeaderInterceptor();
 
   const loadUser = React.useCallback(async (s: Session | null) => {
     if (!s?.user) {
