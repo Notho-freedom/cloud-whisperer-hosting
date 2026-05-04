@@ -460,6 +460,42 @@ export type Database = {
           },
         ]
       }
+      github_connections: {
+        Row: {
+          access_token: string
+          avatar_url: string | null
+          created_at: string
+          github_user_id: string
+          id: string
+          scopes: string[] | null
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          access_token: string
+          avatar_url?: string | null
+          created_at?: string
+          github_user_id: string
+          id?: string
+          scopes?: string[] | null
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          access_token?: string
+          avatar_url?: string | null
+          created_at?: string
+          github_user_id?: string
+          id?: string
+          scopes?: string[] | null
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       incidents: {
         Row: {
           id: string
@@ -725,6 +761,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      plans: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          features: Json
+          id: string
+          name: string
+          popular: boolean | null
+          price_cents: number
+          sort_order: number | null
+          stripe_price_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json
+          id: string
+          name: string
+          popular?: boolean | null
+          price_cents?: number
+          sort_order?: number | null
+          stripe_price_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          name?: string
+          popular?: boolean | null
+          price_cents?: number
+          sort_order?: number | null
+          stripe_price_id?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -1040,6 +1115,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_user_org: { Args: { _user: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
