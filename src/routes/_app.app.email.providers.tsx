@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PageHeader, PageContent } from "@/components/app/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail } from "lucide-react";
-import { listEmailProviders } from "@/server/email.functions";
+import { listEmailProviders } from "@/api/email-api.server";
 
 export const Route = createFileRoute("/_app/app/email/providers")({
   head: () => ({ meta: [{ title: "Providers email | Hostiq" }] }),

@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/StatusBadge";
-import { listDomains } from "@/server/domains.functions";
+import { listDomains } from "@/api/domains-api.server";
 
 export const Route = createFileRoute("/_app/app/domains/")({
   head: () => ({ meta: [{ title: "Domaines | Hostiq" }] }),

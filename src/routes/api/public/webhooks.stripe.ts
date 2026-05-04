@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { stripe } from "@/server/billing.server";
+import { stripe } from "@/api/billing.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const Route = createFileRoute("/api/public/webhooks/stripe")({
