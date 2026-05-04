@@ -63,6 +63,7 @@ import { Route as AdminAdminUsersIndexRouteImport } from './routes/_admin.admin.
 import { Route as AdminAdminSupportIndexRouteImport } from './routes/_admin.admin.support.index'
 import { Route as ApiPublicWebhooksVercelRouteImport } from './routes/api/public/webhooks.vercel'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks.stripe'
+import { Route as ApiPublicGithubCallbackRouteImport } from './routes/api/public/github.callback'
 import { Route as AppAppTeamInviteRouteImport } from './routes/_app.app.team.invite'
 import { Route as AppAppSupportNewRouteImport } from './routes/_app.app.support.new'
 import { Route as AppAppSupportTicketIdRouteImport } from './routes/_app.app.support.$ticketId'
@@ -362,6 +363,11 @@ const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
   path: '/api/public/webhooks/stripe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicGithubCallbackRoute = ApiPublicGithubCallbackRouteImport.update({
+  id: '/api/public/github/callback',
+  path: '/api/public/github/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppAppTeamInviteRoute = AppAppTeamInviteRouteImport.update({
   id: '/app/team/invite',
   path: '/app/team/invite',
@@ -596,6 +602,7 @@ export interface FileRoutesByFullPath {
   '/app/support/$ticketId': typeof AppAppSupportTicketIdRoute
   '/app/support/new': typeof AppAppSupportNewRoute
   '/app/team/invite': typeof AppAppTeamInviteRoute
+  '/api/public/github/callback': typeof ApiPublicGithubCallbackRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/public/webhooks/vercel': typeof ApiPublicWebhooksVercelRoute
   '/admin/support/': typeof AdminAdminSupportIndexRoute
@@ -678,6 +685,7 @@ export interface FileRoutesByTo {
   '/app/support/$ticketId': typeof AppAppSupportTicketIdRoute
   '/app/support/new': typeof AppAppSupportNewRoute
   '/app/team/invite': typeof AppAppTeamInviteRoute
+  '/api/public/github/callback': typeof ApiPublicGithubCallbackRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/public/webhooks/vercel': typeof ApiPublicWebhooksVercelRoute
   '/admin/support': typeof AdminAdminSupportIndexRoute
@@ -767,6 +775,7 @@ export interface FileRoutesById {
   '/_app/app/support/$ticketId': typeof AppAppSupportTicketIdRoute
   '/_app/app/support/new': typeof AppAppSupportNewRoute
   '/_app/app/team/invite': typeof AppAppTeamInviteRoute
+  '/api/public/github/callback': typeof ApiPublicGithubCallbackRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/public/webhooks/vercel': typeof ApiPublicWebhooksVercelRoute
   '/_admin/admin/support/': typeof AdminAdminSupportIndexRoute
@@ -853,6 +862,7 @@ export interface FileRouteTypes {
     | '/app/support/$ticketId'
     | '/app/support/new'
     | '/app/team/invite'
+    | '/api/public/github/callback'
     | '/api/public/webhooks/stripe'
     | '/api/public/webhooks/vercel'
     | '/admin/support/'
@@ -935,6 +945,7 @@ export interface FileRouteTypes {
     | '/app/support/$ticketId'
     | '/app/support/new'
     | '/app/team/invite'
+    | '/api/public/github/callback'
     | '/api/public/webhooks/stripe'
     | '/api/public/webhooks/vercel'
     | '/admin/support'
@@ -1023,6 +1034,7 @@ export interface FileRouteTypes {
     | '/_app/app/support/$ticketId'
     | '/_app/app/support/new'
     | '/_app/app/team/invite'
+    | '/api/public/github/callback'
     | '/api/public/webhooks/stripe'
     | '/api/public/webhooks/vercel'
     | '/_admin/admin/support/'
@@ -1050,6 +1062,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   MarketingRoute: typeof MarketingRouteWithChildren
+  ApiPublicGithubCallbackRoute: typeof ApiPublicGithubCallbackRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
   ApiPublicWebhooksVercelRoute: typeof ApiPublicWebhooksVercelRoute
 }
@@ -1432,6 +1445,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/webhooks/stripe'
       fullPath: '/api/public/webhooks/stripe'
       preLoaderRoute: typeof ApiPublicWebhooksStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/github/callback': {
+      id: '/api/public/github/callback'
+      path: '/api/public/github/callback'
+      fullPath: '/api/public/github/callback'
+      preLoaderRoute: typeof ApiPublicGithubCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/app/team/invite': {
@@ -1943,6 +1963,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   MarketingRoute: MarketingRouteWithChildren,
+  ApiPublicGithubCallbackRoute: ApiPublicGithubCallbackRoute,
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
   ApiPublicWebhooksVercelRoute: ApiPublicWebhooksVercelRoute,
 }
