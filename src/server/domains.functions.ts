@@ -112,7 +112,7 @@ export const updateDomainSettings = createServerFn({ method: "POST" })
     }).parse,
   )
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = {};
+    const patch: { auto_renew?: boolean; locked?: boolean; privacy?: boolean; nameservers?: string[] } = {};
     if (data.autoRenew !== undefined) patch.auto_renew = data.autoRenew;
     if (data.locked !== undefined) patch.locked = data.locked;
     if (data.privacy !== undefined) patch.privacy = data.privacy;

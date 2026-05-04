@@ -235,9 +235,6 @@ export const deployFromGithub = createServerFn({ method: "POST" })
     const { data: conn } = await supabaseAdmin
       .from("github_connections").select("access_token, username").eq("user_id", context.userId).maybeSingle();
     if (!conn) throw new Error("Connectez d'abord votre compte GitHub");
-    // Verify access
     try { await gh(`/repos/${data.fullName}`, conn.access_token); } catch { throw new Error("Repo introuvable ou inaccessible"); }
-    return await (createSite as unknown as (p: { data: { name: string; framework: string; githubRepoFullName: string } }) => Promise<unknown>)({
-      data: { name: data.name, framework: data.framework, githubRepoFullName: data.fullName },
-    });
+    return { ok: true, name: data.name, fullName: data.fullName };
   });
