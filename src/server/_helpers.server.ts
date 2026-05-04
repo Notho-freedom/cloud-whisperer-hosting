@@ -1,16 +1,19 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export async function getUserOrgId(userId: string): Promise<string> {
-  const { data, error } = await supabaseAdmin
+  // Try existing
+  const { data } = await supabaseAdmin
     .from("organizations")
     .select("id")
     .eq("owner_id", userId)
     .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
-  if (error) throw error;
-  if (!data) throw new Error("No organization for user");
-  return data.id;
+  if (data) return data.id;
+  // Fallback: idempotent RPC
+  const { data: rpc, error: rpcErr } = await supabaseAdmin.rpc("ensure_user_org", { _user: userId });
+  if (rpcErr) throw rpcErr;
+  return rpc as unknown as string;
 }
 
 export async function logApiCall(opts: {
@@ -33,6 +36,20 @@ export async function logApiCall(opts: {
       error: opts.error ?? null,
     });
   } catch {
-    /* ignore log failures */
+    /* ignore */
   }
+}
+
+export async function isAdmin(userId: string): Promise<boolean> {
+  const { data } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
+  return !!data;
+}
+
+export async function assertAdmin(userId: string) {
+  if (!(await isAdmin(userId))) throw new Error("Forbidden");
 }
