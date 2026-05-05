@@ -34,7 +34,7 @@ export const getDomain = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ name: z.string().min(3).max(253) }).parse)
   .handler(async ({ data, context }) => {
-    const { whois } = await import("./domains.server");
+    const { whois } = await import("./domains");
     const { data: domain } = await context.supabase
       .from("domains")
       .select("*")
@@ -53,7 +53,7 @@ export const searchDomains = createServerFn({ method: "POST" })
     }).parse,
   )
   .handler(async ({ data }) => {
-    const { searchDomain } = await import("./domains.server");
+    const { searchDomain } = await import("./domains");
     try {
       return await searchDomain(data.query, data.tlds);
     } catch (e) {
@@ -74,8 +74,8 @@ export const registerDomain = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const [{ supabaseAdmin }, { getUserOrgId }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
     ]);
     try {
       const orgId = await getUserOrgId(context.userId);

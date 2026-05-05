@@ -24,8 +24,8 @@ export const createApiKey = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const [{ supabaseAdmin }, { getUserOrgId }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
     ]);
     const orgId = await getUserOrgId(context.userId);
     const raw = `hq_live_${randomBytes(24).toString("hex")}`;

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const listPlans = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("@/integrations/supabase/admin");
   const { data } = await supabaseAdmin
     .from("plans").select("*").order("sort_order", { ascending: true });
   return data ?? [];
@@ -51,8 +51,8 @@ export const setDefaultPaymentMethod = createServerFn({ method: "POST" })
   .inputValidator(z.object({ id: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const [{ supabaseAdmin }, { getUserOrgId }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
     ]);
     const orgId = await getUserOrgId(context.userId);
     await supabaseAdmin.from("payment_methods").update({ is_default: false }).eq("org_id", orgId);
@@ -75,9 +75,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
   .inputValidator(z.object({ planId: z.string().min(1).max(40) }).parse)
   .handler(async ({ data, context }) => {
     const [{ supabaseAdmin }, { getUserOrgId }, { stripe }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
-      import("./billing.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
+      import("./billing"),
     ]);
     const orgId = await getUserOrgId(context.userId);
     const { data: plan } = await supabaseAdmin.from("plans").select("*").eq("id", data.planId).maybeSingle();

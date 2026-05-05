@@ -2,8 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { randomBytes } from "crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { gh, type GhRepo } from "./github.server";
+import { supabaseAdmin } from "@/integrations/supabase/admin";
+import { gh, type GhRepo } from "./github";
 
 const REDIRECT_URI = "https://hostinq.lovable.app/api/public/github/callback";
 

@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const listTeam = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { getUserOrgId } = await import("./_helpers.server");
+    const { getUserOrgId } = await import("./_helpers");
     const orgId = await getUserOrgId(context.userId);
     const [{ data: members }, { data: invites }] = await Promise.all([
       context.supabase.from("organization_members").select("*, profiles(name,email,avatar_url)").eq("org_id", orgId),
@@ -28,9 +28,9 @@ export const inviteMember = createServerFn({ method: "POST" })
       { getUserOrgId },
       { sendTransactionalEmail },
     ] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
-      import("./email.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
+      import("./email"),
     ]);
     const orgId = await getUserOrgId(context.userId);
     const { data: invite, error } = await supabaseAdmin

@@ -6,8 +6,8 @@ export const adminKpis = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
     ]);
     await assertAdmin(context.userId);
     const [users, orgs, sites, domains, mailboxes, openTickets, invoices, apiCalls] = await Promise.all([
@@ -37,8 +37,8 @@ export const adminListUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
     ]);
     await assertAdmin(context.userId);
     const { data } = await supabaseAdmin
@@ -51,8 +51,8 @@ export const adminGetUser = createServerFn({ method: "GET" })
   .inputValidator(z.object({ id: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
     ]);
     await assertAdmin(context.userId);
     const [{ data: profile }, { data: roles }, { data: orgs }, { data: sites }, { data: domains }] = await Promise.all([
@@ -70,8 +70,8 @@ export const adminSetRole = createServerFn({ method: "POST" })
   .inputValidator(z.object({ userId: z.string().uuid(), role: z.enum(["user", "admin", "support"]) }).parse)
   .handler(async ({ data, context }) => {
     const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
     ]);
     await assertAdmin(context.userId);
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
@@ -85,8 +85,8 @@ const list = (table: string, order = "created_at") =>
     .middleware([requireSupabaseAuth])
     .handler(async ({ context }) => {
       const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
-        import("@/integrations/supabase/client.server"),
-        import("./_helpers.server"),
+        import("@/integrations/supabase/admin"),
+        import("./_helpers"),
       ]);
       await assertAdmin(context.userId);
       const { data } = await supabaseAdmin.from(table as never).select("*").order(order, { ascending: false }).limit(200);
@@ -108,8 +108,8 @@ export const adminListPlans = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
     ]);
     await assertAdmin(context.userId);
     const { data } = await supabaseAdmin.from("plans").select("*").order("sort_order", { ascending: true });
@@ -130,8 +130,8 @@ export const adminUpsertBlogPost = createServerFn({ method: "POST" })
   }).parse)
   .handler(async ({ data, context }) => {
     const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
     ]);
     await assertAdmin(context.userId);
     const payload = { ...data, published_at: data.published ? new Date().toISOString() : null };
@@ -155,8 +155,8 @@ export const adminCreateAnnouncement = createServerFn({ method: "POST" })
   }).parse)
   .handler(async ({ data, context }) => {
     const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
     ]);
     await assertAdmin(context.userId);
     const { data: row, error } = await supabaseAdmin.from("announcements").insert(data).select().single();
@@ -182,7 +182,7 @@ export const adminCreateIncident = createServerFn({ method: "POST" })
 export const adminProviderHealth = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { assertAdmin } = await import("./_helpers.server");
+    const { assertAdmin } = await import("./_helpers");
     await assertAdmin(context.userId);
     const checks = [
       { id: "planethoster", name: "PlanetHoster", configured: !!process.env.PLANETHOSTER_API_KEY },
@@ -206,8 +206,8 @@ export const adminUpsertPlan = createServerFn({ method: "POST" })
   }).parse)
   .handler(async ({ data, context }) => {
     const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
     ]);
     await assertAdmin(context.userId);
     const { error } = await supabaseAdmin.from("plans").upsert(data);

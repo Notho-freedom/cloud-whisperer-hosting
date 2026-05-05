@@ -39,9 +39,9 @@ export const createSite = createServerFn({ method: "POST" })
       { getUserOrgId },
       { createVercelProject, triggerDeployment },
     ] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
-      import("./sites.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
+      import("./sites"),
     ]);
     try {
       const orgId = await getUserOrgId(context.userId);
@@ -119,7 +119,7 @@ export const listSiteDeployments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ siteId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
-    const { listDeployments } = await import("./sites.server");
+    const { listDeployments } = await import("./sites");
     const { data: site } = await context.supabase
       .from("sites").select("vercel_project_id").eq("id", data.siteId).maybeSingle();
     const { data: db } = await context.supabase
@@ -148,8 +148,8 @@ export const redeploySite = createServerFn({ method: "POST" })
   .inputValidator(z.object({ siteId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const [{ supabaseAdmin }, { triggerDeployment }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./sites.server"),
+      import("@/integrations/supabase/admin"),
+      import("./sites"),
     ]);
     const { data: site } = await context.supabase
       .from("sites").select("name, vercel_project_id").eq("id", data.siteId).maybeSingle();
@@ -240,8 +240,8 @@ export const deployFromGithub = createServerFn({ method: "POST" })
   }).parse)
   .handler(async ({ data, context }) => {
     const [{ supabaseAdmin }, { gh }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./github.server"),
+      import("@/integrations/supabase/admin"),
+      import("./github"),
     ]);
     const { data: conn } = await supabaseAdmin
       .from("github_connections").select("access_token, username").eq("user_id", context.userId).maybeSingle();

@@ -43,8 +43,8 @@ export const createMailbox = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const [{ supabaseAdmin }, { getUserOrgId }] = await Promise.all([
-      import("@/integrations/supabase/client.server"),
-      import("./_helpers.server"),
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
     ]);
     try {
       const orgId = await getUserOrgId(context.userId);

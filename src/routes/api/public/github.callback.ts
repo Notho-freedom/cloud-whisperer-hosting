@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { exchangeCodeForToken, gh } from "@/api/github.server";
+import { supabaseAdmin } from "@/integrations/supabase/admin";
+import { exchangeCodeForToken, gh } from "@/api/github";
 
 export const Route = createFileRoute("/api/public/github/callback")({
   server: {
