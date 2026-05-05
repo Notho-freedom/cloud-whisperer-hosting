@@ -86,6 +86,14 @@ export const adminListAnnouncements = list("announcements");
 export const adminListBlogPosts = list("blog_posts");
 export const adminListMailboxes = list("mailboxes");
 
+export const adminListPlans = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data } = await supabaseAdmin.from("plans").select("*").order("sort_order", { ascending: true });
+    return data ?? [];
+  });
+
 export const adminUpsertBlogPost = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({
