@@ -20,7 +20,7 @@ function AdminEmail() {
           <Table>
             <TableHeader><TableRow><TableHead>Adresse</TableHead><TableHead>Provider</TableHead><TableHead>Plan</TableHead><TableHead>Quota</TableHead></TableRow></TableHeader>
             <TableBody>
-              {mailboxes.map((m) => (
+              {(mailboxes as Array<{ id: string; address: string; provider: string; plan: string | null; used_gb: number | null; quota_gb: number | null }>).map((m) => (
                 <TableRow key={m.id}>
                   <TableCell className="font-mono">{m.address}</TableCell>
                   <TableCell><Badge variant="outline" className="capitalize">{m.provider}</Badge></TableCell>
