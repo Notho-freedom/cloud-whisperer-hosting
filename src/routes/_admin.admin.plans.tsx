@@ -16,7 +16,7 @@ function AdminPlans() {
       <AdminPageContent className="space-y-6">
         {isLoading ? <div className="p-12 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : (
           <div className="grid gap-3 md:grid-cols-3">
-            {plans.map((p: { id: string; name: string; price_cents: number; currency: string; features: string[] | null; popular: boolean | null }) => (
+            {plans.map((p) => (
               <Card key={p.id}><CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div><p className="font-semibold">{p.name}</p><p className="text-xs text-muted-foreground">{p.id}</p></div>
