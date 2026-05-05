@@ -1,90 +1,65 @@
+## Objectif
 
-# Plan final — Câblage complet UI ↔ Backend
+Terminer le câblage UI ↔ backend: 14 pages admin restantes utilisent encore `@/lib/mocks`. Une fois branchées, supprimer `src/lib/mocks.ts` (le build TS sert de garde-fou). Corriger l'erreur "Supabase unknown key / role key" rapportée à l'exécution. Tester les flux principaux.
 
-Objectif: éliminer **toutes** les références à `src/lib/mocks.ts`, brancher chaque interface au backend réel (Supabase + PlanetHoster + Vercel + Stripe + Resend), ajouter le flux **GitHub** (OAuth + déploiement de repo), corriger le bug d'achat de domaine, puis tester chaque endpoint et garantir un build vert.
+## Diagnostic erreur Supabase
 
-## 1. Server functions manquantes
+Les deux blocs `.env` montrent que le projet Lovable Cloud actif est `gbqacbycvlafdahwkygv` (premier bloc, non commenté). Le second bloc est commenté (#) → il n'est pas chargé. Les secrets serveur sont déjà tous présents: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, plus PlanetHoster, Vercel, GitHub, Stripe, Resend.
 
-Créer / compléter dans `src/server/`:
+Cause probable de l'erreur: une server fn lit un nom de variable inexistant (par ex. `SUPABASE_ANON_KEY` au lieu de `SUPABASE_PUBLISHABLE_KEY`, ou `SUPABASE_ROLE_KEY` au lieu de `SUPABASE_SERVICE_ROLE_KEY`). Action: grep tout le code serveur pour ces noms incorrects et corriger.
 
-- **`domains.functions.ts`** — ajouter: `updateDomainSettings` (autoRenew, locked, privacy, nameservers), `transferDomain`, `getTldPricing` (table TLDS persistée en DB ou statique côté serveur).
-- **`sites.functions.ts`** — ajouter: `getSiteEnvVars` / `upsertEnvVar` / `deleteEnvVar` (table `env_vars`), `getDeployment` (détail), `addSiteDomain` / `removeSiteDomain` (lien domaine ↔ site Vercel), `updateSiteSettings`, `deleteSite`.
-- **`email.functions.ts`** — implémenter CRUD complet: `listMailboxes`, `createMailbox`, `getMailbox`, `deleteMailbox`, `listAliases`, `createAlias`, `listForwards`, `createForward`, `listEmailProviders` (Google Workspace / IONOS / interne).
-- **`billing.functions.ts`** — ajouter: `listInvoices`, `getInvoice`, `listPaymentMethods`, `setDefaultPaymentMethod`, `removePaymentMethod`, `getCurrentPlan`, `changePlan` (Stripe Checkout), `getUsage` (table `usage_metrics`).
-- **`notifications.functions.ts`** — `listNotifications`, `markRead`, `markAllRead`.
-- **`support.functions.ts`** — ajouter: `getTicket` + messages, `replyToTicket`, `closeTicket`.
-- **`admin.functions.ts`** — étendre: `listAllUsers`, `getUser` (avec orgs/sites/domaines), `setUserRole`, `listAllSites`, `listAllDomains`, `listAllInvoices`, `listAuditLog`, `listApiLogs`, `listIncidents`, `createIncident`, `listAnnouncements`, `createAnnouncement`, `listBlogPosts`, `upsertBlogPost`, `listProviders` (santé API: PlanetHoster, Vercel, Stripe, Resend via ping), `listPlans` / `upsertPlan` (nouvelle table `plans`).
+## Étapes
 
-## 2. Intégration GitHub
+1. **Diagnostic clés Supabase**
+   - `rg "SUPABASE_ANON_KEY|SUPABASE_ROLE_KEY|SUPABASE_KEY"` dans `src/` et `supabase/`.
+   - Renommer toute occurrence vers `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SERVICE_ROLE_KEY`.
+   - Vérifier que `client.server.ts` et `auth-middleware.ts` utilisent les bons noms (déjà OK selon revue).
+   - Tester `searchDomains` et `registerDomain` via `stack_modern--invoke-server-function` puis lire `stack_modern--server-function-logs`.
 
-- Ajouter une **table `github_connections`** (`user_id`, `github_user_id`, `access_token` (chiffré via service_role uniquement), `username`, `avatar_url`).
-- Server route OAuth: `src/routes/api/public/github.callback.ts` — échange code → token, stocke en DB.
-- Server fns: `startGithubOAuth` (génère URL `https://github.com/login/oauth/authorize` avec state), `getGithubConnection`, `listGithubRepos` (proxy `GET /user/repos`), `disconnectGithub`.
-- Demander à l'utilisateur les secrets **`GITHUB_CLIENT_ID`** et **`GITHUB_CLIENT_SECRET`** (callback URL: `https://hostinq.lovable.app/api/public/github/callback`).
-- UI:
-  - `_app.app.settings.integrations.tsx` — bouton "Connecter GitHub" réel (au lieu du badge statique).
-  - `_app.app.sites.new.tsx` — onglet "Importer depuis GitHub" avec liste de repos sélectionnable; createSite passe `gitRepo` à Vercel.
+2. **Server fns admin manquantes** (compléter `src/api/admin-api.server.ts`)
+   - `adminListPlans`, `adminListPromoCodes` (table `plans` + nouvelle table `promo_codes` si demandé — sinon on omet promo).
+   - `adminListProvidersHealth` (existe déjà sous nom `adminProviderHealth`, vérifier signature).
+   - `adminListIncidents` existe.
+   - Déjà tout le reste OK.
 
-## 3. Correction bug achat de domaine
+3. **Câblage des 14 pages admin** — remplacer les imports `@/lib/mocks` par `useQuery` sur les server fns:
+   - `_admin.admin.users.index.tsx` → `adminListUsers`
+   - `_admin.admin.users.$userId.tsx` → `adminGetUser`
+   - `_admin.admin.sites.tsx` → `adminListSites`
+   - `_admin.admin.domains.tsx` → `adminListDomains`
+   - `_admin.admin.billing.tsx` → `adminListInvoices`
+   - `_admin.admin.support.index.tsx` → `adminListTickets`
+   - `_admin.admin.audit.tsx` → `adminListAuditLog`
+   - `_admin.admin.api-logs.tsx` → `adminListApiLogs`
+   - `_admin.admin.status.tsx` → `adminListIncidents`
+   - `_admin.admin.providers.tsx` → `adminProviderHealth`
+   - `_admin.admin.plans.tsx` → `adminListPlans` + `adminUpsertPlan` (UI minimal sans promo codes)
+   - `_admin.admin.email.tsx` → `adminListMailboxes`
+   - `_admin.admin.blog.tsx` → `adminListBlogPosts` + `adminUpsertBlogPost`
+   - `_admin.admin.announcements.tsx` → `adminListAnnouncements` + `adminCreateAnnouncement`
 
-Le bug actuel vient probablement de:
-- `searchDomain` qui throw au lieu de fallback propre quand PH renvoie 401/404,
-- `registerDomain` qui ne gère pas le cas "no organization for user" si trigger handle_new_user n'a pas tourné pour comptes existants.
+4. **Suppression `src/lib/mocks.ts`** une fois 0 import restant.
 
-Corrections:
-- Wrapper `searchDomain` en mode strict-fallback (jamais throw côté handler).
-- `getUserOrgId`: si aucune org, en créer une à la volée (idempotent).
-- Ajouter `try/catch` global dans `registerDomain` retournant message FR clair via `toast`.
-- Validation TLD côté serveur (`z.enum`) pour éviter inputs invalides.
+5. **Tests automatisés** (via `stack_modern--invoke-server-function`):
+   - `getTldPricing`
+   - `searchDomains` (sans auth → attendu 401, avec session → résultats)
+   - `listDomains`, `listSites`, `listMailboxes`, `listInvoices`
+   - `adminKpis` (avec compte admin)
+   - `startGithubOAuth` (renvoie URL)
+   - Lire les logs si erreur, corriger, re-tester.
 
-## 4. Câblage UI complet (suppression de `mocks.ts`)
+6. **Vérification migrations & secrets**
+   - Confirmer via `supabase--read_query` que les tables clés existent (déjà confirmé via schéma fourni).
+   - Confirmer `secrets--fetch_secrets` (déjà OK: tous présents).
 
-Pour chaque fichier listé, remplacer `import … from "@/lib/mocks"` par `useQuery`/`useMutation` sur les server fns ci-dessus. Pages concernées:
+## Hors-scope (à clarifier ensuite si besoin)
 
-**App utilisateur**
-- `_app.app.index.tsx` — dashboard: KPIs réels (counts domaines/sites/mailboxes + dernier déploiement).
-- `_app.app.notifications.tsx` — liste + mark read.
-- `_app.app.domains.$domain.tsx` + `.dns.tsx` — détail domaine, paramètres, DNS CRUD.
-- `_app.app.sites.$projectId.tsx` (+ `.index/.deployments/.deployments.$id/.env/.domains/.settings/.analytics/.logs`) — détail site, env vars CRUD, déploiements live, domaines liés, redéploiement, suppression, analytics (Vercel `/v1/analytics`), logs (`/v2/deployments/{id}/events`).
-- `_app.app.email.index.tsx` + `.$mailboxId.tsx` + `.new.tsx` + `.providers.tsx` — gestion mailbox réelle (table `mailboxes` + alias/forwards).
-- `_app.app.billing.index/.invoices/.invoices.$id/.payment-methods/.plan/.usage.tsx` — toutes données depuis Stripe + DB.
-- `_app.app.support.$ticketId.tsx` — thread messages réel.
+- Tests E2E navigateur du flux complet (achat domaine réel via PlanetHoster sandbox / déploiement Vercel réel) — l'utilisateur devra exécuter manuellement, je documenterai les étapes.
+- Promo codes admin: pas de table, j'affiche une UI vide + note "à venir" plutôt qu'inventer du schéma.
 
-**Admin**
-- `_admin.admin.users.index.tsx` + `.$userId.tsx` + `.roles.tsx` — gestion utilisateurs.
-- `_admin.admin.sites/.domains/.billing/.support.index/.audit/.api-logs/.status/.providers/.plans/.blog/.email/.announcements.tsx` — chaque page lit depuis ses tables réelles.
+## Livraison
 
-## 5. Suppression de `src/lib/mocks.ts`
-
-Une fois zéro import restant, supprimer le fichier. La build TS échouera tant qu'un import subsiste — c'est notre garde-fou.
-
-## 6. Tests
-
-Après implémentation, pour chaque server fn critique:
-1. `stack_modern--invoke-server-function` POST sur `/_serverFn/<id>` ou via UI réelle.
-2. `supabase--read_query` pour vérifier persistence (domains, sites, mailboxes, invoices).
-3. `stack_modern--server-function-logs` pour confirmer absence d'erreur.
-4. Test manuel dans le preview du flux: signup → recherche domaine → achat → ajout DNS → création site → déploiement → mailbox → ticket → facture.
-
-## 7. Détails techniques
-
-- **Quotas / pagination**: ajouter `.limit(100)` + tri sur toutes les listes.
-- **RLS**: déjà OK; pour `github_connections` créer policies `self read/write`.
-- **Webhooks**: vérifier que `webhooks.vercel.ts` met bien à jour `deployments.status` et `sites.last_deploy_at`; idem `webhooks.stripe.ts` pour `subscriptions` + `invoices` insert.
-- **Migrations à créer**:
-  1. table `github_connections`
-  2. table `plans` (id text, name, price_cents, features jsonb, stripe_price_id)
-  3. seed initial des plans (starter / pro / business)
-
-## 8. Livraison
-
-À la fin du tour:
-- 0 import de `@/lib/mocks` (fichier supprimé).
-- Build TanStack vert.
-- GitHub OAuth fonctionnel (en attente du secret user).
-- Tous les flux promis cliquables et persistés.
-- Récap des tests effectués + URLs/IDs créés.
-
----
-
-**Action requise utilisateur**: après approbation du plan, fournir `GITHUB_CLIENT_ID` + `GITHUB_CLIENT_SECRET` (créer une OAuth App sur https://github.com/settings/developers, callback `https://hostinq.lovable.app/api/public/github/callback`). Le reste s'enchaîne sans interruption.
+- 0 import de `@/lib/mocks`, fichier supprimé.
+- Toutes les pages admin lisent depuis Supabase.
+- Erreur de clé corrigée et flux `searchDomain` → `registerDomain` testé end-to-end.
+- Récap final avec résultats des tests + URL preview à essayer.
