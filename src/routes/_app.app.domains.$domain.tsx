@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getDomain, updateDomainSettings } from "@/api/domains-api";
+import { getPlatformCapabilities } from "@/api/platform-api";
 
 export const Route = createFileRoute("/_app/app/domains/$domain")({
   head: ({ params }) => ({ meta: [{ title: `${params.domain} | Hostiq` }] }),
@@ -20,6 +21,9 @@ function DomainDetail() {
   const { domain } = Route.useParams();
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ["domain", domain], queryFn: () => getDomain({ data: { name: domain } }) });
+  const { data: capabilities = [] } = useQuery({ queryKey: ["platform-capabilities"], queryFn: () => getPlatformCapabilities() });
+  const dnsCapability = capabilities.find((cap) => cap.key === "dnsManagement");
+  const domainSearchCapability = capabilities.find((cap) => cap.key === "domainSearch");
   const update = useMutation({
     mutationFn: (patch: { id: string; autoRenew?: boolean; locked?: boolean; privacy?: boolean }) => updateDomainSettings({ data: patch }),
     onSuccess: () => { toast.success("Mis à jour"); qc.invalidateQueries({ queryKey: ["domain", domain] }); },
@@ -37,14 +41,20 @@ function DomainDetail() {
         breadcrumbs={[{ label: "Domaines", to: "/app/domains" }, { label: d.name }]}
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild disabled={dnsCapability?.ready === false}>
               <Link to="/app/domains/$domain/dns" params={{ domain: d.name }}><SettingsIcon className="h-4 w-4" />Gérer DNS</Link>
             </Button>
-            <Button><RefreshCw className="h-4 w-4" />Renouveler</Button>
+            <Button disabled><RefreshCw className="h-4 w-4" />Renouvellement bientôt</Button>
           </>
         }
       />
       <PageContent>
+        {dnsCapability && !dnsCapability.ready && (
+          <Card className="mb-4 border-destructive/30 p-4 text-sm">
+            <p className="font-medium">Gestion DNS indisponible</p>
+            <p className="mt-1 text-muted-foreground">{dnsCapability.reason}</p>
+          </Card>
+        )}
         <Tabs defaultValue="overview">
           <TabsList>
             <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
@@ -70,9 +80,9 @@ function DomainDetail() {
             <Card>
               <CardHeader><CardTitle className="text-base">Préférences</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <Row label="Renouvellement automatique"><Switch checked={!!d.auto_renew} onCheckedChange={(v) => update.mutate({ id: d.id, autoRenew: v })} /></Row>
-                <Row label="Verrouillage du transfert"><Switch checked={!!d.locked} onCheckedChange={(v) => update.mutate({ id: d.id, locked: v })} /></Row>
-                <Row label="WHOIS Privacy"><Switch checked={!!d.privacy} onCheckedChange={(v) => update.mutate({ id: d.id, privacy: v })} /></Row>
+                <Row label="Renouvellement automatique"><Switch checked={!!d.auto_renew} disabled /></Row>
+                <Row label="Verrouillage du transfert"><Switch checked={!!d.locked} disabled={domainSearchCapability?.ready === false} onCheckedChange={(v) => update.mutate({ id: d.id, locked: v })} /></Row>
+                <Row label="WHOIS Privacy"><Switch checked={!!d.privacy} disabled /></Row>
               </CardContent>
             </Card>
           </TabsContent>
@@ -103,7 +113,7 @@ function DomainDetail() {
               <div className="flex items-center gap-3">
                 {d.locked ? <Lock className="h-5 w-5 text-success" /> : <Unlock className="h-5 w-5 text-warning" />}
                 <div className="flex-1"><p className="font-medium">Lock du domaine</p></div>
-                <Switch checked={!!d.locked} onCheckedChange={(v) => update.mutate({ id: d.id, locked: v })} />
+                <Switch checked={!!d.locked} disabled={domainSearchCapability?.ready === false} onCheckedChange={(v) => update.mutate({ id: d.id, locked: v })} />
               </div>
             </CardContent></Card>
           </TabsContent>

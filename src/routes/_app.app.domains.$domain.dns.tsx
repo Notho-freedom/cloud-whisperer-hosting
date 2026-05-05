@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getDomain, listDnsRecords, upsertDnsRecord, deleteDnsRecord } from "@/api/domains-api";
+import { getPlatformCapabilities } from "@/api/platform-api";
 
 export const Route = createFileRoute("/_app/app/domains/$domain/dns")({
   head: ({ params }) => ({ meta: [{ title: `DNS · ${params.domain}` }] }),
@@ -23,6 +24,8 @@ function DnsEditor() {
   const { domain } = Route.useParams();
   const qc = useQueryClient();
   const { data: d } = useQuery({ queryKey: ["domain", domain], queryFn: () => getDomain({ data: { name: domain } }) });
+  const { data: capabilities = [] } = useQuery({ queryKey: ["platform-capabilities"], queryFn: () => getPlatformCapabilities() });
+  const dnsCapability = capabilities.find((cap) => cap.key === "dnsManagement");
   const domainId = d?.domain?.id;
   const { data: records = [] } = useQuery({
     queryKey: ["dns", domainId],
@@ -52,6 +55,12 @@ function DnsEditor() {
         breadcrumbs={[{ label: "Domaines", to: "/app/domains" }, { label: domain, to: "/app/domains/$domain" }, { label: "DNS" }]}
       />
       <PageContent className="space-y-4">
+        {dnsCapability && !dnsCapability.ready && (
+          <Card className="border-destructive/30 p-4 text-sm">
+            <p className="font-medium">DNS réel indisponible</p>
+            <p className="mt-1 text-muted-foreground">{dnsCapability.reason}</p>
+          </Card>
+        )}
         <Card className="p-4">
           <div className="grid gap-2 md:grid-cols-[100px_140px_1fr_100px_auto]">
             <Select value={type} onValueChange={(v) => setType(v as typeof TYPES[number])}>
@@ -61,7 +70,7 @@ function DnsEditor() {
             <Input placeholder="@ ou subdomain" value={name} onChange={(e) => setName(e.target.value)} className="font-mono" />
             <Input placeholder="valeur" value={value} onChange={(e) => setValue(e.target.value)} className="font-mono" />
             <Input type="number" value={ttl} onChange={(e) => setTtl(Number(e.target.value))} className="font-mono" />
-            <Button disabled={!domainId || !value || add.isPending} onClick={() => add.mutate()}>
+            <Button disabled={!domainId || !value || add.isPending || dnsCapability?.ready === false} onClick={() => add.mutate()}>
               <Plus className="h-4 w-4" />Ajouter
             </Button>
           </div>
@@ -84,7 +93,7 @@ function DnsEditor() {
                   <TableCell className="font-mono text-xs text-muted-foreground max-w-md truncate">{r.value}</TableCell>
                   <TableCell className="font-mono text-xs">{r.ttl}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => del.mutate(r.id)}>
+                    <Button variant="ghost" size="icon" className="text-destructive" disabled={dnsCapability?.ready === false} onClick={() => del.mutate(r.id)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </TableCell>

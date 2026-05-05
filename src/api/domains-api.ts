@@ -1,23 +1,37 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertCapabilityReady, getAppBaseUrl } from "@/lib/provider-readiness";
 
-export const TLD_PRICING: Array<{ tld: string; pricePerYear: number; renewalPrice: number; popular?: boolean }> = [
-  { tld: "com", pricePerYear: 9.99, renewalPrice: 12.99, popular: true },
-  { tld: "io", pricePerYear: 39.0, renewalPrice: 49.0, popular: true },
-  { tld: "dev", pricePerYear: 14.0, renewalPrice: 16.0, popular: true },
-  { tld: "app", pricePerYear: 16.0, renewalPrice: 18.0, popular: true },
-  { tld: "fr", pricePerYear: 7.99, renewalPrice: 9.99 },
-  { tld: "net", pricePerYear: 11.99, renewalPrice: 13.99 },
-  { tld: "co", pricePerYear: 24.0, renewalPrice: 28.0 },
-  { tld: "ai", pricePerYear: 79.0, renewalPrice: 89.0, popular: true },
-  { tld: "tech", pricePerYear: 49.0, renewalPrice: 59.0 },
-  { tld: "org", pricePerYear: 12.99, renewalPrice: 14.99 },
-  { tld: "xyz", pricePerYear: 2.99, renewalPrice: 12.99 },
-  { tld: "store", pricePerYear: 4.99, renewalPrice: 49.0 },
-];
+const DomainRegistrantSchema = z.object({
+  firstName: z.string().min(1).max(80),
+  lastName: z.string().min(1).max(80),
+  email: z.string().email(),
+  companyName: z.string().max(120).optional(),
+  address1: z.string().min(1).max(200),
+  address2: z.string().max(200).optional(),
+  city: z.string().min(1).max(120),
+  postalCode: z.string().min(1).max(40),
+  state: z.string().min(1).max(120),
+  countryCode: z.string().length(2).transform((value) => value.toUpperCase()),
+});
 
-export const getTldPricing = createServerFn({ method: "GET" }).handler(async () => TLD_PRICING);
+function splitDomain(name: string) {
+  const [sld, ...rest] = name.toLowerCase().split(".");
+  if (!sld || rest.length === 0) throw new Error("Nom de domaine invalide.");
+  return { sld, tld: rest.join(".") };
+}
+
+export const getTldPricing = createServerFn({ method: "GET" }).handler(async () => {
+  assertCapabilityReady("domainSearch");
+  const { getTldPricing: fetchTldPricing } = await import("./domains");
+  const pricing = await fetchTldPricing("EUR");
+  return Object.entries(pricing.tlds).map(([tld, value]) => ({
+    tld: tld.replace(/^\./, ""),
+    pricePerYear: Number(value.register),
+    renewalPrice: Number(value.renew ?? value.register),
+  }));
+});
 
 export const listDomains = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -35,13 +49,19 @@ export const getDomain = createServerFn({ method: "GET" })
   .inputValidator(z.object({ name: z.string().min(3).max(253) }).parse)
   .handler(async ({ data, context }) => {
     const { whois } = await import("./domains");
-    const { data: domain } = await context.supabase
+    const { data: domain, error } = await context.supabase
       .from("domains")
       .select("*")
       .eq("name", data.name)
       .maybeSingle();
-    let who: { domain: string; registrar: string; status: string } = { domain: data.name, registrar: "PlanetHoster", status: "active" };
-    try { who = await whois(data.name); } catch { /* fallback above */ }
+    if (error) throw error;
+
+    let who: Awaited<ReturnType<typeof whois>> = null;
+    try {
+      who = await whois(data.name);
+    } catch {
+      who = null;
+    }
     return { domain, whois: who };
   });
 
@@ -53,54 +73,105 @@ export const searchDomains = createServerFn({ method: "POST" })
     }).parse,
   )
   .handler(async ({ data }) => {
+    assertCapabilityReady("domainSearch");
     const { searchDomain } = await import("./domains");
-    try {
-      return await searchDomain(data.query, data.tlds);
-    } catch (e) {
-      console.error("searchDomain failed:", e);
-      // Always return shape; never throw
-      return data.tlds.map((t) => ({ domain: `${data.query}.${t}`, available: true, price: 14.99, currency: "EUR" }));
+    return searchDomain(data.query, data.tlds);
+  });
+
+export const createDomainCheckout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      domainName: z.string().min(3).max(253),
+      termYears: z.number().int().min(1).max(10),
+      registrant: DomainRegistrantSchema,
+    }).parse,
+  )
+  .handler(async ({ data, context }) => {
+    assertCapabilityReady("domainPurchase");
+
+    const [{ supabaseAdmin }, { getUserOrgId }, { createDomainOrder, updateDomainOrder }, { searchDomain }, { stripe }] =
+      await Promise.all([
+        import("@/integrations/supabase/admin"),
+        import("./_helpers"),
+        import("./domain-orders"),
+        import("./domains"),
+        import("./billing"),
+      ]);
+
+    const { sld, tld } = splitDomain(data.domainName);
+    const searchResult = await searchDomain(sld, [tld]);
+    const match = searchResult[0];
+    if (!match) throw new Error("Impossible de créer un devis pour ce domaine.");
+    if (!match.available) throw new Error("Ce domaine n'est plus disponible.");
+
+    const orgId = await getUserOrgId(context.userId);
+    const { data: existing } = await supabaseAdmin.from("domains").select("id").eq("name", data.domainName).maybeSingle();
+    if (existing) throw new Error("Ce domaine est déjà présent dans votre compte.");
+
+    const quoteExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    const order = await createDomainOrder({
+      orgId,
+      userId: context.userId,
+      domainName: data.domainName,
+      sld,
+      tld,
+      termYears: data.termYears,
+      currencyCode: match.currency,
+      quotedRegisterPrice: match.price,
+      quotedRenewPrice: match.renewalPrice,
+      quoteExpiresAt,
+      registrant: data.registrant,
+      providerSnapshot: {
+        price: match.price,
+        renewalPrice: match.renewalPrice,
+        currency: match.currency,
+        isPremium: match.isPremium,
+      },
+    });
+
+    const unitAmount = Math.round(match.price * data.termYears * 100);
+    const session = await stripe().checkout.sessions.create({
+      mode: "payment",
+      success_url: `${getAppBaseUrl()}/app/domains?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${getAppBaseUrl()}/app/domains/search?checkout=cancelled`,
+      customer_email: data.registrant.email,
+      metadata: {
+        checkout_kind: "domain_registration",
+        domain_order_id: order.id,
+      },
+      line_items: [
+        {
+          price_data: {
+            currency: match.currency.toLowerCase(),
+            product_data: {
+              name: `Enregistrement ${data.domainName}`,
+              description: `${data.termYears} an(s)`,
+            },
+            unit_amount: unitAmount,
+          },
+          quantity: 1,
+        },
+      ],
+    });
+
+    await updateDomainOrder(order.id, {
+      status: "checkout_created",
+      stripe_checkout_session_id: session.id,
+      stripe_payment_status: session.payment_status ?? null,
+    });
+
+    if (!session.url) {
+      throw new Error("Stripe n'a pas retourné d'URL de checkout.");
     }
+
+    return { orderId: order.id, checkoutUrl: session.url };
   });
 
 export const registerDomain = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
-    z.object({
-      name: z.string().min(3).max(253),
-      tld: z.string().min(2).max(20),
-      pricePerYear: z.number().min(0).max(10000),
-    }).parse,
-  )
-  .handler(async ({ data, context }) => {
-    const [{ supabaseAdmin }, { getUserOrgId }] = await Promise.all([
-      import("@/integrations/supabase/admin"),
-      import("./_helpers"),
-    ]);
-    try {
-      const orgId = await getUserOrgId(context.userId);
-      const { data: row, error } = await supabaseAdmin
-        .from("domains")
-        .insert({
-          org_id: orgId,
-          name: data.name,
-          tld: data.tld,
-          status: "active",
-          registered_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 365 * 86400_000).toISOString(),
-          price_per_year: data.pricePerYear,
-        })
-        .select()
-        .single();
-      if (error) {
-        if (error.code === "23505") throw new Error("Ce domaine est déjà enregistré.");
-        throw new Error(error.message);
-      }
-      return row;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Erreur lors de l'enregistrement";
-      throw new Error(msg);
-    }
+  .handler(async () => {
+    throw new Error("L'enregistrement direct est désactivé. Utilisez le checkout réel du domaine.");
   });
 
 export const updateDomainSettings = createServerFn({ method: "POST" })
@@ -115,13 +186,30 @@ export const updateDomainSettings = createServerFn({ method: "POST" })
     }).parse,
   )
   .handler(async ({ data, context }) => {
-    const patch: { auto_renew?: boolean; locked?: boolean; privacy?: boolean; nameservers?: string[] } = {};
-    if (data.autoRenew !== undefined) patch.auto_renew = data.autoRenew;
-    if (data.locked !== undefined) patch.locked = data.locked;
-    if (data.privacy !== undefined) patch.privacy = data.privacy;
-    if (data.nameservers !== undefined) patch.nameservers = data.nameservers;
-    const { error } = await context.supabase.from("domains").update(patch).eq("id", data.id);
+    assertCapabilityReady("domainSearch");
+    if (data.autoRenew !== undefined) {
+      throw new Error("La gestion réelle du renouvellement automatique n'est pas encore intégrée.");
+    }
+    if (data.privacy !== undefined) {
+      throw new Error("La gestion réelle de la privacy WHOIS n'est pas encore intégrée.");
+    }
+    if (data.nameservers !== undefined) {
+      throw new Error("La mise à jour réelle des nameservers n'est pas encore intégrée.");
+    }
+    if (data.locked === undefined) {
+      throw new Error("Aucune modification réelle demandée.");
+    }
+
+    const [{ setRegistrarLock }, { data: domain, error }] = await Promise.all([
+      import("./domains"),
+      context.supabase.from("domains").select("id, name").eq("id", data.id).maybeSingle(),
+    ]);
     if (error) throw error;
+    if (!domain) throw new Error("Domaine introuvable.");
+
+    await setRegistrarLock(domain.name, data.locked);
+    const { error: updateError } = await context.supabase.from("domains").update({ locked: data.locked }).eq("id", data.id);
+    if (updateError) throw updateError;
     return { ok: true };
   });
 
@@ -140,41 +228,14 @@ export const listDnsRecords = createServerFn({ method: "GET" })
 
 export const upsertDnsRecord = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
-    z.object({
-      id: z.string().uuid().optional(),
-      domainId: z.string().uuid(),
-      type: z.enum(["A", "AAAA", "CNAME", "MX", "TXT", "NS", "SRV"]),
-      name: z.string().min(1).max(255),
-      value: z.string().min(1).max(2048),
-      ttl: z.number().int().min(60).max(86400).default(3600),
-      priority: z.number().int().min(0).max(65535).optional(),
-    }).parse,
-  )
-  .handler(async ({ data, context }) => {
-    const payload = {
-      domain_id: data.domainId,
-      type: data.type,
-      name: data.name,
-      value: data.value,
-      ttl: data.ttl,
-      priority: data.priority ?? null,
-    };
-    if (data.id) {
-      const { error } = await context.supabase.from("dns_records").update(payload).eq("id", data.id);
-      if (error) throw error;
-      return { id: data.id };
-    }
-    const { data: row, error } = await context.supabase.from("dns_records").insert(payload).select().single();
-    if (error) throw error;
-    return row;
+  .handler(async () => {
+    assertCapabilityReady("dnsManagement");
+    throw new Error("La gestion DNS réelle n'est pas disponible.");
   });
 
 export const deleteDnsRecord = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ id: z.string().uuid() }).parse)
-  .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("dns_records").delete().eq("id", data.id);
-    if (error) throw error;
-    return { ok: true };
+  .handler(async () => {
+    assertCapabilityReady("dnsManagement");
+    throw new Error("La gestion DNS réelle n'est pas disponible.");
   });

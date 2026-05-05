@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/StatusBadge";
 import { listDomains } from "@/api/domains-api";
+import { getPlatformCapabilities } from "@/api/platform-api";
 
 export const Route = createFileRoute("/_app/app/domains/")({
   head: () => ({ meta: [{ title: "Domaines | Hostiq" }] }),
@@ -19,18 +20,29 @@ function DomainsList() {
     queryKey: ["domains"],
     queryFn: () => listDomains(),
   });
+  const { data: capabilities = [] } = useQuery({
+    queryKey: ["platform-capabilities"],
+    queryFn: () => getPlatformCapabilities(),
+  });
+  const domainPurchaseCapability = capabilities.find((cap) => cap.key === "domainPurchase");
   return (
     <>
       <PageHeader
         title="Domaines"
         description={`${domains.length} domaine${domains.length > 1 ? "s" : ""} géré${domains.length > 1 ? "s" : ""}`}
         actions={
-          <Button asChild>
+          <Button asChild disabled={domainPurchaseCapability?.ready === false}>
             <Link to="/app/domains/search"><Plus className="h-4 w-4" />Acheter un domaine</Link>
           </Button>
         }
       />
       <PageContent>
+        {domainPurchaseCapability && !domainPurchaseCapability.ready && (
+          <Card className="mb-4 border-destructive/30 p-4 text-sm">
+            <p className="font-medium">Achat domaine indisponible</p>
+            <p className="mt-1 text-muted-foreground">{domainPurchaseCapability.reason}</p>
+          </Card>
+        )}
         <Card>
           <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center">
             <div className="relative flex-1">

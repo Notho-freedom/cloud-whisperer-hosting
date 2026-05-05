@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertCapabilityReady, getAppBaseUrl } from "@/lib/provider-readiness";
 
 export const listTeam = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -23,6 +24,7 @@ export const inviteMember = createServerFn({ method: "POST" })
     }).parse,
   )
   .handler(async ({ data, context }) => {
+    assertCapabilityReady("teamInvites");
     const [
       { supabaseAdmin },
       { getUserOrgId },
@@ -43,10 +45,11 @@ export const inviteMember = createServerFn({ method: "POST" })
       await sendTransactionalEmail({
         to: data.email,
         subject: "Vous êtes invité sur Hostiq",
-        html: `<p>Vous avez été invité à rejoindre une équipe Hostiq.</p><p>Acceptez l'invitation : <a href="https://hostinq.lovable.app/app/team/accept?token=${invite.token}">Rejoindre</a></p>`,
+        html: `<p>Vous avez été invité à rejoindre une équipe Hostiq.</p><p>Acceptez l'invitation : <a href="${getAppBaseUrl()}/app/team/accept?token=${invite.token}">Rejoindre</a></p>`,
       });
     } catch (e) {
-      console.error("Email send failed:", e);
+      await supabaseAdmin.from("team_invites").delete().eq("id", invite.id);
+      throw new Error(e instanceof Error ? e.message : "L'invitation n'a pas pu être envoyée.");
     }
     return invite;
   });

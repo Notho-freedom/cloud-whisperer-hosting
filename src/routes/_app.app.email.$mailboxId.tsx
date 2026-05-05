@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Trash2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { getMailbox, createAlias, deleteAlias, createForward, deleteForward } from "@/api/email-api";
+import { getPlatformCapabilities } from "@/api/platform-api";
 
 export const Route = createFileRoute("/_app/app/email/$mailboxId")({
   head: () => ({ meta: [{ title: "Boîte mail | Hostiq" }] }),
@@ -20,6 +21,8 @@ function MailboxDetail() {
   const { mailboxId } = Route.useParams();
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ["mailbox", mailboxId], queryFn: () => getMailbox({ data: { id: mailboxId } }) });
+  const { data: capabilities = [] } = useQuery({ queryKey: ["platform-capabilities"], queryFn: () => getPlatformCapabilities() });
+  const mailboxCapability = capabilities.find((cap) => cap.key === "mailboxProvisioning");
   const [newAlias, setNewAlias] = React.useState("");
   const [newFwd, setNewFwd] = React.useState("");
 
@@ -56,6 +59,14 @@ function MailboxDetail() {
         breadcrumbs={[{ label: "Email", to: "/app/email" }, { label: mb.address }]}
       />
       <PageContent>
+        {mailboxCapability && !mailboxCapability.ready && (
+          <Card className="mb-4 border-destructive/30">
+            <CardContent className="p-4 text-sm">
+              <p className="font-medium">Mutations email désactivées</p>
+              <p className="mt-1 text-muted-foreground">{mailboxCapability.reason}</p>
+            </CardContent>
+          </Card>
+        )}
         <Tabs defaultValue="overview">
           <TabsList>
             <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
@@ -79,7 +90,7 @@ function MailboxDetail() {
           <TabsContent value="aliases" className="mt-6 space-y-4">
             <Card className="p-4 flex gap-2">
               <Input className="font-mono" placeholder="contact@domaine.com" value={newAlias} onChange={(e) => setNewAlias(e.target.value)} />
-              <Button onClick={() => addAlias.mutate()} disabled={!newAlias}><Plus className="h-4 w-4" />Ajouter</Button>
+              <Button onClick={() => addAlias.mutate()} disabled={!newAlias || mailboxCapability?.ready === false}><Plus className="h-4 w-4" />Ajouter</Button>
             </Card>
             <Card>
               <div className="divide-y divide-border">
@@ -87,7 +98,7 @@ function MailboxDetail() {
                 {aliases.map((a) => (
                   <div key={a.id} className="flex items-center justify-between p-4">
                     <span className="font-mono text-sm">{a.alias}</span>
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => delAlias.mutate(a.id)}>
+                    <Button variant="ghost" size="icon" className="text-destructive" disabled={mailboxCapability?.ready === false} onClick={() => delAlias.mutate(a.id)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -99,7 +110,7 @@ function MailboxDetail() {
           <TabsContent value="forwards" className="mt-6 space-y-4">
             <Card className="p-4 flex gap-2">
               <Input className="font-mono" placeholder="destinataire@email.com" value={newFwd} onChange={(e) => setNewFwd(e.target.value)} />
-              <Button onClick={() => addFwd.mutate()} disabled={!newFwd}><Plus className="h-4 w-4" />Ajouter</Button>
+              <Button onClick={() => addFwd.mutate()} disabled={!newFwd || mailboxCapability?.ready === false}><Plus className="h-4 w-4" />Ajouter</Button>
             </Card>
             <Card>
               <div className="divide-y divide-border">
@@ -107,7 +118,7 @@ function MailboxDetail() {
                 {forwards.map((f) => (
                   <div key={f.id} className="flex items-center justify-between p-4">
                     <span className="font-mono text-sm">{f.forward_to}</span>
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => delFwd.mutate(f.id)}>
+                    <Button variant="ghost" size="icon" className="text-destructive" disabled={mailboxCapability?.ready === false} onClick={() => delFwd.mutate(f.id)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>

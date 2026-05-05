@@ -184,14 +184,14 @@ export const adminProviderHealth = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { assertAdmin } = await import("./_helpers");
     await assertAdmin(context.userId);
-    const checks = [
-      { id: "planethoster", name: "PlanetHoster", configured: !!process.env.PLANETHOSTER_API_KEY },
-      { id: "vercel", name: "Vercel", configured: !!process.env.VERCEL_TOKEN },
-      { id: "stripe", name: "Stripe", configured: !!process.env.STRIPE_SECRET_KEY },
-      { id: "resend", name: "Resend", configured: !!process.env.RESEND_API_KEY },
-      { id: "github", name: "GitHub OAuth", configured: !!process.env.GITHUB_CLIENT_ID },
-    ];
-    return checks.map((c) => ({ ...c, status: c.configured ? "operational" : "down" }));
+    const { listPlatformCapabilities } = await import("@/lib/provider-readiness");
+    return listPlatformCapabilities().map((capability) => ({
+      id: capability.key,
+      name: capability.label,
+      configured: capability.ready,
+      status: capability.ready ? "operational" : "down",
+      reason: capability.reason,
+    }));
   });
 
 export const adminUpsertPlan = createServerFn({ method: "POST" })

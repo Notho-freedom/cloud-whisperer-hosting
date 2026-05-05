@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertCapabilityReady, getAppBaseUrl } from "@/lib/provider-readiness";
 
 export const listPlans = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/admin");
@@ -49,25 +50,17 @@ export const listPaymentMethods = createServerFn({ method: "GET" })
 export const setDefaultPaymentMethod = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid() }).parse)
-  .handler(async ({ data, context }) => {
-    const [{ supabaseAdmin }, { getUserOrgId }] = await Promise.all([
-      import("@/integrations/supabase/admin"),
-      import("./_helpers"),
-    ]);
-    const orgId = await getUserOrgId(context.userId);
-    await supabaseAdmin.from("payment_methods").update({ is_default: false }).eq("org_id", orgId);
-    const { error } = await supabaseAdmin.from("payment_methods").update({ is_default: true }).eq("id", data.id);
-    if (error) throw error;
-    return { ok: true };
+  .handler(async () => {
+    assertCapabilityReady("paymentMethodManagement");
+    throw new Error("La gestion réelle des moyens de paiement Stripe n'est pas encore intégrée.");
   });
 
 export const removePaymentMethod = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid() }).parse)
-  .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("payment_methods").delete().eq("id", data.id);
-    if (error) throw error;
-    return { ok: true };
+  .handler(async () => {
+    assertCapabilityReady("paymentMethodManagement");
+    throw new Error("La gestion réelle des moyens de paiement Stripe n'est pas encore intégrée.");
   });
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
@@ -100,8 +93,8 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
           },
           quantity: 1,
         }],
-        success_url: `https://hostinq.lovable.app/app/billing?ok=1`,
-        cancel_url: `https://hostinq.lovable.app/app/billing?cancel=1`,
+        success_url: `${getAppBaseUrl()}/app/billing?ok=1`,
+        cancel_url: `${getAppBaseUrl()}/app/billing?cancel=1`,
         metadata: { org_id: orgId, plan_id: data.planId },
       });
       return { url: session.url, free: false };

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { listMailboxes } from "@/api/email-api";
+import { getPlatformCapabilities } from "@/api/platform-api";
 
 const PROVIDER_LABEL: Record<string, string> = { google: "Google Workspace", microsoft: "Microsoft 365", zoho: "Zoho Mail" };
 
@@ -17,6 +18,8 @@ export const Route = createFileRoute("/_app/app/email/")({
 
 function EmailList() {
   const { data: list = [], isLoading } = useQuery({ queryKey: ["mailboxes"], queryFn: () => listMailboxes() });
+  const { data: capabilities = [] } = useQuery({ queryKey: ["platform-capabilities"], queryFn: () => getPlatformCapabilities() });
+  const mailboxCapability = capabilities.find((cap) => cap.key === "mailboxProvisioning");
   return (
     <>
       <PageHeader
@@ -25,11 +28,17 @@ function EmailList() {
         actions={
           <>
             <Button variant="outline" asChild><Link to="/app/email/providers">Providers</Link></Button>
-            <Button asChild><Link to="/app/email/new"><Plus className="h-4 w-4" />Nouvelle boîte</Link></Button>
+            <Button asChild disabled={mailboxCapability?.ready === false}><Link to="/app/email/new"><Plus className="h-4 w-4" />Nouvelle boîte</Link></Button>
           </>
         }
       />
       <PageContent>
+        {mailboxCapability && !mailboxCapability.ready && (
+          <Card className="mb-4 p-4 text-sm">
+            <p className="font-medium">Provisioning email indisponible</p>
+            <p className="mt-1 text-muted-foreground">{mailboxCapability.reason}</p>
+          </Card>
+        )}
         {isLoading && <p className="text-sm text-muted-foreground">Chargement…</p>}
         {!isLoading && list.length === 0 && <Card className="p-12 text-center text-sm text-muted-foreground">Aucune boîte. <Link to="/app/email/new" className="text-primary">Créer la première</Link>.</Card>}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

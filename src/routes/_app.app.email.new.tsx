@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, Loader2 } from "lucide-react";
 import { createMailbox, listEmailProviders } from "@/api/email-api";
 import { listDomains } from "@/api/domains-api";
+import { getPlatformCapabilities } from "@/api/platform-api";
 
 export const Route = createFileRoute("/_app/app/email/new")({
   head: () => ({ meta: [{ title: "Nouvelle boîte mail | Hostiq" }] }),
@@ -20,6 +21,8 @@ function NewMailbox() {
   const navigate = useNavigate();
   const { data: providers = [] } = useQuery({ queryKey: ["email-providers"], queryFn: () => listEmailProviders() });
   const { data: domains = [] } = useQuery({ queryKey: ["domains"], queryFn: () => listDomains() });
+  const { data: capabilities = [] } = useQuery({ queryKey: ["platform-capabilities"], queryFn: () => getPlatformCapabilities() });
+  const mailboxCapability = capabilities.find((cap) => cap.key === "mailboxProvisioning");
   const [provider, setProvider] = React.useState<"google" | "microsoft" | "zoho">("google");
   const [local, setLocal] = React.useState("");
   const [domain, setDomain] = React.useState("");
@@ -36,16 +39,25 @@ function NewMailbox() {
     <>
       <PageHeader title="Créer une boîte mail" breadcrumbs={[{ label: "Email", to: "/app/email" }, { label: "Nouvelle" }]} />
       <PageContent className="space-y-6">
+        {mailboxCapability && !mailboxCapability.ready && (
+          <Card>
+            <CardContent className="p-4 text-sm">
+              <p className="font-medium">Provisioning email indisponible</p>
+              <p className="mt-1 text-muted-foreground">{mailboxCapability.reason}</p>
+            </CardContent>
+          </Card>
+        )}
         <div>
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">1. Provider</h3>
           <div className="grid gap-4 md:grid-cols-3">
             {providers.map((p) => (
-              <button key={p.id} type="button" onClick={() => setProvider(p.id as typeof provider)}
-                className={`text-left rounded-lg border p-5 transition ${provider === p.id ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/40"}`}>
+              <button key={p.id} type="button" disabled={!p.available} onClick={() => setProvider(p.id as typeof provider)}
+                className={`text-left rounded-lg border p-5 transition disabled:opacity-60 ${provider === p.id ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/40"}`}>
                 <Mail className="h-5 w-5 text-primary" />
                 <p className="mt-3 font-semibold">{p.name}</p>
                 <p className="text-sm text-muted-foreground">{p.description}</p>
                 <p className="mt-2 text-lg font-semibold">{p.pricePerMailbox} €<span className="text-xs font-normal text-muted-foreground"> /boîte/mois</span></p>
+                {!p.available && <p className="mt-2 text-xs text-destructive">{p.reason}</p>}
               </button>
             ))}
           </div>
@@ -65,7 +77,7 @@ function NewMailbox() {
                     </select>}
               </div>
             </div>
-            <Button onClick={() => create.mutate()} disabled={!local || !domain || create.isPending}>
+            <Button onClick={() => create.mutate()} disabled={!local || !domain || create.isPending || mailboxCapability?.ready === false}>
               {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Créer la boîte"}
             </Button>
           </CardContent>
