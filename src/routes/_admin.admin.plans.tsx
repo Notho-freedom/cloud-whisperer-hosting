@@ -24,7 +24,7 @@ function AdminPlans() {
                 </div>
                 <p className="mt-3 text-2xl font-semibold">{(p.price_cents / 100).toFixed(2)} {p.currency}<span className="text-xs font-normal text-muted-foreground">/mois</span></p>
                 <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
-                  {(p.features ?? []).slice(0, 6).map((f, i) => <li key={i}>· {f}</li>)}
+                  {(Array.isArray(p.features) ? (p.features as unknown[]).slice(0, 6) : []).map((f, i) => <li key={i}>· {String(f)}</li>)}
                 </ul>
               </CardContent></Card>
             ))}
