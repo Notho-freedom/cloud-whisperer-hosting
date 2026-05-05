@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Download, ExternalLink } from "lucide-react";
-import { listInvoices } from "@/api/billing-api.server";
+import { listInvoices } from "@/api/billing-api";
 
 export const Route = createFileRoute("/_app/app/billing/invoices")({ component: InvoicesList });
 

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createSite } from "@/api/sites-api.server";
+import { createSite } from "@/api/sites-api";
 
 export const Route = createFileRoute("/_app/app/sites/new")({
   head: () => ({ meta: [{ title: "Nouveau site | Hostiq" }] }),

@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { adminListSites } from "@/api/admin-api.server";
+import { adminListSites } from "@/api/admin-api";
 
 export const Route = createFileRoute("/_admin/admin/sites")({ component: AdminSites });
 

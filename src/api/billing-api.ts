@@ -1,11 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getUserOrgId } from "./_helpers.server";
-import { stripe } from "./billing.server";
 
 export const listPlans = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin
     .from("plans").select("*").order("sort_order", { ascending: true });
   return data ?? [];
@@ -52,6 +50,10 @@ export const setDefaultPaymentMethod = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
+    const [{ supabaseAdmin }, { getUserOrgId }] = await Promise.all([
+      import("@/integrations/supabase/client.server"),
+      import("./_helpers.server"),
+    ]);
     const orgId = await getUserOrgId(context.userId);
     await supabaseAdmin.from("payment_methods").update({ is_default: false }).eq("org_id", orgId);
     const { error } = await supabaseAdmin.from("payment_methods").update({ is_default: true }).eq("id", data.id);
@@ -72,6 +74,11 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ planId: z.string().min(1).max(40) }).parse)
   .handler(async ({ data, context }) => {
+    const [{ supabaseAdmin }, { getUserOrgId }, { stripe }] = await Promise.all([
+      import("@/integrations/supabase/client.server"),
+      import("./_helpers.server"),
+      import("./billing.server"),
+    ]);
     const orgId = await getUserOrgId(context.userId);
     const { data: plan } = await supabaseAdmin.from("plans").select("*").eq("id", data.planId).maybeSingle();
     if (!plan) throw new Error("Plan introuvable");

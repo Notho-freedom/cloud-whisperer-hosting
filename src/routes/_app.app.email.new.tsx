@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Loader2 } from "lucide-react";
-import { createMailbox, listEmailProviders } from "@/api/email-api.server";
-import { listDomains } from "@/api/domains-api.server";
+import { createMailbox, listEmailProviders } from "@/api/email-api";
+import { listDomains } from "@/api/domains-api";
 
 export const Route = createFileRoute("/_app/app/email/new")({
   head: () => ({ meta: [{ title: "Nouvelle boîte mail | Hostiq" }] }),

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/Logo";
 import { Download, Printer } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
-import { getInvoice } from "@/api/billing-api.server";
+import { getInvoice } from "@/api/billing-api";
 
 export const Route = createFileRoute("/_app/app/billing/invoices/$id")({ component: InvoiceDetail });
 

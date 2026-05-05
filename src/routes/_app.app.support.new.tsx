@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createTicket } from "@/api/support-api.server";
+import { createTicket } from "@/api/support-api";
 
 export const Route = createFileRoute("/_app/app/support/new")({
   component: NewTicket,

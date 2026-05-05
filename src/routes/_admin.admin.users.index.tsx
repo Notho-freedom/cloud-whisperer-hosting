@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Loader2 } from "lucide-react";
-import { adminListUsers } from "@/api/admin-api.server";
+import { adminListUsers } from "@/api/admin-api";
 
 export const Route = createFileRoute("/_admin/admin/users/")({ component: UsersList });
 

@@ -4,7 +4,7 @@ import { AdminPageHeader, AdminPageContent } from "@/components/admin/AdminLayou
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Loader2 } from "lucide-react";
-import { adminProviderHealth } from "@/api/admin-api.server";
+import { adminProviderHealth } from "@/api/admin-api";
 
 export const Route = createFileRoute("/_admin/admin/providers")({ component: AdminProviders });
 

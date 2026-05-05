@@ -2,8 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createHash, randomBytes } from "crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getUserOrgId } from "./_helpers.server";
 
 export const listApiKeys = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -25,6 +23,10 @@ export const createApiKey = createServerFn({ method: "POST" })
     }).parse,
   )
   .handler(async ({ data, context }) => {
+    const [{ supabaseAdmin }, { getUserOrgId }] = await Promise.all([
+      import("@/integrations/supabase/client.server"),
+      import("./_helpers.server"),
+    ]);
     const orgId = await getUserOrgId(context.userId);
     const raw = `hq_live_${randomBytes(24).toString("hex")}`;
     const prefix = raw.slice(0, 11);

@@ -1,9 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getUserOrgId } from "./_helpers.server";
-import { searchDomain, whois } from "./domains.server";
 
 export const TLD_PRICING: Array<{ tld: string; pricePerYear: number; renewalPrice: number; popular?: boolean }> = [
   { tld: "com", pricePerYear: 9.99, renewalPrice: 12.99, popular: true },
@@ -37,6 +34,7 @@ export const getDomain = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ name: z.string().min(3).max(253) }).parse)
   .handler(async ({ data, context }) => {
+    const { whois } = await import("./domains.server");
     const { data: domain } = await context.supabase
       .from("domains")
       .select("*")
@@ -55,6 +53,7 @@ export const searchDomains = createServerFn({ method: "POST" })
     }).parse,
   )
   .handler(async ({ data }) => {
+    const { searchDomain } = await import("./domains.server");
     try {
       return await searchDomain(data.query, data.tlds);
     } catch (e) {
@@ -74,6 +73,10 @@ export const registerDomain = createServerFn({ method: "POST" })
     }).parse,
   )
   .handler(async ({ data, context }) => {
+    const [{ supabaseAdmin }, { getUserOrgId }] = await Promise.all([
+      import("@/integrations/supabase/client.server"),
+      import("./_helpers.server"),
+    ]);
     try {
       const orgId = await getUserOrgId(context.userId);
       const { data: row, error } = await supabaseAdmin

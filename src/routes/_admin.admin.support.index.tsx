@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Loader2 } from "lucide-react";
-import { adminListTickets } from "@/api/admin-api.server";
+import { adminListTickets } from "@/api/admin-api";
 
 export const Route = createFileRoute("/_admin/admin/support/")({ component: AdminSupport });
 

@@ -1,12 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { assertAdmin } from "./_helpers.server";
 
 export const adminKpis = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
+      import("@/integrations/supabase/client.server"),
+      import("./_helpers.server"),
+    ]);
     await assertAdmin(context.userId);
     const [users, orgs, sites, domains, mailboxes, openTickets, invoices, apiCalls] = await Promise.all([
       supabaseAdmin.from("profiles").select("*", { count: "exact", head: true }),
@@ -34,6 +36,10 @@ export const adminKpis = createServerFn({ method: "GET" })
 export const adminListUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
+      import("@/integrations/supabase/client.server"),
+      import("./_helpers.server"),
+    ]);
     await assertAdmin(context.userId);
     const { data } = await supabaseAdmin
       .from("profiles").select("id, email, name, created_at").order("created_at", { ascending: false }).limit(200);
@@ -44,6 +50,10 @@ export const adminGetUser = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
+    const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
+      import("@/integrations/supabase/client.server"),
+      import("./_helpers.server"),
+    ]);
     await assertAdmin(context.userId);
     const [{ data: profile }, { data: roles }, { data: orgs }, { data: sites }, { data: domains }] = await Promise.all([
       supabaseAdmin.from("profiles").select("*").eq("id", data.id).maybeSingle(),
@@ -59,6 +69,10 @@ export const adminSetRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ userId: z.string().uuid(), role: z.enum(["user", "admin", "support"]) }).parse)
   .handler(async ({ data, context }) => {
+    const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
+      import("@/integrations/supabase/client.server"),
+      import("./_helpers.server"),
+    ]);
     await assertAdmin(context.userId);
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
     const { error } = await supabaseAdmin.from("user_roles").insert({ user_id: data.userId, role: data.role });
@@ -70,6 +84,10 @@ const list = (table: string, order = "created_at") =>
   createServerFn({ method: "GET" })
     .middleware([requireSupabaseAuth])
     .handler(async ({ context }) => {
+      const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
+        import("@/integrations/supabase/client.server"),
+        import("./_helpers.server"),
+      ]);
       await assertAdmin(context.userId);
       const { data } = await supabaseAdmin.from(table as never).select("*").order(order, { ascending: false }).limit(200);
       return data ?? [];
@@ -89,6 +107,10 @@ export const adminListMailboxes = list("mailboxes");
 export const adminListPlans = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
+      import("@/integrations/supabase/client.server"),
+      import("./_helpers.server"),
+    ]);
     await assertAdmin(context.userId);
     const { data } = await supabaseAdmin.from("plans").select("*").order("sort_order", { ascending: true });
     return data ?? [];
@@ -107,6 +129,10 @@ export const adminUpsertBlogPost = createServerFn({ method: "POST" })
     published: z.boolean().default(false),
   }).parse)
   .handler(async ({ data, context }) => {
+    const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
+      import("@/integrations/supabase/client.server"),
+      import("./_helpers.server"),
+    ]);
     await assertAdmin(context.userId);
     const payload = { ...data, published_at: data.published ? new Date().toISOString() : null };
     if (data.id) {
@@ -128,6 +154,10 @@ export const adminCreateAnnouncement = createServerFn({ method: "POST" })
     status: z.enum(["scheduled", "sent", "draft"]).default("draft"),
   }).parse)
   .handler(async ({ data, context }) => {
+    const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
+      import("@/integrations/supabase/client.server"),
+      import("./_helpers.server"),
+    ]);
     await assertAdmin(context.userId);
     const { data: row, error } = await supabaseAdmin.from("announcements").insert(data).select().single();
     if (error) throw error;
@@ -152,6 +182,7 @@ export const adminCreateIncident = createServerFn({ method: "POST" })
 export const adminProviderHealth = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { assertAdmin } = await import("./_helpers.server");
     await assertAdmin(context.userId);
     const checks = [
       { id: "planethoster", name: "PlanetHoster", configured: !!process.env.PLANETHOSTER_API_KEY },
@@ -174,6 +205,10 @@ export const adminUpsertPlan = createServerFn({ method: "POST" })
     popular: z.boolean().default(false),
   }).parse)
   .handler(async ({ data, context }) => {
+    const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
+      import("@/integrations/supabase/client.server"),
+      import("./_helpers.server"),
+    ]);
     await assertAdmin(context.userId);
     const { error } = await supabaseAdmin.from("plans").upsert(data);
     if (error) throw error;

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/StatusBadge";
-import { adminListAnnouncements, adminCreateAnnouncement } from "@/api/admin-api.server";
+import { adminListAnnouncements, adminCreateAnnouncement } from "@/api/admin-api";
 import { Plus, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_admin/admin/announcements")({ component: Announcements });

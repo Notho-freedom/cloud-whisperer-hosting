@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Loader2 } from "lucide-react";
-import { adminListBlogPosts } from "@/api/admin-api.server";
+import { adminListBlogPosts } from "@/api/admin-api";
 
 export const Route = createFileRoute("/_admin/admin/blog")({ component: BlogCMS });
 

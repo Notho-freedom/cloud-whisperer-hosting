@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/StatusBadge";
-import { getDomain, updateDomainSettings } from "@/api/domains-api.server";
+import { getDomain, updateDomainSettings } from "@/api/domains-api";
 
 export const Route = createFileRoute("/_app/app/domains/$domain")({
   head: ({ params }) => ({ meta: [{ title: `${params.domain} | Hostiq` }] }),

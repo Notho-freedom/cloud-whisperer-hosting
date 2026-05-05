@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Plus, Loader2 } from "lucide-react";
-import { adminListIncidents, adminCreateIncident } from "@/api/admin-api.server";
+import { adminListIncidents, adminCreateIncident } from "@/api/admin-api";
 
 export const Route = createFileRoute("/_admin/admin/status")({ component: AdminStatus });
 

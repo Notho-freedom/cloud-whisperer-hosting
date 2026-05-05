@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { adminGetUser, adminSetRole } from "@/api/admin-api.server";
+import { adminGetUser, adminSetRole } from "@/api/admin-api";
 
 export const Route = createFileRoute("/_admin/admin/users/$userId")({ component: UserDetail });
 

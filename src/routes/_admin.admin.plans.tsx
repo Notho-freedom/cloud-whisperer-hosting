@@ -4,7 +4,7 @@ import { AdminPageHeader, AdminPageContent } from "@/components/admin/AdminLayou
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { adminListPlans } from "@/api/admin-api.server";
+import { adminListPlans } from "@/api/admin-api";
 
 export const Route = createFileRoute("/_admin/admin/plans")({ component: AdminPlans });
 

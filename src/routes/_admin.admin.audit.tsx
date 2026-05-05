@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2 } from "lucide-react";
-import { adminListAuditLog } from "@/api/admin-api.server";
+import { adminListAuditLog } from "@/api/admin-api";
 
 export const Route = createFileRoute("/_admin/admin/audit")({ component: AuditPage });
 

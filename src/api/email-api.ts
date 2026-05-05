@@ -1,8 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getUserOrgId } from "./_helpers.server";
 
 export const EMAIL_PROVIDERS = [
   { id: "google", name: "Google Workspace", description: "Gmail Pro avec Drive, Meet, Calendar.", pricePerMailbox: 6 },
@@ -44,6 +42,10 @@ export const createMailbox = createServerFn({ method: "POST" })
     }).parse,
   )
   .handler(async ({ data, context }) => {
+    const [{ supabaseAdmin }, { getUserOrgId }] = await Promise.all([
+      import("@/integrations/supabase/client.server"),
+      import("./_helpers.server"),
+    ]);
     try {
       const orgId = await getUserOrgId(context.userId);
       const domain = data.address.split("@")[1];
