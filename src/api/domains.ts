@@ -239,3 +239,29 @@ export async function setRegistrarLock(domain: string, locked: boolean) {
     { sld, tld },
   );
 }
+
+// ---- DNS (PlanetHoster real endpoints) ----
+
+export type DnsZoneRecord = {
+  id?: string | number;
+  type: string;
+  name: string;
+  value: string;
+  ttl?: number;
+  priority?: number;
+};
+
+export async function getDnsZone(domain: string) {
+  const { sld, tld } = splitDomain(domain);
+  return phRequest<{ records?: DnsZoneRecord[] }>("/v3/dns/zone", "GET", { sld, tld });
+}
+
+export async function saveDnsRecords(domain: string, records: DnsZoneRecord[]) {
+  const { sld, tld } = splitDomain(domain);
+  return phRequest<{ message?: string }>("/v3/dns/records", "PATCH", { sld, tld, records });
+}
+
+export async function resetDnsZone(domain: string) {
+  const { sld, tld } = splitDomain(domain);
+  return phRequest<{ message?: string }>("/v3/dns/zone/reset", "POST", { sld, tld });
+}
