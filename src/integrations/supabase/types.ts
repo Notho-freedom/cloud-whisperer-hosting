@@ -299,6 +299,89 @@ export type Database = {
           },
         ]
       }
+      domain_orders: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          currency_code: string
+          domain_name: string
+          error_message: string | null
+          id: string
+          org_id: string
+          provider_snapshot: Json
+          quote_expires_at: string
+          quoted_register_price: number
+          quoted_renew_price: number | null
+          registrant: Json
+          registrar_order_id: string | null
+          registrar_purchase_status: string | null
+          sld: string
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_status: string | null
+          term_years: number
+          tld: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          currency_code: string
+          domain_name: string
+          error_message?: string | null
+          id?: string
+          org_id: string
+          provider_snapshot?: Json
+          quote_expires_at: string
+          quoted_register_price: number
+          quoted_renew_price?: number | null
+          registrant?: Json
+          registrar_order_id?: string | null
+          registrar_purchase_status?: string | null
+          sld: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_status?: string | null
+          term_years: number
+          tld: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          currency_code?: string
+          domain_name?: string
+          error_message?: string | null
+          id?: string
+          org_id?: string
+          provider_snapshot?: Json
+          quote_expires_at?: string
+          quoted_register_price?: number
+          quoted_renew_price?: number | null
+          registrant?: Json
+          registrar_order_id?: string | null
+          registrar_purchase_status?: string | null
+          sld?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_status?: string | null
+          term_years?: number
+          tld?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domain_orders_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       domains: {
         Row: {
           auto_renew: boolean | null
