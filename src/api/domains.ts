@@ -156,7 +156,8 @@ export async function searchDomain(query: string, tlds: string[]): Promise<Domai
         throw new Error(`Aucun tarif réel n'est disponible pour .${tld}.`);
       }
 
-      const availability = await getDomainAvailability(normalizedQuery, tld);
+      const availabilityResp = await getDomainAvailability(normalizedQuery, tld);
+      const availability = { ...availabilityResp, available: !!availabilityResp.available };
       const registerPrice = availability.is_premium
         ? Number(availability.premium_register_price ?? priceInfo.register)
         : Number(priceInfo.register);

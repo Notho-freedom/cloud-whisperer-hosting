@@ -172,6 +172,10 @@ export const adminCreateIncident = createServerFn({ method: "POST" })
     status: z.enum(["investigating", "identified", "monitoring", "resolved"]).default("investigating"),
   }).parse)
   .handler(async ({ data, context }) => {
+    const [{ supabaseAdmin }, { assertAdmin }] = await Promise.all([
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
+    ]);
     await assertAdmin(context.userId);
     const { data: row, error } = await supabaseAdmin.from("incidents").insert(data).select().single();
     if (error) throw error;
