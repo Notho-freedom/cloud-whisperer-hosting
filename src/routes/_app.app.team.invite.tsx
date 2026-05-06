@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader, PageContent } from "@/components/app/AppLayout";
@@ -21,7 +21,7 @@ function InviteMember() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: capabilities = [] } = useQuery({ queryKey: ["platform-capabilities"], queryFn: () => getPlatformCapabilities() });
-  const inviteCapability = capabilities.find((cap) => cap.key === "teamInvites");
+  const inviteCapability = (capabilities as Array<{ key: string; ready: boolean; reason: string | null }>).find((cap) => cap.key === "teamInvites");
   const m = useMutation({
     mutationFn: () => inviteMember({ data: { email, role } }),
     onSuccess: () => {

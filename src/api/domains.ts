@@ -2,7 +2,7 @@ import { logApiCall } from "./_helpers";
 
 const BASE = "https://api.planethoster.net";
 
-type PlanetHosterMethod = "GET" | "POST" | "PUT" | "DELETE";
+type PlanetHosterMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 type TldPricingMap = Record<string, {
   register: number;
@@ -156,7 +156,8 @@ export async function searchDomain(query: string, tlds: string[]): Promise<Domai
         throw new Error(`Aucun tarif réel n'est disponible pour .${tld}.`);
       }
 
-      const availability = await getDomainAvailability(normalizedQuery, tld);
+      const availabilityResp = await getDomainAvailability(normalizedQuery, tld);
+      const availability = { ...availabilityResp, available: !!availabilityResp.available };
       const registerPrice = availability.is_premium
         ? Number(availability.premium_register_price ?? priceInfo.register)
         : Number(priceInfo.register);
@@ -237,4 +238,30 @@ export async function setRegistrarLock(domain: string, locked: boolean) {
     locked ? "PUT" : "DELETE",
     { sld, tld },
   );
+}
+
+// ---- DNS (PlanetHoster real endpoints) ----
+
+export type DnsZoneRecord = {
+  id?: string | number;
+  type: string;
+  name: string;
+  value: string;
+  ttl?: number;
+  priority?: number;
+};
+
+export async function getDnsZone(domain: string) {
+  const { sld, tld } = splitDomain(domain);
+  return phRequest<{ records?: DnsZoneRecord[] }>("/v3/dns/zone", "GET", { sld, tld });
+}
+
+export async function saveDnsRecords(domain: string, records: DnsZoneRecord[]) {
+  const { sld, tld } = splitDomain(domain);
+  return phRequest<{ message?: string }>("/v3/dns/records", "PATCH", { sld, tld, records });
+}
+
+export async function resetDnsZone(domain: string) {
+  const { sld, tld } = splitDomain(domain);
+  return phRequest<{ message?: string }>("/v3/dns/zone/reset", "POST", { sld, tld });
 }
