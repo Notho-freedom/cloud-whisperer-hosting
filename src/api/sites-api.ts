@@ -32,6 +32,7 @@ export const createSite = createServerFn({ method: "POST" })
       framework: z.string().max(40).default("nextjs"),
       gitRepo: z.string().url().optional(),
       githubRepoFullName: z.string().max(200).optional(),
+      branch: z.string().max(100).default("main"),
     }).parse,
   )
   .handler(async ({ data, context }) => {
@@ -47,7 +48,10 @@ export const createSite = createServerFn({ method: "POST" })
     ]);
 
     const orgId = await getUserOrgId(context.userId);
-    const gitRepoUrl = data.gitRepo ?? (data.githubRepoFullName ? `https://github.com/${data.githubRepoFullName}` : undefined);
+    const gitRepoUrl =
+      data.gitRepo ?? (data.githubRepoFullName ? `https://github.com/${data.githubRepoFullName}` : undefined);
+
+    // Create the Vercel project FIRST. If this fails, no site row is written.
     const project = await createVercelProject(data.name, data.framework, gitRepoUrl);
     const prodUrl = `https://${data.name}.vercel.app`;
 
@@ -58,6 +62,7 @@ export const createSite = createServerFn({ method: "POST" })
         name: data.name,
         framework: data.framework,
         git_repo: gitRepoUrl ?? null,
+        git_branch: data.branch,
         vercel_project_id: project.id,
         prod_url: prodUrl,
       })
@@ -65,19 +70,29 @@ export const createSite = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    const dep = await triggerDeployment(project.id, data.name);
-    if (!dep?.id) {
-      throw new Error("Vercel n'a pas retourné d'identifiant de déploiement.");
+    // Trigger first deployment if a git source is connected.
+    if (data.githubRepoFullName) {
+      try {
+        const dep = await triggerDeployment(project.id, data.name, {
+          type: "github",
+          repo: data.githubRepoFullName,
+          ref: data.branch,
+        });
+        if (dep?.id) {
+          await supabaseAdmin.from("deployments").insert({
+            site_id: site.id,
+            vercel_deployment_id: dep.id,
+            url: dep.url ? `https://${dep.url}` : null,
+            status: "queued",
+            target: "production",
+            branch: data.branch,
+            author: "system",
+          });
+        }
+      } catch (e) {
+        console.error("Initial deployment failed:", e);
+      }
     }
-
-    await supabaseAdmin.from("deployments").insert({
-      site_id: site.id,
-      vercel_deployment_id: dep.id,
-      url: dep.url ? `https://${dep.url}` : null,
-      status: "queued",
-      target: "production",
-      author: "system",
-    });
 
     return site;
   });
@@ -90,15 +105,27 @@ export const updateSite = createServerFn({ method: "POST" })
     region: z.string().max(20).optional(),
     git_branch: z.string().max(100).optional(),
   }).parse)
-  .handler(async () => {
-    assertCapabilityReady("siteConfig");
-    throw new Error("La synchronisation réelle des réglages de site n'est pas encore intégrée.");
+  .handler(async ({ data, context }) => {
+    const { id, ...patch } = data;
+    const { error } = await context.supabase.from("sites").update(patch).eq("id", id);
+    if (error) throw error;
+    return { ok: true };
   });
 
 export const deleteSite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
+    const { data: site } = await context.supabase
+      .from("sites").select("vercel_project_id").eq("id", data.id).maybeSingle();
+    if (site?.vercel_project_id) {
+      try {
+        const { deleteVercelProject } = await import("./sites");
+        await deleteVercelProject(site.vercel_project_id);
+      } catch (e) {
+        console.error("Vercel project delete failed:", e);
+      }
+    }
     const { error } = await context.supabase.from("sites").delete().eq("id", data.id);
     if (error) throw error;
     return { ok: true };
@@ -109,15 +136,19 @@ export const listSiteDeployments = createServerFn({ method: "GET" })
   .inputValidator(z.object({ siteId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const { listDeployments } = await import("./sites");
-    const { data: site, error } = await context.supabase
+    const { data: site } = await context.supabase
       .from("sites").select("vercel_project_id").eq("id", data.siteId).maybeSingle();
-    if (error) throw error;
-    const { data: db, error: dbError } = await context.supabase
+    const { data: db } = await context.supabase
       .from("deployments").select("*").eq("site_id", data.siteId).order("created_at", { ascending: false });
-    if (dbError) throw dbError;
-    const live = site?.vercel_project_id
-      ? await listDeployments(site.vercel_project_id) as Array<Record<string, unknown>>
-      : [];
+    let live: Array<{ id?: string; url?: string; state?: string; createdAt?: number }> = [];
+    if (site?.vercel_project_id) {
+      try {
+        const fetched = await listDeployments(site.vercel_project_id);
+        live = fetched.map((d) => ({ id: d.uid, url: d.url, state: d.state, createdAt: d.createdAt }));
+      } catch (e) {
+        console.error("Vercel listDeployments failed:", e);
+      }
+    }
     return { db: db ?? [], live };
   });
 
@@ -125,8 +156,7 @@ export const getDeployment = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
-    const { data: dep, error } = await context.supabase.from("deployments").select("*").eq("id", data.id).maybeSingle();
-    if (error) throw error;
+    const { data: dep } = await context.supabase.from("deployments").select("*").eq("id", data.id).maybeSingle();
     return dep;
   });
 
@@ -139,15 +169,19 @@ export const redeploySite = createServerFn({ method: "POST" })
       import("@/integrations/supabase/admin"),
       import("./sites"),
     ]);
-    const { data: site, error } = await context.supabase
-      .from("sites").select("name, vercel_project_id").eq("id", data.siteId).maybeSingle();
-    if (error) throw error;
-    if (!site?.vercel_project_id) throw new Error("Aucun projet Vercel lié");
+    const { data: site } = await context.supabase
+      .from("sites").select("name, vercel_project_id, git_repo, git_branch").eq("id", data.siteId).maybeSingle();
+    if (!site?.vercel_project_id) throw new Error("Aucun projet Vercel lié à ce site.");
 
-    const dep = await triggerDeployment(site.vercel_project_id, site.name);
-    if (!dep?.id) {
-      throw new Error("Vercel n'a pas retourné d'identifiant de déploiement.");
-    }
+    const repoFullName = site.git_repo?.includes("github.com/")
+      ? site.git_repo.split("github.com/")[1]?.replace(/\.git$/, "")
+      : undefined;
+    const dep = await triggerDeployment(
+      site.vercel_project_id,
+      site.name,
+      repoFullName ? { type: "github", repo: repoFullName, ref: site.git_branch ?? "main" } : undefined,
+    );
+    if (!dep?.id) throw new Error("Vercel n'a pas retourné d'identifiant de déploiement.");
 
     await supabaseAdmin.from("deployments").insert({
       site_id: data.siteId,
@@ -155,18 +189,20 @@ export const redeploySite = createServerFn({ method: "POST" })
       url: dep.url ? `https://${dep.url}` : null,
       status: "queued",
       target: "production",
+      branch: site.git_branch ?? "main",
       author: "manual",
     });
     return dep;
   });
 
+// ---- ENV VARS (real Vercel + mirror in DB for UI) ----
+
 export const listEnvVars = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ siteId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
-    const { data: rows, error } = await context.supabase
+    const { data: rows } = await context.supabase
       .from("env_vars").select("*").eq("site_id", data.siteId).order("key");
-    if (error) throw error;
     return rows ?? [];
   });
 
@@ -180,43 +216,108 @@ export const upsertEnvVar = createServerFn({ method: "POST" })
     target: z.array(z.enum(["production", "preview", "development"])).default(["production"]),
     type: z.enum(["plain", "secret"]).default("plain"),
   }).parse)
-  .handler(async () => {
-    assertCapabilityReady("siteConfig");
-    throw new Error("La gestion réelle des variables d'environnement Vercel n'est pas encore intégrée.");
+  .handler(async ({ data, context }) => {
+    assertCapabilityReady("siteProvisioning");
+    const { upsertVercelEnv } = await import("./sites");
+    const { data: site } = await context.supabase
+      .from("sites").select("vercel_project_id").eq("id", data.siteId).maybeSingle();
+    if (!site?.vercel_project_id) throw new Error("Site sans projet Vercel lié.");
+
+    await upsertVercelEnv(site.vercel_project_id, {
+      key: data.key,
+      value: data.value,
+      type: data.type === "secret" ? "encrypted" : "plain",
+      target: data.target,
+    });
+
+    const payload = {
+      site_id: data.siteId,
+      key: data.key,
+      value: data.type === "secret" ? "" : data.value,
+      target: data.target,
+      type: data.type,
+      updated_at: new Date().toISOString(),
+    };
+    if (data.id) {
+      const { error } = await context.supabase.from("env_vars").update(payload).eq("id", data.id);
+      if (error) throw error;
+      return { id: data.id };
+    }
+    const { data: row, error } = await context.supabase.from("env_vars").insert(payload).select().single();
+    if (error) throw error;
+    return row;
   });
 
 export const deleteEnvVar = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid() }).parse)
-  .handler(async () => {
-    assertCapabilityReady("siteConfig");
-    throw new Error("La gestion réelle des variables d'environnement Vercel n'est pas encore intégrée.");
+  .handler(async ({ data, context }) => {
+    assertCapabilityReady("siteProvisioning");
+    const { deleteVercelEnv, listVercelEnv } = await import("./sites");
+    const { data: row } = await context.supabase
+      .from("env_vars").select("site_id, key").eq("id", data.id).maybeSingle();
+    if (row) {
+      const { data: site } = await context.supabase
+        .from("sites").select("vercel_project_id").eq("id", row.site_id).maybeSingle();
+      if (site?.vercel_project_id) {
+        try {
+          const envs = await listVercelEnv(site.vercel_project_id);
+          const match = envs.find((e) => e.key === row.key);
+          if (match?.id) await deleteVercelEnv(site.vercel_project_id, match.id);
+        } catch (e) {
+          console.error("Vercel env delete failed:", e);
+        }
+      }
+    }
+    const { error } = await context.supabase.from("env_vars").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
   });
+
+// ---- SITE DOMAINS (real Vercel) ----
 
 export const addSiteDomain = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ siteId: z.string().uuid(), domain: z.string().min(3).max(253) }).parse)
-  .handler(async () => {
-    assertCapabilityReady("siteConfig");
-    throw new Error("La liaison réelle des domaines sur le site n'est pas encore intégrée.");
+  .handler(async ({ data, context }) => {
+    assertCapabilityReady("siteProvisioning");
+    const { addVercelProjectDomain } = await import("./sites");
+    const { data: site } = await context.supabase
+      .from("sites").select("domains, vercel_project_id").eq("id", data.siteId).maybeSingle();
+    if (!site?.vercel_project_id) throw new Error("Site sans projet Vercel lié.");
+
+    const result = await addVercelProjectDomain(site.vercel_project_id, data.domain);
+    const next = Array.from(new Set([...(site.domains ?? []), data.domain]));
+    const { error } = await context.supabase.from("sites").update({ domains: next }).eq("id", data.siteId);
+    if (error) throw error;
+    return { domains: next, verification: result.verification ?? [], verified: result.verified ?? false };
   });
 
 export const removeSiteDomain = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ siteId: z.string().uuid(), domain: z.string() }).parse)
-  .handler(async () => {
-    assertCapabilityReady("siteConfig");
-    throw new Error("La liaison réelle des domaines sur le site n'est pas encore intégrée.");
+  .handler(async ({ data, context }) => {
+    assertCapabilityReady("siteProvisioning");
+    const { removeVercelProjectDomain } = await import("./sites");
+    const { data: site } = await context.supabase
+      .from("sites").select("domains, vercel_project_id").eq("id", data.siteId).maybeSingle();
+    if (site?.vercel_project_id) {
+      try { await removeVercelProjectDomain(site.vercel_project_id, data.domain); } catch (e) { console.error("Vercel removeDomain:", e); }
+    }
+    const next = (site?.domains ?? []).filter((d: string) => d !== data.domain);
+    const { error } = await context.supabase.from("sites").update({ domains: next }).eq("id", data.siteId);
+    if (error) throw error;
+    return { domains: next };
   });
 
-export const deployFromGithub = createServerFn({ method: "POST" })
+export const verifySiteDomain = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({
-    name: z.string().min(1).max(60).regex(/^[a-z0-9-]+$/),
-    fullName: z.string().min(3).max(200),
-    framework: z.string().max(40).default("nextjs"),
-  }).parse)
-  .handler(async () => {
+  .inputValidator(z.object({ siteId: z.string().uuid(), domain: z.string() }).parse)
+  .handler(async ({ data, context }) => {
     assertCapabilityReady("siteProvisioning");
-    throw new Error("Le flux direct deployFromGithub n'est plus disponible. Utilisez la création réelle de site.");
+    const { verifyVercelProjectDomain } = await import("./sites");
+    const { data: site } = await context.supabase
+      .from("sites").select("vercel_project_id").eq("id", data.siteId).maybeSingle();
+    if (!site?.vercel_project_id) throw new Error("Site sans projet Vercel lié.");
+    return verifyVercelProjectDomain(site.vercel_project_id, data.domain);
   });
