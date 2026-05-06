@@ -228,14 +228,51 @@ export const listDnsRecords = createServerFn({ method: "GET" })
 
 export const upsertDnsRecord = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
-    assertCapabilityReady("dnsManagement");
-    throw new Error("La gestion DNS réelle n'est pas disponible.");
+  .inputValidator(z.object({
+    domainId: z.string().uuid(),
+    id: z.string().uuid().optional(),
+    type: z.enum(["A", "AAAA", "CNAME", "MX", "TXT", "NS", "SRV"]),
+    name: z.string().min(1).max(253),
+    value: z.string().min(1).max(2048),
+    ttl: z.number().int().min(60).max(86400).default(3600),
+    priority: z.number().int().min(0).max(65535).optional(),
+  }).parse)
+  .handler(async ({ data, context }) => {
+    const { saveDnsRecords, getDnsZone } = await import("./domains");
+    const { data: dom, error } = await context.supabase
+      .from("domains").select("id, name").eq("id", data.domainId).maybeSingle();
+    if (error) throw error;
+    if (!dom) throw new Error("Domaine introuvable.");
+    const zone = await getDnsZone(dom.name);
+    const existing = zone.records ?? [];
+    const next = [...existing, { type: data.type, name: data.name, value: data.value, ttl: data.ttl, priority: data.priority }];
+    await saveDnsRecords(dom.name, next);
+    const { data: row, error: insErr } = await context.supabase
+      .from("dns_records")
+      .insert({ domain_id: data.domainId, type: data.type, name: data.name, value: data.value, ttl: data.ttl, priority: data.priority ?? null })
+      .select().single();
+    if (insErr) throw insErr;
+    return row;
   });
 
 export const deleteDnsRecord = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
-    assertCapabilityReady("dnsManagement");
-    throw new Error("La gestion DNS réelle n'est pas disponible.");
+  .inputValidator(z.object({ id: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { saveDnsRecords, getDnsZone } = await import("./domains");
+    const { data: rec } = await context.supabase
+      .from("dns_records").select("*, domains(name)").eq("id", data.id).maybeSingle();
+    const domainName = (rec as { domains?: { name?: string } } | null)?.domains?.name;
+    if (domainName) {
+      try {
+        const zone = await getDnsZone(domainName);
+        const filtered = (zone.records ?? []).filter((r) =>
+          !(r.type === rec!.type && r.name === rec!.name && r.value === rec!.value),
+        );
+        await saveDnsRecords(domainName, filtered);
+      } catch (e) { console.error("PlanetHoster DNS delete:", e); }
+    }
+    const { error } = await context.supabase.from("dns_records").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
   });

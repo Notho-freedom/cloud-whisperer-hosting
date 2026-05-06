@@ -74,14 +74,14 @@ export function getPlatformCapabilities(): Record<PlatformCapabilityKey, Platfor
     dnsManagement: capability(
       "dnsManagement",
       "Gestion DNS",
-      false,
-      "La synchronisation DNS réelle avec le provider n'est pas encore intégrée.",
+      hasPlanetHoster,
+      hasPlanetHoster ? null : "La gestion DNS réelle nécessite PlanetHoster (PLANETHOSTER_API_USER/KEY).",
     ),
     siteConfig: capability(
       "siteConfig",
       "Configuration de sites",
-      false,
-      "La synchronisation réelle des domaines, variables d'environnement et réglages Vercel n'est pas encore intégrée.",
+      hasVercel,
+      hasVercel ? null : "La configuration réelle des sites nécessite Vercel (VERCEL_TOKEN).",
     ),
     paymentMethodManagement: capability(
       "paymentMethodManagement",

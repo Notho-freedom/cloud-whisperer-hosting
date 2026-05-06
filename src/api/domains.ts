@@ -2,7 +2,7 @@ import { logApiCall } from "./_helpers";
 
 const BASE = "https://api.planethoster.net";
 
-type PlanetHosterMethod = "GET" | "POST" | "PUT" | "DELETE";
+type PlanetHosterMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 type TldPricingMap = Record<string, {
   register: number;
