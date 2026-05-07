@@ -16,6 +16,8 @@ export const Route = createFileRoute("/_app/app/sites/$projectId")({
 const TABS = [
   { to: "", label: "Vue d'ensemble" },
   { to: "/deployments", label: "Déploiements" },
+  { to: "/source", label: "Source" },
+  { to: "/logs", label: "Logs" },
   { to: "/domains", label: "Domaines" },
   { to: "/env", label: "Variables" },
   { to: "/settings", label: "Paramètres" },

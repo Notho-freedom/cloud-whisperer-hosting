@@ -87,6 +87,7 @@ import { Route as AdminAdminUsersRolesRouteImport } from './routes/_admin.admin.
 import { Route as AdminAdminUsersUserIdRouteImport } from './routes/_admin.admin.users.$userId'
 import { Route as AdminAdminSupportMacrosRouteImport } from './routes/_admin.admin.support.macros'
 import { Route as AppAppSitesProjectIdIndexRouteImport } from './routes/_app.app.sites.$projectId.index'
+import { Route as AppAppSitesProjectIdSourceRouteImport } from './routes/_app.app.sites.$projectId.source'
 import { Route as AppAppSitesProjectIdSettingsRouteImport } from './routes/_app.app.sites.$projectId.settings'
 import { Route as AppAppSitesProjectIdLogsRouteImport } from './routes/_app.app.sites.$projectId.logs'
 import { Route as AppAppSitesProjectIdEnvRouteImport } from './routes/_app.app.sites.$projectId.env'
@@ -487,6 +488,12 @@ const AppAppSitesProjectIdIndexRoute =
     path: '/',
     getParentRoute: () => AppAppSitesProjectIdRoute,
   } as any)
+const AppAppSitesProjectIdSourceRoute =
+  AppAppSitesProjectIdSourceRouteImport.update({
+    id: '/source',
+    path: '/source',
+    getParentRoute: () => AppAppSitesProjectIdRoute,
+  } as any)
 const AppAppSitesProjectIdSettingsRoute =
   AppAppSitesProjectIdSettingsRouteImport.update({
     id: '/settings',
@@ -621,6 +628,7 @@ export interface FileRoutesByFullPath {
   '/app/sites/$projectId/env': typeof AppAppSitesProjectIdEnvRoute
   '/app/sites/$projectId/logs': typeof AppAppSitesProjectIdLogsRoute
   '/app/sites/$projectId/settings': typeof AppAppSitesProjectIdSettingsRoute
+  '/app/sites/$projectId/source': typeof AppAppSitesProjectIdSourceRoute
   '/app/sites/$projectId/': typeof AppAppSitesProjectIdIndexRoute
   '/app/sites/$projectId/deployments/$deploymentId': typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
@@ -704,6 +712,7 @@ export interface FileRoutesByTo {
   '/app/sites/$projectId/env': typeof AppAppSitesProjectIdEnvRoute
   '/app/sites/$projectId/logs': typeof AppAppSitesProjectIdLogsRoute
   '/app/sites/$projectId/settings': typeof AppAppSitesProjectIdSettingsRoute
+  '/app/sites/$projectId/source': typeof AppAppSitesProjectIdSourceRoute
   '/app/sites/$projectId': typeof AppAppSitesProjectIdIndexRoute
   '/app/sites/$projectId/deployments/$deploymentId': typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
@@ -794,6 +803,7 @@ export interface FileRoutesById {
   '/_app/app/sites/$projectId/env': typeof AppAppSitesProjectIdEnvRoute
   '/_app/app/sites/$projectId/logs': typeof AppAppSitesProjectIdLogsRoute
   '/_app/app/sites/$projectId/settings': typeof AppAppSitesProjectIdSettingsRoute
+  '/_app/app/sites/$projectId/source': typeof AppAppSitesProjectIdSourceRoute
   '/_app/app/sites/$projectId/': typeof AppAppSitesProjectIdIndexRoute
   '/_app/app/sites/$projectId/deployments/$deploymentId': typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
@@ -881,6 +891,7 @@ export interface FileRouteTypes {
     | '/app/sites/$projectId/env'
     | '/app/sites/$projectId/logs'
     | '/app/sites/$projectId/settings'
+    | '/app/sites/$projectId/source'
     | '/app/sites/$projectId/'
     | '/app/sites/$projectId/deployments/$deploymentId'
   fileRoutesByTo: FileRoutesByTo
@@ -964,6 +975,7 @@ export interface FileRouteTypes {
     | '/app/sites/$projectId/env'
     | '/app/sites/$projectId/logs'
     | '/app/sites/$projectId/settings'
+    | '/app/sites/$projectId/source'
     | '/app/sites/$projectId'
     | '/app/sites/$projectId/deployments/$deploymentId'
   id:
@@ -1053,6 +1065,7 @@ export interface FileRouteTypes {
     | '/_app/app/sites/$projectId/env'
     | '/_app/app/sites/$projectId/logs'
     | '/_app/app/sites/$projectId/settings'
+    | '/_app/app/sites/$projectId/source'
     | '/_app/app/sites/$projectId/'
     | '/_app/app/sites/$projectId/deployments/$deploymentId'
   fileRoutesById: FileRoutesById
@@ -1615,6 +1628,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppSitesProjectIdIndexRouteImport
       parentRoute: typeof AppAppSitesProjectIdRoute
     }
+    '/_app/app/sites/$projectId/source': {
+      id: '/_app/app/sites/$projectId/source'
+      path: '/source'
+      fullPath: '/app/sites/$projectId/source'
+      preLoaderRoute: typeof AppAppSitesProjectIdSourceRouteImport
+      parentRoute: typeof AppAppSitesProjectIdRoute
+    }
     '/_app/app/sites/$projectId/settings': {
       id: '/_app/app/sites/$projectId/settings'
       path: '/settings'
@@ -1811,6 +1831,7 @@ interface AppAppSitesProjectIdRouteChildren {
   AppAppSitesProjectIdEnvRoute: typeof AppAppSitesProjectIdEnvRoute
   AppAppSitesProjectIdLogsRoute: typeof AppAppSitesProjectIdLogsRoute
   AppAppSitesProjectIdSettingsRoute: typeof AppAppSitesProjectIdSettingsRoute
+  AppAppSitesProjectIdSourceRoute: typeof AppAppSitesProjectIdSourceRoute
   AppAppSitesProjectIdIndexRoute: typeof AppAppSitesProjectIdIndexRoute
 }
 
@@ -1822,6 +1843,7 @@ const AppAppSitesProjectIdRouteChildren: AppAppSitesProjectIdRouteChildren = {
   AppAppSitesProjectIdEnvRoute: AppAppSitesProjectIdEnvRoute,
   AppAppSitesProjectIdLogsRoute: AppAppSitesProjectIdLogsRoute,
   AppAppSitesProjectIdSettingsRoute: AppAppSitesProjectIdSettingsRoute,
+  AppAppSitesProjectIdSourceRoute: AppAppSitesProjectIdSourceRoute,
   AppAppSitesProjectIdIndexRoute: AppAppSitesProjectIdIndexRoute,
 }
 

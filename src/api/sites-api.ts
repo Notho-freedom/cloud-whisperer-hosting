@@ -157,7 +157,139 @@ export const getDeployment = createServerFn({ method: "GET" })
   .inputValidator(z.object({ id: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const { data: dep } = await context.supabase.from("deployments").select("*").eq("id", data.id).maybeSingle();
+    if (!dep) return null;
+    // Fetch live status from Vercel if we have an id
+    if (dep.vercel_deployment_id) {
+      try {
+        const { getVercelDeployment } = await import("./sites");
+        const live = await getVercelDeployment(dep.vercel_deployment_id);
+        const stateMap: Record<string, string> = { READY: "ready", ERROR: "error", CANCELED: "canceled", BUILDING: "building", QUEUED: "queued", INITIALIZING: "building" };
+        const newStatus = stateMap[live.readyState ?? ""] ?? dep.status;
+        return { ...dep, status: newStatus, live_url: live.url ? `https://${live.url}` : dep.url };
+      } catch {/* ignore */}
+    }
     return dep;
+  });
+
+export const streamDeploymentBuildEvents = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ deploymentId: z.string().uuid(), since: z.number().optional() }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: dep } = await context.supabase
+      .from("deployments").select("vercel_deployment_id, status").eq("id", data.deploymentId).maybeSingle();
+    if (!dep?.vercel_deployment_id) return { events: [], status: dep?.status ?? "unknown" };
+    const { getDeploymentEvents, getVercelDeployment } = await import("./sites");
+    const [events, live] = await Promise.all([
+      getDeploymentEvents(dep.vercel_deployment_id, data.since).catch(() => []),
+      getVercelDeployment(dep.vercel_deployment_id).catch(() => ({ readyState: dep.status })),
+    ]);
+    return { events, status: (live.readyState ?? dep.status ?? "unknown").toLowerCase() };
+  });
+
+export const getDeploymentRuntimeLogs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ deploymentId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: dep } = await context.supabase
+      .from("deployments").select("vercel_deployment_id").eq("id", data.deploymentId).maybeSingle();
+    if (!dep?.vercel_deployment_id) return [];
+    const { getRuntimeLogs } = await import("./sites");
+    return getRuntimeLogs(dep.vercel_deployment_id).catch(() => []);
+  });
+
+export const cancelDeployment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ deploymentId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: dep } = await context.supabase
+      .from("deployments").select("vercel_deployment_id").eq("id", data.deploymentId).maybeSingle();
+    if (dep?.vercel_deployment_id) {
+      const { cancelVercelDeployment } = await import("./sites");
+      await cancelVercelDeployment(dep.vercel_deployment_id);
+    }
+    await context.supabase.from("deployments").update({ status: "canceled" }).eq("id", data.deploymentId);
+    return { ok: true };
+  });
+
+// ---- Upload-based deployments ----
+const FileUploadSchema = z.object({
+  siteId: z.string().uuid().optional(),
+  name: z.string().min(1).max(60).regex(/^[a-z0-9-]+$/),
+  framework: z.string().nullable().optional(),
+  files: z.array(z.object({
+    path: z.string().min(1).max(500),
+    data: z.string(),     // base64
+    size: z.number().min(0).max(50_000_000),
+  })).min(1).max(2000),
+});
+
+export const deployFromUpload = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(FileUploadSchema.parse)
+  .handler(async ({ data, context }) => {
+    assertCapabilityReady("siteProvisioning");
+    const [{ supabaseAdmin }, { getUserOrgId }, { createVercelProject, triggerDeploymentFromFiles }] = await Promise.all([
+      import("@/integrations/supabase/admin"),
+      import("./_helpers"),
+      import("./sites"),
+    ]);
+
+    let siteId = data.siteId;
+    let vercelProjectId: string | null = null;
+    if (siteId) {
+      const { data: existing } = await context.supabase
+        .from("sites").select("vercel_project_id").eq("id", siteId).maybeSingle();
+      vercelProjectId = existing?.vercel_project_id ?? null;
+    }
+    if (!vercelProjectId) {
+      const orgId = await getUserOrgId(context.userId);
+      const project = await createVercelProject(data.name, data.framework ?? undefined);
+      vercelProjectId = project.id;
+      const { data: site } = await supabaseAdmin.from("sites").insert({
+        org_id: orgId,
+        name: data.name,
+        framework: data.framework ?? "static",
+        vercel_project_id: project.id,
+        prod_url: `https://${data.name}.vercel.app`,
+      }).select().single();
+      siteId = site!.id;
+    }
+
+    const dep = await triggerDeploymentFromFiles(data.name, data.files.map((f) => ({
+      file: f.path,
+      data: f.data,
+      encoding: "base64",
+    })), { projectId: vercelProjectId, framework: data.framework ?? null });
+    if (!dep?.id) throw new Error("Vercel n'a pas retourné d'identifiant de déploiement.");
+
+    const { data: depRow } = await supabaseAdmin.from("deployments").insert({
+      site_id: siteId!,
+      vercel_deployment_id: dep.id,
+      url: dep.url ? `https://${dep.url}` : null,
+      status: "queued",
+      target: "production",
+      branch: null,
+      author: "upload",
+    }).select().single();
+
+    const totalBytes = data.files.reduce((a, f) => a + f.size, 0);
+    await supabaseAdmin.from("site_uploads").insert({
+      site_id: siteId!,
+      deployment_id: depRow!.id,
+      manifest: data.files.map((f) => ({ path: f.path, size: f.size })),
+      total_bytes: totalBytes,
+    });
+    return { siteId, deploymentId: depRow!.id };
+  });
+
+export const getSiteUploadManifest = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ siteId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { data: row } = await context.supabase
+      .from("site_uploads").select("manifest, total_bytes, created_at, deployment_id")
+      .eq("site_id", data.siteId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    return row;
   });
 
 export const redeploySite = createServerFn({ method: "POST" })
