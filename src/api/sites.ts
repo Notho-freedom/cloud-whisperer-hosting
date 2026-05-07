@@ -166,3 +166,63 @@ export async function verifyVercelProjectDomain(projectId: string, name: string)
     method: "POST",
   });
 }
+
+// ---- Deployment events (build logs streaming) ----
+export type VercelDeploymentEvent = {
+  type?: string;            // stdout, stderr, command, delimiter, ...
+  created?: number;
+  text?: string;
+  payload?: { text?: string; info?: { type?: string; name?: string } };
+};
+
+export async function getDeploymentEvents(deploymentId: string, since?: number): Promise<VercelDeploymentEvent[]> {
+  const qs = new URLSearchParams({ builds: "1", direction: "forward", limit: "1000" });
+  if (since) qs.set("since", String(since));
+  const data = await vc<VercelDeploymentEvent[] | { events?: VercelDeploymentEvent[] }>(
+    `/v3/deployments/${deploymentId}/events?${qs.toString()}`,
+  );
+  // Vercel returns either an array (NDJSON parsed) or { events: [] }
+  return Array.isArray(data) ? data : data.events ?? [];
+}
+
+// ---- File-based deployments (no Git) ----
+export type DeployFile = { file: string; data: string; encoding?: "base64" | "utf-8" };
+
+export async function triggerDeploymentFromFiles(
+  name: string,
+  files: DeployFile[],
+  options?: { projectId?: string; target?: "production" | "staging"; framework?: string | null },
+) {
+  const body: Record<string, unknown> = {
+    name,
+    target: options?.target ?? "production",
+    files: files.map((f) => ({ file: f.file, data: f.data, encoding: f.encoding ?? "base64" })),
+  };
+  if (options?.projectId) body.project = options.projectId;
+  if (options?.framework !== undefined) {
+    body.projectSettings = { framework: options.framework ?? null };
+  }
+  return vc<{ id?: string; url?: string }>("/v13/deployments?forceNew=1", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+// ---- Project & deployment runtime logs ----
+export async function getRuntimeLogs(deploymentId: string, limit = 200) {
+  // Vercel runtime logs (lambda/edge invocations). Returns array of log entries.
+  const data = await vc<Array<{ id?: string; timestampInMs?: number; message?: string; level?: string; source?: string; type?: string }>>(
+    `/v2/deployments/${deploymentId}/events?direction=backward&limit=${limit}&follow=0`,
+  );
+  return Array.isArray(data) ? data : [];
+}
+
+export async function cancelVercelDeployment(deploymentId: string) {
+  return vc<{ ok?: boolean }>(`/v12/deployments/${deploymentId}/cancel`, { method: "PATCH" });
+}
+
+export async function listVercelDeploymentFiles(deploymentId: string) {
+  return vc<Array<{ name: string; type: string; uid?: string; children?: unknown[] }>>(
+    `/v6/deployments/${deploymentId}/files`,
+  );
+}
