@@ -100,8 +100,7 @@ function NewSite() {
     const arr = Array.from(fileList);
     const out: Array<{ path: string; data: string; size: number }> = [];
     for (const f of arr) {
-      // @ts-expect-error webkitRelativePath exists for directory uploads
-      const path = (f.webkitRelativePath as string) || f.name;
+      const path = ((f as File & { webkitRelativePath?: string }).webkitRelativePath) || f.name;
       const buf = await f.arrayBuffer();
       const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
       out.push({ path: path.replace(/^\.\//, ""), data: b64, size: f.size });

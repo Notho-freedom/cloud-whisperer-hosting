@@ -30,9 +30,9 @@ function DeploymentDetail() {
   const sinceRef = React.useRef<number>(0);
   const isRunning = RUNNING.has((d?.status ?? "").toLowerCase());
 
+  // Poll build events; keep polling for a bit even after status flips so trailing logs land.
   React.useEffect(() => {
-    if (!d) return;
-    let stop = false;
+    let active = true;
     const tick = async () => {
       try {
         const r = await streamDeploymentBuildEvents({ data: { deploymentId, since: sinceRef.current || undefined } });
@@ -48,32 +48,11 @@ function DeploymentDetail() {
           }
         }
       } catch {/* */}
-      if (!stop && RUNNING.has((r => r)(d.status ?? "").toLowerCase())) {
-        setTimeout(tick, 1500);
-      }
     };
     void tick();
-    return () => { stop = true; };
-  }, [d, deploymentId]);
-
-  // poll while running
-  React.useEffect(() => {
-    if (!isRunning) return;
-    const id = setInterval(async () => {
-      try {
-        const r = await streamDeploymentBuildEvents({ data: { deploymentId, since: sinceRef.current || undefined } });
-        if (r.events?.length) {
-          const next = r.events.map((e) => ({
-            ts: e.created, text: e.payload?.text ?? e.text ?? "", type: e.type,
-          })).filter((e) => e.text);
-          if (next.length) {
-            setEvents((prev) => [...prev, ...next]);
-            sinceRef.current = Math.max(...r.events.map((e) => e.created ?? 0)) + 1;
-          }
-        }
-      } catch {/* */}
-    }, 1500);
-    return () => clearInterval(id);
+    if (!isRunning) return () => { active = false; };
+    const id = setInterval(() => { if (active) void tick(); }, 1500);
+    return () => { active = false; clearInterval(id); };
   }, [isRunning, deploymentId]);
 
   const cancel = useMutation({
