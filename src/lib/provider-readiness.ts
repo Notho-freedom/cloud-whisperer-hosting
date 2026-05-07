@@ -31,7 +31,7 @@ function capability(
 }
 
 export function getPlatformCapabilities(): Record<PlatformCapabilityKey, PlatformCapability> {
-  const hasPlanetHoster = hasEnv("PLANETHOSTER_API_USER") && hasEnv("PLANETHOSTER_API_KEY");
+  const hasPlanetHosterProxy = hasEnv("PLANETHOSTER_PROXY_URL") && hasEnv("PLANETHOSTER_PROXY_SECRET");
   const hasStripeCheckout = hasEnv("STRIPE_SECRET_KEY");
   const hasStripeWebhook = hasEnv("STRIPE_WEBHOOK_SECRET");
   const hasVercel = hasEnv("VERCEL_TOKEN");
@@ -42,16 +42,16 @@ export function getPlatformCapabilities(): Record<PlatformCapabilityKey, Platfor
     domainSearch: capability(
       "domainSearch",
       "Recherche de domaines",
-      hasPlanetHoster,
-      hasPlanetHoster ? null : "PlanetHoster n'est pas configuré pour la recherche réelle de domaines.",
+      hasPlanetHosterProxy,
+      hasPlanetHosterProxy ? null : "Le proxy PlanetHoster n'est pas configuré (PLANETHOSTER_PROXY_URL / PLANETHOSTER_PROXY_SECRET).",
     ),
     domainPurchase: capability(
       "domainPurchase",
       "Achat de domaines",
-      hasPlanetHoster && hasStripeCheckout && hasStripeWebhook,
-      hasPlanetHoster && hasStripeCheckout && hasStripeWebhook
+      hasPlanetHosterProxy && hasStripeCheckout && hasStripeWebhook,
+      hasPlanetHosterProxy && hasStripeCheckout && hasStripeWebhook
         ? null
-        : "L'achat réel de domaines nécessite PlanetHoster ainsi que Stripe checkout et webhook.",
+        : "L'achat réel de domaines nécessite le proxy PlanetHoster ainsi que Stripe checkout et webhook.",
     ),
     siteProvisioning: capability(
       "siteProvisioning",
@@ -74,8 +74,8 @@ export function getPlatformCapabilities(): Record<PlatformCapabilityKey, Platfor
     dnsManagement: capability(
       "dnsManagement",
       "Gestion DNS",
-      hasPlanetHoster,
-      hasPlanetHoster ? null : "La gestion DNS réelle nécessite PlanetHoster (PLANETHOSTER_API_USER/KEY).",
+      hasPlanetHosterProxy,
+      hasPlanetHosterProxy ? null : "La gestion DNS réelle nécessite le proxy PlanetHoster (PLANETHOSTER_PROXY_URL / PLANETHOSTER_PROXY_SECRET).",
     ),
     siteConfig: capability(
       "siteConfig",

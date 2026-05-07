@@ -80,6 +80,42 @@ function splitDomain(domain: string) {
   return { sld, tld: rest.join(".") };
 }
 
+function summarizeProxyResponse(text: string) {
+  return text.replace(/\s+/g, " ").trim().slice(0, 180);
+}
+
+function parseProxyJson<T>(text: string, contentType: string | null, status: number) {
+  const trimmed = text.trim();
+  const looksLikeJson =
+    (contentType ?? "").toLowerCase().includes("application/json") ||
+    trimmed.startsWith("{") ||
+    trimmed.startsWith("[");
+
+  if (!trimmed) {
+    return {} as T;
+  }
+
+  if (!looksLikeJson) {
+    if (trimmed.toLowerCase().includes("error code: 1016")) {
+      throw new Error(
+        "Le proxy PlanetHoster est inaccessible (Cloudflare 1016). Vérifiez PLANETHOSTER_PROXY_URL ainsi que le DNS et l'origine du proxy PlanetHoster.",
+      );
+    }
+
+    throw new Error(
+      `Le proxy PlanetHoster a retourné une réponse non JSON (HTTP ${status}): ${summarizeProxyResponse(trimmed)}`,
+    );
+  }
+
+  try {
+    return JSON.parse(trimmed) as T;
+  } catch {
+    throw new Error(
+      `Le proxy PlanetHoster a retourné un JSON invalide (HTTP ${status}): ${summarizeProxyResponse(trimmed)}`,
+    );
+  }
+}
+
 async function phRequest<T>(path: string, method: PlanetHosterMethod, payload?: Record<string, unknown>): Promise<T> {
   const { url, secret } = proxyConfig();
   const start = Date.now();
@@ -111,7 +147,11 @@ async function phRequest<T>(path: string, method: PlanetHosterMethod, payload?: 
     const res = await fetch(target, init);
     status = res.status;
     const text = await res.text();
-    const json = text ? JSON.parse(text) : {};
+    const json = parseProxyJson<T & { error?: string; message?: string }>(
+      text,
+      res.headers.get("content-type"),
+      res.status,
+    );
     if (!res.ok) throw new Error(json?.error || json?.message || `PlanetHoster ${res.status}`);
     return json as T;
   } finally {
