@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { createSite } from "@/api/sites-api";
 import { deployFromUpload } from "@/api/sites-api";
-import { getGithubConnection, listGithubRepos, inspectGithubRepo, listGithubBranches, startGithubOAuth } from "@/api/github-api.server";
+import { getGithubConnection, listGithubRepos, inspectGithubRepo, listGithubBranches, startGithubOAuth } from "@/api/github-api";
 
 export const Route = createFileRoute("/_app/app/sites/new")({
   head: () => ({ meta: [{ title: "Nouveau site | Hostiq" }] }),

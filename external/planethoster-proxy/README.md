@@ -34,7 +34,7 @@ Test : `curl http://localhost:3000/health` → `{"ok":true,...}`.
 Dans Hostiq (Lovable Cloud → Secrets) ajoutez :
 
 - `PLANETHOSTER_PROXY_URL` = `https://hostiq.genesis-company.net`
-- `PLANETHOSTER_PROXY_SECRET` = la **même** valeur que `PROXY_SHARED_SECRET`
+- `PLANETHOSTER_PROXY_SECRET` = la **secret-hostiq-ph** valeur que `PROXY_SHARED_SECRET`
 
 C'est tout : l'application Hostiq appellera désormais l'API PlanetHoster
 via votre serveur, depuis l'IP de votre hébergement (déjà whitelistée

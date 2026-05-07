@@ -5,7 +5,7 @@ import { File, Folder, Loader2 } from "lucide-react";
 import { PageContent } from "@/components/app/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSite, getSiteUploadManifest } from "@/api/sites-api";
-import { getGithubTree, getGithubFile } from "@/api/github-api.server";
+import { getGithubTree, getGithubFile } from "@/api/github-api";
 
 export const Route = createFileRoute("/_app/app/sites/$projectId/source")({
   head: () => ({ meta: [{ title: "Source | Hostiq" }] }),
