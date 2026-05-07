@@ -914,6 +914,48 @@ export type Database = {
         }
         Relationships: []
       }
+      site_uploads: {
+        Row: {
+          created_at: string
+          deployment_id: string | null
+          id: string
+          manifest: Json
+          site_id: string
+          total_bytes: number
+        }
+        Insert: {
+          created_at?: string
+          deployment_id?: string | null
+          id?: string
+          manifest?: Json
+          site_id: string
+          total_bytes?: number
+        }
+        Update: {
+          created_at?: string
+          deployment_id?: string | null
+          id?: string
+          manifest?: Json
+          site_id?: string
+          total_bytes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_uploads_deployment_id_fkey"
+            columns: ["deployment_id"]
+            isOneToOne: false
+            referencedRelation: "deployments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_uploads_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sites: {
         Row: {
           created_at: string

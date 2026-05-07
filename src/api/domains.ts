@@ -1,6 +1,11 @@
 import { logApiCall } from "./_helpers";
 
-const BASE = "https://api.planethoster.net";
+/**
+ * Tous les appels PlanetHoster sont relayés par notre proxy Node hébergé
+ * sur PlanetHoster (cf. external/planethoster-proxy). L'IP du proxy est
+ * whitelistée côté PlanetHoster, ce qui évite l'erreur "reseller account
+ * has not whitelisted" lors d'appels depuis l'edge Lovable.
+ */
 
 type PlanetHosterMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
@@ -54,11 +59,15 @@ type DomainInfoResponse = {
   nameservers?: { ns1?: string; ns2?: string; ns3?: string; ns4?: string; ns5?: string };
 };
 
-function credentials() {
-  const user = process.env.PLANETHOSTER_API_USER;
-  const key = process.env.PLANETHOSTER_API_KEY;
-  if (!user || !key) throw new Error("PlanetHoster n'est pas configuré.");
-  return { user, key };
+function proxyConfig() {
+  const url = process.env.PLANETHOSTER_PROXY_URL;
+  const secret = process.env.PLANETHOSTER_PROXY_SECRET;
+  if (!url || !secret) {
+    throw new Error(
+      "Le proxy PlanetHoster n'est pas configuré (PLANETHOSTER_PROXY_URL / PLANETHOSTER_PROXY_SECRET).",
+    );
+  }
+  return { url: url.replace(/\/$/, ""), secret };
 }
 
 function normalizeTld(tld: string) {
@@ -72,7 +81,7 @@ function splitDomain(domain: string) {
 }
 
 async function phRequest<T>(path: string, method: PlanetHosterMethod, payload?: Record<string, unknown>): Promise<T> {
-  const { user, key } = credentials();
+  const { url, secret } = proxyConfig();
   const start = Date.now();
   let status = 0;
 
@@ -80,30 +89,26 @@ async function phRequest<T>(path: string, method: PlanetHosterMethod, payload?: 
     const init: RequestInit = {
       method,
       headers: {
-        "X-API-USER": user,
-        "X-API-KEY": key,
+        "X-Proxy-Secret": secret,
         Accept: "application/json",
       },
     };
 
-    if (payload && method !== "GET") {
-      init.headers = {
-        ...init.headers,
-        "Content-Type": "application/json",
-      };
+    let target = `${url}/api/ph${path}`;
+    if (method === "GET" && payload) {
+      const qs = new URLSearchParams(
+        Object.entries(payload).reduce<Record<string, string>>((acc, [k, v]) => {
+          if (v !== undefined && v !== null) acc[k] = String(v);
+          return acc;
+        }, {}),
+      ).toString();
+      if (qs) target += `?${qs}`;
+    } else if (payload) {
+      init.headers = { ...init.headers, "Content-Type": "application/json" };
       init.body = JSON.stringify(payload);
     }
 
-    const url = method === "GET" && payload
-      ? `${BASE}${path}?${new URLSearchParams(
-          Object.entries(payload).reduce<Record<string, string>>((acc, [key, value]) => {
-            if (value !== undefined && value !== null) acc[key] = String(value);
-            return acc;
-          }, {}),
-        ).toString()}`
-      : `${BASE}${path}`;
-
-    const res = await fetch(url, init);
+    const res = await fetch(target, init);
     status = res.status;
     const text = await res.text();
     const json = text ? JSON.parse(text) : {};
@@ -240,7 +245,7 @@ export async function setRegistrarLock(domain: string, locked: boolean) {
   );
 }
 
-// ---- DNS (PlanetHoster real endpoints) ----
+// ---- DNS (PlanetHoster real endpoints, via proxy) ----
 
 export type DnsZoneRecord = {
   id?: string | number;

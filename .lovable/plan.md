@@ -1,88 +1,152 @@
-J’ai vérifié le code et la base avant de proposer la suite. Le problème n’est pas seulement un bug isolé : il reste encore plusieurs zones qui affichent ou écrivent des données comme si le fournisseur avait réellement exécuté l’action, alors que l’action externe n’est pas confirmée.
 
-Hypothèse confirmée : les tentatives précédentes ont échoué parce que certains flux ont été “branchés UI → base” mais pas “UI → fournisseur réel → confirmation → base”, et la base actuelle ne contient même pas encore la table `domain_orders` attendue par le webhook d’achat de domaine.
+## Objectif
 
-Ce que j’ai constaté concrètement :
-- `domain_orders` n’existe pas dans la base Lovable Cloud, alors que le webhook Stripe de domaines l’utilise.
-- La table `domains` contient déjà des domaines de test (`test.io`, `hostiq.io`) sans `planethoster_id`, donc pas prouvés comme achats réels.
-- `src/api/domains.server.ts` contient encore explicitement un fallback synthétique avec `Math.random()`.
-- `src/api/sites-api.ts` contient encore des erreurs “pas encore intégrée” pour DNS, variables d’environnement, domaines Vercel et `deployFromGithub`.
-- `src/api/email-api.ts` bloque encore toute création de boîte mail avec “provisioning réel indisponible”.
-- `provider-readiness.ts` marque encore DNS, email, config site et moyens de paiement comme non opérationnels.
-- L’erreur PlanetHoster “reseller account has not whitelisted” est une erreur réelle du fournisseur : l’API PlanetHoster exige que l’IP appelante soit autorisée côté compte revendeur. Le code doit arrêter de masquer ça, l’exposer proprement, et ne jamais créer un domaine tant que le fournisseur n’a pas confirmé l’achat.
+Trois chantiers, en commençant par les **Sites** (priorité absolue).
 
-Plan d’exécution après approbation :
+---
 
-1. Remettre le projet en état buildable
-   - Corriger les erreurs TypeScript actuellement signalées : imports manquants, types non sérialisables, handlers sans inputValidator, `useQuery` manquant, accès `deps.db` non typés.
-   - Retirer les doublons dangereux `*.server.ts` / `*.ts` quand ils divergent, ou forcer les routes à utiliser uniquement les modules réellement utilisés.
-   - Ne pas modifier les fichiers générés Lovable Cloud (`client.ts`, `client.server.ts`, `types.ts`).
+## 1. Sites — flow complet façon Vercel (priorité)
 
-2. Supprimer définitivement les fausses données et les fallbacks de simulation
-   - Supprimer le fallback aléatoire dans `src/api/domains.server.ts`.
-   - Rechercher et retirer toute logique `mock`, `simulation`, `synthetic`, `Math.random`, fallback fournisseur silencieux.
-   - Ajouter une migration de nettoyage pour supprimer les domaines non prouvés par un identifiant fournisseur / une commande validée (`test.io`, `hostiq.io`, et équivalents de test).
-   - La règle devient : si le fournisseur réel échoue, on affiche une erreur claire et on n’écrit pas de ressource “active”.
+### 1.1 Création du site (wizard 3 étapes)
 
-3. Réparer complètement le flux d’achat de domaine réel
-   - Créer/appliquer la migration manquante `domain_orders` en base Lovable Cloud avec RLS.
-   - Modifier le flux d’achat pour qu’un domaine ne soit jamais inséré dans `domains` au clic ni au checkout créé.
-   - Le flux correct sera :
-     ```text
-     Recherche PlanetHoster réelle
-       → disponibilité/prix réels
-       → création d'une commande domain_orders en statut quoted
-       → checkout Stripe réel
-       → webhook Stripe confirmé
-       → appel PlanetHoster register réel
-       → seulement si succès fournisseur : insertion domains
-       → si échec fournisseur : domain_orders failed + erreur visible, aucun domaine actif créé
-     ```
-   - Ajouter une page ou un état UI “Commandes de domaines” pour voir `quoted`, `checkout_created`, `payment_confirmed`, `completed`, `failed` avec le message fournisseur exact.
-   - Transformer l’erreur “reseller account has not whitelisted” en message utilisateur propre : “PlanetHoster bloque l’appel API car l’adresse IP du serveur n’est pas autorisée sur le compte revendeur.”
+Refonte de `src/routes/_app.app.sites.new.tsx` en wizard :
 
-4. Rendre le DNS réellement connecté ou honnêtement bloqué
-   - Implémenter les endpoints PlanetHoster DNS réels : lecture de zone, ajout/modification de records, suppression si supportée par l’API.
-   - Synchroniser `dns_records` depuis PlanetHoster au lieu d’être une simple table locale.
-   - Si PlanetHoster bloque l’appel par whitelist, ne pas insérer de DNS local ; afficher l’erreur fournisseur et conserver l’état existant.
-   - Mettre à jour l’UI DNS pour afficher “non synchronisé / erreur fournisseur” plutôt que “ajouté” si l’API n’a pas confirmé.
+**Étape 1 — Source**
+Trois cartes au choix :
+- **Importer depuis GitHub** (si compte GitHub connecté côté Settings → Intégrations) — liste les repos via `listGithubRepos` (déjà câblé), recherche, sélection branche.
+- **Upload de fichiers** (zip ou dossier glissé-déposé) — pour les débutants HTML/Tailwind.
+- **Projet vide** — créer puis pousser plus tard.
 
-5. Finaliser le déploiement Vercel réel depuis GitHub
-   - Corriger `createSite`, `deployFromGithub`, `redeploySite`, `listSiteDeployments` pour ne pas créer de faux projet si Vercel échoue.
-   - Connecter le choix de dépôt GitHub dans l’UI de création de site : connexion GitHub, liste des repos, sélection du repo, framework, branche, variables d’environnement, puis création projet Vercel.
-   - Appeler l’API Vercel réelle pour : création projet, lien GitHub, création déploiement, listing live des déploiements, récupération URL de preview/production.
-   - Les déploiements ne seront écrits en base qu’après retour Vercel réel.
-   - Corriger les webhooks Vercel pour mettre à jour un déploiement existant au lieu de dupliquer sans contrôle.
+**Étape 2 — Configuration**
+- Nom du projet (slug auto-généré, validation `[a-z0-9-]`).
+- Détection auto du framework :
+  - GitHub : lecture du `package.json` du repo via API GitHub → détecte Next.js / Vite / Astro / Remix / static.
+  - Upload : détection à partir des fichiers (`index.html` racine = static, `package.json` = lecture des deps).
+- Affichage des paramètres détectés (build command, output dir) avec possibilité de surcharger.
+- Variables d'environnement : tableau key/value, import via collage `.env`.
 
-6. Brancher les variables d’environnement Vercel et domaines de site
-   - Implémenter `upsertEnvVar` / `deleteEnvVar` avec l’API Vercel réelle, pas seulement la table locale.
-   - Pour les secrets, stocker en base uniquement une valeur masquée ou un indicateur, pas le secret brut affichable.
-   - Implémenter `addSiteDomain` / `removeSiteDomain` avec les endpoints Vercel réels.
-   - Afficher les challenges de vérification Vercel si un domaine doit être vérifié.
+**Étape 3 — Déploiement**
+- Création du projet Vercel (`createVercelProject`).
+- Upload des env vars (`upsertVercelEnv`).
+- Déclenchement du déploiement :
+  - GitHub : `triggerDeployment` avec `gitSource`.
+  - Upload : nouvelle fonction `triggerDeploymentFromFiles` qui POST `/v13/deployments` avec le tableau `files` (chaque fichier = `{file, data, encoding:"base64"}`) — l'API Vercel accepte ce format pour les déploiements sans Git.
+- Redirection vers la page du déploiement live.
 
-7. Email professionnel : supprimer la promesse non réelle ou intégrer un vrai fournisseur disponible
-   - Aujourd’hui, Gmail/Google Workspace, Microsoft 365 et Zoho sont listés mais aucun provisioning réel n’est implémenté.
-   - Je vais retirer toute possibilité de “créer” une boîte fictive.
-   - Je vais transformer l’écran en flux réel : fournisseur, domaine, boîte souhaitée, puis vérification de capacité.
-   - Si aucun fournisseur de création de mailbox n’est réellement disponible avec les clés actuelles, l’UI affichera clairement “configuration fournisseur requise” et ne créera rien en base.
-   - Si l’API PlanetHoster/World ou un autre fournisseur compatible mailbox est disponible dans les clés existantes, je l’intègre ; sinon il faudra ajouter les identifiants du fournisseur email réel choisi avant que la création de boîtes soit vendable.
+### 1.2 Page de déploiement temps réel
 
-8. Paiements et facturation
-   - Conserver Stripe réel pour checkout et webhooks.
-   - Vérifier que les abonnements payants n’écrivent la souscription qu’après webhook confirmé.
-   - Pour moyens de paiement, remplacer les boutons “set default/remove” qui disent “pas encore intégré” par les vrais appels Stripe si un customer Stripe existe.
-   - Si aucun customer Stripe n’existe encore, afficher une action “ajouter un moyen de paiement via Stripe Checkout/Portal” plutôt qu’un bouton qui échoue.
+Refonte de `src/routes/_app.app.sites.$projectId.deployments.$deploymentId.tsx` :
 
-9. Diagnostics fournisseurs et endpoints testables
-   - Ajouter des diagnostics admin réels : PlanetHoster pricing/availability, PlanetHoster DNS, Stripe API, Vercel projects/deployments, GitHub repos, Resend.
-   - Chaque diagnostic retournera : `operational`, `blocked`, `misconfigured`, `provider_error`, avec le message fournisseur exact.
-   - Ajouter une page admin “Santé fournisseurs” qui exécute ces checks et affiche les résultats sans rien simuler.
+**Header**
+- État live (Queued → Building → Ready / Error) avec polling toutes les 2 s via `getVercelDeployment`.
+- URL de prévisualisation cliquable (ouvre dans un nouvel onglet).
+- Aperçu (screenshot) du site une fois "Ready" : utilisation de `https://api.urlbox.io` ou simplement un `<iframe>` sandboxé (option simple, zéro coût).
 
-10. Tests et vérifications après corrections
-   - Lancer les contrôles build/typecheck via le harness automatique après modifications.
-   - Tester par appels serveur les endpoints publics : GitHub callback structure, Stripe webhook signature rejetée/acceptée selon cas, Vercel webhook signature rejetée/acceptée selon cas.
-   - Tester les diagnostics fournisseurs depuis le runtime applicatif, pas depuis un script local, afin de reproduire les vraies conditions réseau/IP.
-   - Tester les flux protégés avec les fonctions applicatives quand un token utilisateur est disponible ; sinon vérifier côté base et côté fournisseurs via diagnostics admin.
-   - Documenter précisément ce qui est opérationnel, ce qui est bloqué par le fournisseur, et ce qui nécessite une clé/API supplémentaire.
+**Logs de build en streaming**
+- Nouveau server function `getDeploymentEvents(deploymentId)` qui appelle `GET /v3/deployments/{id}/events?builds=1` (Vercel build events).
+- Polling 1.5 s tant que statut ∈ {QUEUED, BUILDING, INITIALIZING}, affichage en console avec couleurs par niveau.
 
-Important : pour PlanetHoster, si l’erreur de whitelist persiste après correction du code, l’application sera techniquement correcte mais le fournisseur refusera toujours les appels. Dans ce cas, je ne remettrai pas de simulation : le flux indiquera clairement que l’API PlanetHoster bloque l’achat/la recherche tant que l’environnement d’appel n’est pas autorisé côté compte revendeur. Si tu veux basculer vers un autre registrar (ex. Porkbun/Namecheap), je préparerai l’adaptateur proprement, mais il faudra des clés réelles pour ce registrar.
+**Métadonnées**
+- Branche, commit, auteur, durée, taille du bundle, région.
+- Bouton "Redéployer", "Promouvoir en production", "Annuler".
+
+### 1.3 Liste des déploiements
+
+`_app.app.sites.$projectId.deployments.tsx` : ajout statut live (couleur), durée, type (production/preview), filtres.
+
+### 1.4 Explorateur de fichiers (lecture seule)
+
+Nouvel onglet **Source** dans `_app.app.sites.$projectId.tsx` (`src/routes/_app.app.sites.$projectId.source.tsx`) :
+- Si site lié à GitHub : arbre de fichiers via API GitHub (`/repos/{owner}/{repo}/git/trees/{branch}?recursive=1`), aperçu du contenu via `/contents/{path}`.
+- Si site uploadé : on stocke le manifeste de l'upload (liste des chemins + tailles) dans une nouvelle table `site_uploads` et on affiche cet arbre. Téléchargement individuel via Vercel `/v6/deployments/{id}/files`.
+
+### 1.5 Logs runtime
+
+Refonte `_app.app.sites.$projectId.logs.tsx` (actuellement mocké) → vrai endpoint Vercel `GET /v2/projects/{id}/logs` ou polling des derniers déploiements. Filtre par niveau.
+
+### 1.6 Tables et migrations
+
+```sql
+create table public.site_uploads (
+  id uuid primary key default gen_random_uuid(),
+  site_id uuid references public.sites(id) on delete cascade,
+  deployment_id uuid references public.deployments(id) on delete set null,
+  manifest jsonb not null,         -- [{path, size}]
+  total_bytes bigint not null,
+  created_at timestamptz default now()
+);
+```
+RLS basée sur `is_org_member` via le site parent.
+
+---
+
+## 2. PlanetHoster — proxy externe sur `https://hostiq.genesis-company.net/`
+
+### 2.1 Création du serveur Node à déployer
+
+Nouveau dossier `external/planethoster-proxy/` (livré dans le repo, à déployer manuellement par l'utilisateur sur son sous-domaine PlanetHoster) :
+
+```
+external/planethoster-proxy/
+├── package.json        (express, node-fetch, dotenv)
+├── server.js           (Express, route catch-all /api/ph/*)
+├── .env.example        (PLANETHOSTER_API_USER, PLANETHOSTER_API_KEY, PROXY_SHARED_SECRET)
+└── README.md           (instructions de déploiement Node sur PlanetHoster)
+```
+
+Le serveur :
+- Écoute sur le port fourni par PlanetHoster (`process.env.PORT`).
+- Expose `POST /api/ph/*` qui forward vers `https://api.planethoster.net/*` en injectant `api_user` / `api_key`.
+- Vérifie l'en-tête `X-Proxy-Secret` contre `PROXY_SHARED_SECRET` pour empêcher l'usage public.
+- Logs simples + CORS désactivé (appel server-to-server uniquement).
+
+### 2.2 Refonte de `src/api/domains.ts`
+
+- Variable d'env runtime `PLANETHOSTER_PROXY_URL` (= `https://hostiq.genesis-company.net`) et `PLANETHOSTER_PROXY_SECRET`.
+- La fonction `ph()` n'appelle plus `api.planethoster.net` directement mais `${PROXY_URL}/api/ph/{path}` avec l'en-tête `X-Proxy-Secret`.
+- Suppression de l'usage local de `PLANETHOSTER_API_USER` / `PLANETHOSTER_API_KEY` (ils restent uniquement sur le serveur Node distant).
+
+### 2.3 Secrets
+
+Demander à l'utilisateur d'ajouter `PLANETHOSTER_PROXY_URL` et `PLANETHOSTER_PROXY_SECRET` via `add_secret` (le secret doit être identique côté serveur Node).
+
+---
+
+## 3. Zoho Mail — provisioning réel des boîtes pro
+
+### 3.1 OAuth Zoho
+
+- Création d'une route `src/routes/api/public/zoho.callback.ts` (échange du `code` Zoho → `refresh_token` stocké chiffré dans `org_integrations` table existante).
+- UI de connexion dans `_app.app.email.providers.tsx` : bouton "Connecter Zoho Mail" → redirige vers `https://accounts.zoho.com/oauth/v2/auth?...`.
+
+### 3.2 Provisioning
+
+`src/api/email.ts` : implémentation des appels réels Zoho Mail Admin API
+(`/api/organization/{orgId}/accounts`) pour :
+- Créer une boîte mail (`createMailbox`).
+- Lister, suspendre, supprimer.
+- Lire quota / aliases.
+
+Suppression des stubs/données fictives restantes dans `email-api.ts`.
+
+### 3.3 Secrets requis
+
+- `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET` (à demander via `add_secret` quand l'utilisateur aura créé l'app dans la console Zoho).
+- `ZOHO_REGION` (`com`, `eu`, `in`…).
+
+---
+
+## Ordre d'exécution
+
+1. **Sites** (1.1 → 1.6) — wizard, déploiement temps réel, explorateur, logs.
+2. **Proxy PlanetHoster** (2) — serveur Node livré + refactor `domains.ts` + ajout secrets.
+3. **Zoho Mail** (3) — OAuth + provisioning + ajout secrets.
+
+Après chaque chantier : test bout-en-bout via `invoke-server-function` + logs serveur.
+
+---
+
+## Questions à confirmer avant de commencer
+
+- Pour Zoho : avez-vous **déjà** un compte Zoho Mail avec un domaine vérifié, ou faut-il aussi gérer le flow d'ajout/vérification de domaine (DNS auto via PlanetHoster) ?
+- Pour l'upload de fichiers sites : taille max acceptable (Vercel limite à ~100 MB par déploiement sans Git) — ok pour 100 MB max ?
