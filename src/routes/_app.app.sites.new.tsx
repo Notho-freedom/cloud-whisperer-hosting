@@ -82,7 +82,7 @@ function NewProject() {
     deployUpload.mutate(name);
   }
 
-  const filteredRepos = (repos as Array<{ id: string; fullName: string; name: string; description?: string; defaultBranch: string; private: boolean }>)
+  const filteredRepos = (repos as Array<{ id: number | string; fullName: string; name: string; description?: string | null; defaultBranch: string; private: boolean }>)
     .filter((r) => r.fullName.toLowerCase().includes(search.toLowerCase()));
 
   // ── Import confirm screen
