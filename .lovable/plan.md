@@ -1,152 +1,97 @@
+## Refonte de la console applicative (`/app/*`)
 
-## Objectif
+Le design (couleurs, typo, composants shadcn) est conservé tel quel. On retravaille **uniquement la structure et les workflows** des pages connectées, en copiant les patterns Render (sidebar contextuelle, breadcrumb workspace → projet → service, page service avec Events/Logs/Metrics/Environment) et Vercel (rail global, overview projets avec favoris/usage, page Deployments cross-projets, détail déploiement avec Build Logs + Deployment Summary, wizard "Let's build something new", Account Settings ancré).
 
-Trois chantiers, en commençant par les **Sites** (priorité absolue).
-
----
-
-## 1. Sites — flow complet façon Vercel (priorité)
-
-### 1.1 Création du site (wizard 3 étapes)
-
-Refonte de `src/routes/_app.app.sites.new.tsx` en wizard :
-
-**Étape 1 — Source**
-Trois cartes au choix :
-- **Importer depuis GitHub** (si compte GitHub connecté côté Settings → Intégrations) — liste les repos via `listGithubRepos` (déjà câblé), recherche, sélection branche.
-- **Upload de fichiers** (zip ou dossier glissé-déposé) — pour les débutants HTML/Tailwind.
-- **Projet vide** — créer puis pousser plus tard.
-
-**Étape 2 — Configuration**
-- Nom du projet (slug auto-généré, validation `[a-z0-9-]`).
-- Détection auto du framework :
-  - GitHub : lecture du `package.json` du repo via API GitHub → détecte Next.js / Vite / Astro / Remix / static.
-  - Upload : détection à partir des fichiers (`index.html` racine = static, `package.json` = lecture des deps).
-- Affichage des paramètres détectés (build command, output dir) avec possibilité de surcharger.
-- Variables d'environnement : tableau key/value, import via collage `.env`.
-
-**Étape 3 — Déploiement**
-- Création du projet Vercel (`createVercelProject`).
-- Upload des env vars (`upsertVercelEnv`).
-- Déclenchement du déploiement :
-  - GitHub : `triggerDeployment` avec `gitSource`.
-  - Upload : nouvelle fonction `triggerDeploymentFromFiles` qui POST `/v13/deployments` avec le tableau `files` (chaque fichier = `{file, data, encoding:"base64"}`) — l'API Vercel accepte ce format pour les déploiements sans Git.
-- Redirection vers la page du déploiement live.
-
-### 1.2 Page de déploiement temps réel
-
-Refonte de `src/routes/_app.app.sites.$projectId.deployments.$deploymentId.tsx` :
-
-**Header**
-- État live (Queued → Building → Ready / Error) avec polling toutes les 2 s via `getVercelDeployment`.
-- URL de prévisualisation cliquable (ouvre dans un nouvel onglet).
-- Aperçu (screenshot) du site une fois "Ready" : utilisation de `https://api.urlbox.io` ou simplement un `<iframe>` sandboxé (option simple, zéro coût).
-
-**Logs de build en streaming**
-- Nouveau server function `getDeploymentEvents(deploymentId)` qui appelle `GET /v3/deployments/{id}/events?builds=1` (Vercel build events).
-- Polling 1.5 s tant que statut ∈ {QUEUED, BUILDING, INITIALIZING}, affichage en console avec couleurs par niveau.
-
-**Métadonnées**
-- Branche, commit, auteur, durée, taille du bundle, région.
-- Bouton "Redéployer", "Promouvoir en production", "Annuler".
-
-### 1.3 Liste des déploiements
-
-`_app.app.sites.$projectId.deployments.tsx` : ajout statut live (couleur), durée, type (production/preview), filtres.
-
-### 1.4 Explorateur de fichiers (lecture seule)
-
-Nouvel onglet **Source** dans `_app.app.sites.$projectId.tsx` (`src/routes/_app.app.sites.$projectId.source.tsx`) :
-- Si site lié à GitHub : arbre de fichiers via API GitHub (`/repos/{owner}/{repo}/git/trees/{branch}?recursive=1`), aperçu du contenu via `/contents/{path}`.
-- Si site uploadé : on stocke le manifeste de l'upload (liste des chemins + tailles) dans une nouvelle table `site_uploads` et on affiche cet arbre. Téléchargement individuel via Vercel `/v6/deployments/{id}/files`.
-
-### 1.5 Logs runtime
-
-Refonte `_app.app.sites.$projectId.logs.tsx` (actuellement mocké) → vrai endpoint Vercel `GET /v2/projects/{id}/logs` ou polling des derniers déploiements. Filtre par niveau.
-
-### 1.6 Tables et migrations
-
-```sql
-create table public.site_uploads (
-  id uuid primary key default gen_random_uuid(),
-  site_id uuid references public.sites(id) on delete cascade,
-  deployment_id uuid references public.deployments(id) on delete set null,
-  manifest jsonb not null,         -- [{path, size}]
-  total_bytes bigint not null,
-  created_at timestamptz default now()
-);
-```
-RLS basée sur `is_org_member` via le site parent.
+La partie marketing/site web n'est **pas touchée**.
 
 ---
 
-## 2. PlanetHoster — proxy externe sur `https://hostiq.genesis-company.net/`
+### 1. Nouvelle structure de navigation
 
-### 2.1 Création du serveur Node à déployer
+**`AppLayout` refait en deux modes** :
 
-Nouveau dossier `external/planethoster-proxy/` (livré dans le repo, à déployer manuellement par l'utilisateur sur son sous-domaine PlanetHoster) :
+- **Mode workspace** (toutes les routes sauf `/app/sites/$projectId/*`) — rail gauche compact type Vercel :
+  - Header rail : sélecteur de workspace (avatar + nom + chevron, dropdown "switch workspace / créer / paramètres")
+  - Sections : Projects (Sites), Deployments (global), Logs (global), Analytics, Domains, Email, Storage, Integrations, Team, Billing, API Keys, Settings
+  - Footer rail : statut plateforme ("All services up") + bouton Upgrade
+- **Mode projet** (inside `/app/sites/$projectId/*`) — la sidebar bascule en **sidebar de service** type Render :
+  - Header rail : breadcrumb vertical Workspace › Sites › `<nom du site>` avec retour
+  - Sections "MONITOR" (Events, Logs, Metrics, Analytics), "MANAGE" (Environment, Source, Domains, Settings, Deployments, Previews), footer "Danger zone"
+  - Les onglets horizontaux actuels du site sont supprimés (remplacés par la sidebar contextuelle)
 
-```
-external/planethoster-proxy/
-├── package.json        (express, node-fetch, dotenv)
-├── server.js           (Express, route catch-all /api/ph/*)
-├── .env.example        (PLANETHOSTER_API_USER, PLANETHOSTER_API_KEY, PROXY_SHARED_SECRET)
-└── README.md           (instructions de déploiement Node sur PlanetHoster)
-```
+**Topbar global** unifiée : breadcrumb `Workspace › Projet › Environment › Service`, recherche ⌘K, notifications, theme, avatar — visible dans les deux modes.
 
-Le serveur :
-- Écoute sur le port fourni par PlanetHoster (`process.env.PORT`).
-- Expose `POST /api/ph/*` qui forward vers `https://api.planethoster.net/*` en injectant `api_user` / `api_key`.
-- Vérifie l'en-tête `X-Proxy-Secret` contre `PROXY_SHARED_SECRET` pour empêcher l'usage public.
-- Logs simples + CORS désactivé (appel server-to-server uniquement).
+### 2. Page `/app/sites` (Projects Overview) façon Vercel
 
-### 2.2 Refonte de `src/api/domains.ts`
+- Header : recherche + filtres + toggle grille/liste + bouton "Add New ▾" (Site, Domain, Empty project)
+- Colonne gauche (sticky, ~320px) :
+  - Bloc **Usage (30 derniers jours)** : Edge Requests, Data Transfer, CPU, Storage — barres de progression vs quota plan
+  - Bloc **Alerts** : anomalies / quota >80 % / déploiements échoués
+  - Bloc **Recent Previews** : 5 derniers déploiements preview cross-projets
+- Colonne principale :
+  - Section **Favoris** (étoiles persistées sur `sites.is_favorite` — nouvelle colonne)
+  - Section **All Projects** : cartes avec OG image / placeholder, repo GitHub, statut santé (rond vert/orange/rouge), date de dernière mise à jour, menu `...` (Visit / Open repo / Settings / Delete)
 
-- Variable d'env runtime `PLANETHOSTER_PROXY_URL` (= `https://hostiq.genesis-company.net`) et `PLANETHOSTER_PROXY_SECRET`.
-- La fonction `ph()` n'appelle plus `api.planethoster.net` directement mais `${PROXY_URL}/api/ph/{path}` avec l'en-tête `X-Proxy-Secret`.
-- Suppression de l'usage local de `PLANETHOSTER_API_USER` / `PLANETHOSTER_API_KEY` (ils restent uniquement sur le serveur Node distant).
+### 3. Page globale `/app/deployments` (nouvelle)
 
-### 2.3 Secrets
+Tableau cross-projets type Vercel "All Projects → Deployments" :
 
-Demander à l'utilisateur d'ajouter `PLANETHOSTER_PROXY_URL` et `PLANETHOSTER_PROXY_SECRET` via `add_secret` (le secret doit être identique côté serveur Node).
+- Filtres horizontaux : Date range, Authors, Environments (production/preview), Repositories, Branches, Status (6/7)
+- Colonnes : Commit message · Status (Ready/Building/Error + durée) · Environment badge · Repo · Commit SHA · Branch · Auteur (avatar) · Ago · menu `...`
+- Pagination "Load More"
+- Lien vers `/app/sites/$projectId/deployments/$deploymentId`
+
+### 4. Détail déploiement `/app/sites/$projectId/deployments/$deploymentId` restructuré
+
+Layout type Vercel "Deployment Details" :
+
+- **Header carte** : preview iframe (200×200) · Created (auteur + ago) · Status (Ready/Building) · Duration · Environment (Production/Preview/Current) · Domains assignés (+verify) · Source (branche + commit + message)
+- **Deployment Settings** (accordéon) : Build Settings (machine, vCPU, mémoire), Runtime Settings (Fluid Compute, Function CPU, Node version), Protection
+- **Build Logs** : panneau noir avec compteur de lignes, recherche `Ctrl+F`, surlignage warnings, scroll virtualisé, badge de durée totale
+- **Deployment Summary** : framework détecté + version, onglet **Static Assets** (liste avec taille + gzip + filtres All/HTML/JS/CSS/Image/Misc — alimenté par `listVercelDeploymentFiles`), **Cron Jobs**, **Deployment Checks**, **Assigning Custom Domains**
+- **Runtime Logs / Observability / Speed Insights / Web Analytics** en bas (cartes cliquables vers les sous-pages)
+- Nouvel onglet **Open Graph** : preview de la balise `og:image` / `twitter:card`
+
+### 5. Page Source restructurée
+
+Vue type Vercel "Source" : panneau gauche arborescence cliquable + panneau droit viewer code (utilisation de `<pre>` avec coloration légère via `react-syntax-highlighter`), bouton "Open on GitHub" + bouton "Copy path" en haut.
+
+### 6. Wizard `/app/sites/new` façon Vercel "Let's build something new"
+
+- Champ unique en haut : "Décrivez votre projet ou collez une URL Git…" (placeholder, pour cohérence visuelle — fonctionnel uniquement si URL Git valide collée)
+- 2 colonnes :
+  - **Import Git Repository** : sélecteur compte GitHub + recherche + liste repos avec bouton Import (visible/locked badge)
+  - **Building blocks** : cartes Vercel-like (AI Gateway, Sandboxes, Workflows) → renvoient vers les sections existantes, + **Create Empty Project** (bouton à droite)
+- Section basse **Clone Template** : 4 cartes de templates pré-câblés (Vite, Next.js, Astro, Static) avec aperçu image
+
+### 7. Settings ancré `/app/settings`
+
+Refonte type Render "Account settings" :
+
+- Sidebar de droite avec ancres : Profile · Appearance · Account Security · CLI Tokens · API Keys · SSH Public Keys · Notifications · Delete Account
+- Sections empilées, chacune carte sombre avec champs + bouton "Edit" inline (mode édition par section, pas un seul gros formulaire)
+- Section "Delete Account" en bouton destructif tout en bas
+
+### 8. Page Events par site (nouvelle, type Render)
+
+`/app/sites/$projectId/events` : timeline d'événements (déploiements, redéploiements, changements de domaine, ajouts/retraits de variables, invitations équipe), groupée par jour, avec mini-logs inline ("Your service is live ✨"). Alimentée par `audit_logs` filtré sur le site.
 
 ---
 
-## 3. Zoho Mail — provisioning réel des boîtes pro
+### Détails techniques
 
-### 3.1 OAuth Zoho
+- **AppLayout** : extraire `WorkspaceSidebar` et `ProjectSidebar` ; bascule via `useMatch({ from: "/_app/app/sites/$projectId", shouldThrow: false })`.
+- **Breadcrumb header** : nouveau composant `<TopBreadcrumb segments={[]} />` dans `AppHeader`, dérivé du `useMatches()` TanStack.
+- **Favoris sites** : ajouter colonne `is_favorite boolean default false` sur `public.sites` via migration (+ GRANT + policy update existante suffit). Endpoint `toggleSiteFavorite` côté `sites-api.ts`.
+- **Page Deployments globale** : nouveau serverFn `listAllDeployments({ filters })` qui agrège `deployments` table (déjà existante) avec join sites/users.
+- **Static Assets** : utiliser `listVercelDeploymentFiles` (déjà présent dans `sites.ts`) pour alimenter l'onglet.
+- **Code Source viewer** : `bun add react-syntax-highlighter @types/react-syntax-highlighter` (compatible Worker, pas de native binding).
+- **Routing** : créer `_app.app.deployments.tsx` (liste globale) et `_app.app.sites.$projectId.events.tsx` (timeline). Supprimer les onglets horizontaux dans `_app.app.sites.$projectId.tsx` (remplacés par la sidebar projet).
+- **Aucune modification** des API PlanetHoster/Vercel/Supabase existantes — uniquement réorganisation UI + 1 colonne DB (favoris) + 1 serverFn d'agrégation.
 
-- Création d'une route `src/routes/api/public/zoho.callback.ts` (échange du `code` Zoho → `refresh_token` stocké chiffré dans `org_integrations` table existante).
-- UI de connexion dans `_app.app.email.providers.tsx` : bouton "Connecter Zoho Mail" → redirige vers `https://accounts.zoho.com/oauth/v2/auth?...`.
+### Ce qui reste tel quel
 
-### 3.2 Provisioning
-
-`src/api/email.ts` : implémentation des appels réels Zoho Mail Admin API
-(`/api/organization/{orgId}/accounts`) pour :
-- Créer une boîte mail (`createMailbox`).
-- Lister, suspendre, supprimer.
-- Lire quota / aliases.
-
-Suppression des stubs/données fictives restantes dans `email-api.ts`.
-
-### 3.3 Secrets requis
-
-- `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET` (à demander via `add_secret` quand l'utilisateur aura créé l'app dans la console Zoho).
-- `ZOHO_REGION` (`com`, `eu`, `in`…).
-
----
-
-## Ordre d'exécution
-
-1. **Sites** (1.1 → 1.6) — wizard, déploiement temps réel, explorateur, logs.
-2. **Proxy PlanetHoster** (2) — serveur Node livré + refactor `domains.ts` + ajout secrets.
-3. **Zoho Mail** (3) — OAuth + provisioning + ajout secrets.
-
-Après chaque chantier : test bout-en-bout via `invoke-server-function` + logs serveur.
-
----
-
-## Questions à confirmer avant de commencer
-
-- Pour Zoho : avez-vous **déjà** un compte Zoho Mail avec un domaine vérifié, ou faut-il aussi gérer le flow d'ajout/vérification de domaine (DNS auto via PlanetHoster) ?
-- Pour l'upload de fichiers sites : taille max acceptable (Vercel limite à ~100 MB par déploiement sans Git) — ok pour 100 MB max ?
+- Marketing (`_marketing.*`), Auth (`_auth.*`), Admin (`_admin.*`)
+- Toutes les couleurs / tokens / composants shadcn
+- Toute la logique métier serverFn (sites, domains, email, billing)
+- Le proxy PlanetHoster externe et les intégrations Vercel/GitHub
