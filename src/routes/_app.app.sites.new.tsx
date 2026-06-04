@@ -1,103 +1,75 @@
 import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Github, Upload, FilePlus2, Loader2, ArrowRight, ArrowLeft, Rocket, Search, Folder } from "lucide-react";
+import { Github, Upload, Search, Loader2, Rocket, ArrowLeft, FilePlus2, Lock } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { PageHeader, PageContent } from "@/components/app/AppLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageContent, PageHeader } from "@/components/app/AppLayout";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { createSite } from "@/api/sites-api";
-import { deployFromUpload } from "@/api/sites-api";
-import { getGithubConnection, listGithubRepos, inspectGithubRepo, listGithubBranches, startGithubOAuth } from "@/api/github-api";
+import { createSite, deployFromUpload } from "@/api/sites-api";
+import { getGithubConnection, listGithubRepos, inspectGithubRepo, startGithubOAuth } from "@/api/github-api";
 
 export const Route = createFileRoute("/_app/app/sites/new")({
-  head: () => ({ meta: [{ title: "Nouveau site | Hostiq" }] }),
-  component: NewSite,
+  head: () => ({ meta: [{ title: "New project | Hostiq" }] }),
+  component: NewProject,
 });
-
-type Source = "github" | "upload" | "empty" | null;
-type EnvVar = { key: string; value: string };
 
 function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
 }
 
-function NewSite() {
-  const [step, setStep] = React.useState<1 | 2 | 3>(1);
-  const [source, setSource] = React.useState<Source>(null);
-
-  // GitHub
-  const [repoFullName, setRepoFullName] = React.useState<string>("");
-  const [branch, setBranch] = React.useState<string>("main");
-  const [repoQuery, setRepoQuery] = React.useState("");
-
-  // Upload
-  const [files, setFiles] = React.useState<Array<{ path: string; data: string; size: number }>>([]);
-
-  // Config
-  const [name, setName] = React.useState("");
-  const [framework, setFramework] = React.useState<string>("");
-  const [envs, setEnvs] = React.useState<EnvVar[]>([]);
-
+function NewProject() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const [search, setSearch] = React.useState("");
+  const [importing, setImporting] = React.useState<{ fullName: string; branch?: string; name: string; framework?: string } | null>(null);
+  const [uploadFiles, setUploadFiles] = React.useState<Array<{ path: string; data: string; size: number }>>([]);
 
   const { data: gh } = useQuery({ queryKey: ["github-conn"], queryFn: () => getGithubConnection() });
-  const { data: repos = [] } = useQuery({
-    queryKey: ["github-repos"], queryFn: () => listGithubRepos(), enabled: !!gh,
-  });
-  const inspect = useMutation({
-    mutationFn: (v: { fullName: string; branch?: string }) => inspectGithubRepo({ data: v }),
-    onSuccess: (r) => { setBranch(r.branch); if (r.framework) setFramework(r.framework); },
-  });
-  const branchesQ = useQuery({
-    queryKey: ["github-branches", repoFullName],
-    queryFn: () => listGithubBranches({ data: { fullName: repoFullName } }),
-    enabled: !!repoFullName,
-  });
+  const { data: repos = [] } = useQuery({ queryKey: ["github-repos"], queryFn: () => listGithubRepos(), enabled: !!gh });
+
+  const inspect = useMutation({ mutationFn: (fullName: string) => inspectGithubRepo({ data: { fullName } }) });
 
   const create = useMutation({
     mutationFn: async () => {
-      if (source === "upload") {
-        const r = await deployFromUpload({ data: { name, framework: framework || null, files } });
-        return { siteId: r.siteId, deploymentId: r.deploymentId };
-      }
+      if (!importing) throw new Error("Pick a source first");
       const site = await createSite({ data: {
-        name,
-        framework: framework || "static",
-        githubRepoFullName: source === "github" ? repoFullName : undefined,
-        branch: source === "github" ? branch : "main",
+        name: importing.name,
+        framework: importing.framework ?? "static",
+        githubRepoFullName: importing.fullName,
+        branch: importing.branch ?? "main",
       }});
-      // env vars (best-effort, after site created)
-      if (envs.length) {
-        const { upsertEnvVar } = await import("@/api/sites-api");
-        for (const e of envs) {
-          if (!e.key) continue;
-          try { await upsertEnvVar({ data: { siteId: site.id, key: e.key, value: e.value, target: ["production"], type: "plain" } }); } catch {/* */}
-        }
-      }
-      return { siteId: site.id, deploymentId: undefined };
+      return site;
     },
-    onSuccess: ({ siteId, deploymentId }) => {
-      toast.success("Site créé");
+    onSuccess: (site) => {
+      toast.success("Project created");
       qc.invalidateQueries({ queryKey: ["sites"] });
-      if (deploymentId) {
-        navigate({ to: "/app/sites/$projectId/deployments/$deploymentId", params: { projectId: siteId!, deploymentId } });
-      } else {
-        navigate({ to: "/app/sites/$projectId", params: { projectId: siteId! } });
-      }
+      navigate({ to: "/app/sites/$projectId", params: { projectId: site.id } });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const filteredRepos = repos.filter((r) => r.fullName.toLowerCase().includes(repoQuery.toLowerCase()));
+  const deployUpload = useMutation({
+    mutationFn: async (name: string) => deployFromUpload({ data: { name, framework: null, files: uploadFiles } }),
+    onSuccess: (r) => {
+      toast.success("Upload deployed");
+      qc.invalidateQueries({ queryKey: ["sites"] });
+      navigate({ to: "/app/sites/$projectId/deployments/$deploymentId", params: { projectId: r.siteId!, deploymentId: r.deploymentId } });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
-  async function handleFiles(fileList: FileList | File[]) {
-    const arr = Array.from(fileList);
+  const createEmpty = useMutation({
+    mutationFn: async (name: string) => createSite({ data: { name, framework: "static" } }),
+    onSuccess: (site) => { toast.success("Empty project created"); qc.invalidateQueries({ queryKey: ["sites"] }); navigate({ to: "/app/sites/$projectId", params: { projectId: site.id } }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  async function handleFiles(fl: FileList | File[]) {
+    const arr = Array.from(fl);
     const out: Array<{ path: string; data: string; size: number }> = [];
     for (const f of arr) {
       const path = ((f as File & { webkitRelativePath?: string }).webkitRelativePath) || f.name;
@@ -105,237 +77,175 @@ function NewSite() {
       const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
       out.push({ path: path.replace(/^\.\//, ""), data: b64, size: f.size });
     }
-    setFiles(out);
-    // auto-detect framework
-    const hasIndex = out.some((f) => f.path === "index.html" || f.path.endsWith("/index.html"));
-    const hasPkg = out.find((f) => f.path === "package.json");
-    if (hasPkg) {
-      try {
-        const text = atob(hasPkg.data);
-        const pkg = JSON.parse(text);
-        const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
-        if (deps.next) setFramework("nextjs");
-        else if (deps.vite) setFramework("vite");
-        else if (deps.astro) setFramework("astro");
-        else setFramework("");
-      } catch {/* */}
-    } else if (hasIndex) setFramework("");
-    if (!name) {
-      const guess = slugify(arr[0]?.name?.replace(/\.[^.]+$/, "") || "my-site");
-      setName(guess || "my-site");
-    }
+    setUploadFiles(out);
+    const name = slugify(arr[0]?.name?.replace(/\.[^.]+$/, "") || "my-site") || "my-site";
+    deployUpload.mutate(name);
   }
 
-  function next() {
-    if (step === 1) {
-      if (!source) return toast.error("Choisissez une source");
-      if (source === "github" && !repoFullName) return toast.error("Sélectionnez un dépôt");
-      if (source === "upload" && files.length === 0) return toast.error("Ajoutez des fichiers");
-      setStep(2);
-    } else if (step === 2) {
-      if (!name) return toast.error("Nom de projet requis");
-      setStep(3);
-    }
+  const filteredRepos = (repos as Array<{ id: string; fullName: string; name: string; description?: string; defaultBranch: string; private: boolean }>)
+    .filter((r) => r.fullName.toLowerCase().includes(search.toLowerCase()));
+
+  // ── Import confirm screen
+  if (importing) {
+    return (
+      <>
+        <PageHeader title="Configure & deploy"
+          breadcrumbs={[{ label: "Projects", to: "/app/sites" }, { label: "New" }, { label: "Configure" }]} />
+        <PageContent className="max-w-2xl">
+          <Button variant="ghost" size="sm" onClick={() => setImporting(null)} className="mb-3"><ArrowLeft className="h-4 w-4" /> Back</Button>
+          <Card>
+            <CardContent className="space-y-4 p-5">
+              <div className="flex items-center gap-3">
+                <Github className="h-5 w-5" />
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">{importing.fullName}</p>
+                  <p className="text-xs text-muted-foreground">Branch <span className="font-mono">{importing.branch ?? "main"}</span></p>
+                </div>
+                {importing.framework && <Badge variant="outline" className="ml-auto text-[10px] uppercase">{importing.framework}</Badge>}
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Project name</label>
+                <Input className="mt-1 font-mono" value={importing.name}
+                  onChange={(e) => setImporting({ ...importing, name: slugify(e.target.value) })} />
+                <p className="mt-1 text-[11px] text-muted-foreground">URL: <span className="font-mono">{importing.name}.vercel.app</span></p>
+              </div>
+              <Button onClick={() => create.mutate()} disabled={create.isPending || !importing.name} className="w-full">
+                {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
+                Deploy
+              </Button>
+            </CardContent>
+          </Card>
+        </PageContent>
+      </>
+    );
   }
 
   return (
     <>
-      <PageHeader title="Créer un site" description="Connectez un repo, uploadez des fichiers, ou démarrez vide."
-        breadcrumbs={[{ label: "Sites", to: "/app/sites" }, { label: "Nouveau" }]} />
-      <PageContent>
-        {/* Stepper */}
-        <div className="mb-6 flex items-center gap-3 text-sm">
-          {[1, 2, 3].map((n, i) => (
-            <React.Fragment key={n}>
-              <div className={cn("flex items-center gap-2", step >= n ? "text-foreground" : "text-muted-foreground")}>
-                <div className={cn("flex h-7 w-7 items-center justify-center rounded-full border text-xs font-medium",
-                  step >= n ? "border-primary bg-primary text-primary-foreground" : "border-border")}>
-                  {n}
-                </div>
-                <span>{["Source", "Configuration", "Déploiement"][n - 1]}</span>
-              </div>
-              {i < 2 && <div className="h-px flex-1 bg-border" />}
-            </React.Fragment>
-          ))}
-        </div>
-
-        {step === 1 && (
-          <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
-              <SourceCard active={source === "github"} onClick={() => setSource("github")}
-                icon={<Github className="h-5 w-5" />} title="Importer depuis GitHub"
-                desc="Connectez votre compte et choisissez un dépôt." />
-              <SourceCard active={source === "upload"} onClick={() => setSource("upload")}
-                icon={<Upload className="h-5 w-5" />} title="Uploader des fichiers"
-                desc="Glissez-déposez un dossier (HTML/CSS/JS, build…)." />
-              <SourceCard active={source === "empty"} onClick={() => setSource("empty")}
-                icon={<FilePlus2 className="h-5 w-5" />} title="Projet vide"
-                desc="Créez un projet et déployez plus tard." />
+      <PageHeader title="Let's build something new"
+        breadcrumbs={[{ label: "Projects", to: "/app/sites" }, { label: "New" }]} />
+      <PageContent className="!max-w-5xl">
+        {/* Big search input */}
+        <Card className="mb-6">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2">
+              <FilePlus2 className="h-4 w-4 text-muted-foreground" />
+              <Input className="border-0 bg-transparent p-0 text-sm focus-visible:ring-0" placeholder="Paste a Git URL or describe your project…" />
             </div>
+          </CardContent>
+        </Card>
 
-            {source === "github" && (
-              <Card>
-                <CardHeader><CardTitle className="text-base">Choisir un dépôt</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
-                  {!gh ? (
-                    <div className="flex items-center justify-between gap-3 rounded-md border border-border p-4">
-                      <p className="text-sm">Connectez votre compte GitHub pour importer un dépôt.</p>
-                      <Button onClick={async () => { const { url } = await startGithubOAuth(); window.location.href = url; }}>
-                        <Github className="h-4 w-4" /> Connecter GitHub
-                      </Button>
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Import Git Repository */}
+          <section>
+            <h2 className="mb-3 text-sm font-semibold">Import Git Repository</h2>
+            <Card>
+              <CardContent className="space-y-3 p-3">
+                {!gh ? (
+                  <div className="flex flex-col items-start gap-3 rounded-md border border-dashed border-border p-5">
+                    <Github className="h-6 w-6 text-muted-foreground" />
+                    <p className="text-sm">Connect your GitHub account to import a repository.</p>
+                    <Button onClick={async () => { const { url } = await startGithubOAuth(); window.location.href = url; }} size="sm">
+                      <Github className="h-4 w-4" /> Connect GitHub
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                      <Input placeholder="Search…" className="h-8 pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <Search className="h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Rechercher un dépôt…" value={repoQuery} onChange={(e) => setRepoQuery(e.target.value)} />
-                      </div>
-                      <div className="max-h-80 overflow-auto rounded-md border border-border divide-y divide-border">
-                        {filteredRepos.length === 0 && <p className="p-4 text-sm text-muted-foreground">Aucun dépôt.</p>}
-                        {filteredRepos.map((r) => (
-                          <button key={r.id}
-                            onClick={() => { setRepoFullName(r.fullName); setName(slugify(r.name)); inspect.mutate({ fullName: r.fullName }); }}
-                            className={cn("flex w-full items-center gap-3 p-3 text-left hover:bg-muted/40",
-                              repoFullName === r.fullName && "bg-muted/60")}>
-                            <Github className="h-4 w-4 text-muted-foreground" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{r.fullName}</p>
-                              {r.description && <p className="text-xs text-muted-foreground truncate">{r.description}</p>}
-                            </div>
-                            {r.private && <Badge variant="outline" className="text-[10px]">Privé</Badge>}
-                            <Badge variant="secondary" className="text-[10px] font-mono">{r.defaultBranch}</Badge>
-                          </button>
-                        ))}
-                      </div>
-                      {repoFullName && (
-                        <div className="flex items-center gap-3">
-                          <Label className="text-xs">Branche</Label>
-                          <select className="rounded-md border border-border bg-background px-2 py-1.5 text-sm font-mono"
-                            value={branch} onChange={(e) => setBranch(e.target.value)}>
-                            {(branchesQ.data ?? [branch]).map((b) => <option key={b} value={b}>{b}</option>)}
-                          </select>
-                          {inspect.isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-                          {inspect.data?.framework && <Badge variant="outline" className="text-[10px]">Framework détecté: {inspect.data.framework}</Badge>}
+                    <div className="max-h-[360px] overflow-auto rounded-md border border-border divide-y divide-border">
+                      {filteredRepos.length === 0 && <p className="p-4 text-center text-xs text-muted-foreground">No repositories found.</p>}
+                      {filteredRepos.map((r) => (
+                        <div key={r.id} className="flex items-center gap-3 p-3 hover:bg-muted/30">
+                          <Github className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <div className="min-w-0 flex-1">
+                            <p className="flex items-center gap-1.5 truncate text-sm font-medium">
+                              {r.name} {r.private && <Lock className="h-3 w-3 text-muted-foreground" />}
+                            </p>
+                            <p className="truncate text-[11px] text-muted-foreground">{r.fullName}</p>
+                          </div>
+                          <Button size="sm" variant="outline" onClick={async () => {
+                            const insp = await inspect.mutateAsync(r.fullName).catch(() => null);
+                            setImporting({
+                              fullName: r.fullName, branch: insp?.branch ?? r.defaultBranch,
+                              name: slugify(r.name), framework: insp?.framework ?? undefined,
+                            });
+                          }}>Import</Button>
                         </div>
-                      )}
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+                      ))}
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </section>
 
-            {source === "upload" && (
-              <Card>
-                <CardHeader><CardTitle className="text-base">Vos fichiers</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
-                  <label className="flex cursor-pointer flex-col items-center gap-2 rounded-md border border-dashed border-border p-8 text-center hover:bg-muted/30">
-                    <Folder className="h-8 w-8 text-muted-foreground" />
-                    <p className="text-sm font-medium">Cliquez pour sélectionner un dossier (ou faites glisser des fichiers)</p>
-                    <p className="text-xs text-muted-foreground">HTML, CSS, JS, images… ou un build complet (dossier <code>dist</code>).</p>
-                    <input type="file" multiple
-                      // @ts-expect-error directory upload (Chromium/Firefox)
-                      webkitdirectory="" directory=""
-                      className="hidden"
-                      onChange={(e) => e.target.files && handleFiles(e.target.files)} />
-                  </label>
-                  <input type="file" multiple className="block w-full text-xs"
+          {/* Building blocks */}
+          <section>
+            <h2 className="mb-3 text-sm font-semibold">Building blocks</h2>
+            <div className="space-y-3">
+              <BlockCard icon={<Upload className="h-5 w-5" />} title="Upload files" desc="Drag & drop a folder (HTML/CSS/JS, build output)." action={
+                <label className="cursor-pointer">
+                  <input type="file" multiple
+                    // @ts-expect-error webkit
+                    webkitdirectory="" directory=""
+                    className="hidden"
                     onChange={(e) => e.target.files && handleFiles(e.target.files)} />
-                  {files.length > 0 && (
-                    <div className="rounded-md border border-border p-3 text-xs">
-                      <p className="font-medium">{files.length} fichier{files.length > 1 ? "s" : ""} prêt{files.length > 1 ? "s" : ""} ({(files.reduce((a, f) => a + f.size, 0) / 1024).toFixed(1)} KB)</p>
-                      <ul className="mt-2 max-h-32 overflow-auto font-mono text-[11px] text-muted-foreground">
-                        {files.slice(0, 30).map((f) => <li key={f.path}>{f.path}</li>)}
-                        {files.length > 30 && <li>… +{files.length - 30}</li>}
-                      </ul>
-                    </div>
-                  )}
+                  <Button variant="outline" size="sm" asChild><span>{deployUpload.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Select"}</span></Button>
+                </label>
+              } />
+              <BlockCard icon={<FilePlus2 className="h-5 w-5" />} title="Create Empty Project" desc="Skip Git setup and deploy later." action={
+                <Button variant="outline" size="sm" onClick={() => {
+                  const name = prompt("Project name (lowercase, dashes)");
+                  if (name) createEmpty.mutate(slugify(name));
+                }}>Create</Button>
+              } />
+            </div>
+          </section>
+        </div>
+
+        {/* Templates */}
+        <section className="mt-8">
+          <h2 className="mb-3 text-sm font-semibold">Clone Template</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {TEMPLATES.map((t) => (
+              <Card key={t.name} className="overflow-hidden transition-all hover:border-primary/40">
+                <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-muted to-card text-3xl font-bold text-muted-foreground/40">
+                  {t.icon}
+                </div>
+                <CardContent className="p-3">
+                  <p className="text-sm font-semibold">{t.name}</p>
+                  <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{t.desc}</p>
                 </CardContent>
               </Card>
-            )}
+            ))}
           </div>
-        )}
-
-        {step === 2 && (
-          <Card className="max-w-3xl">
-            <CardHeader><CardTitle className="text-base">Configuration</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>Nom du projet</Label>
-                <Input className="mt-1.5 font-mono" placeholder="my-awesome-app" value={name}
-                  onChange={(e) => setName(slugify(e.target.value))} />
-                <p className="mt-1 text-xs text-muted-foreground">Lettres minuscules, chiffres, tirets. URL: <span className="font-mono">{name || "your-site"}.vercel.app</span></p>
-              </div>
-              <div>
-                <Label>Framework {source === "upload" && <span className="text-xs text-muted-foreground">(laisser vide pour HTML statique)</span>}</Label>
-                <Input className="mt-1.5 font-mono" placeholder="nextjs, vite, astro, …" value={framework}
-                  onChange={(e) => setFramework(e.target.value)} />
-              </div>
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label>Variables d'environnement</Label>
-                  <Button variant="ghost" size="sm" onClick={() => setEnvs([...envs, { key: "", value: "" }])}>+ Ajouter</Button>
-                </div>
-                <div className="mt-2 space-y-2">
-                  {envs.map((e, i) => (
-                    <div key={i} className="flex gap-2">
-                      <Input className="font-mono" placeholder="KEY" value={e.key}
-                        onChange={(ev) => { const c = [...envs]; c[i] = { ...c[i], key: ev.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, "_") }; setEnvs(c); }} />
-                      <Input className="font-mono" placeholder="value" value={e.value}
-                        onChange={(ev) => { const c = [...envs]; c[i] = { ...c[i], value: ev.target.value }; setEnvs(c); }} />
-                      <Button variant="ghost" size="sm" onClick={() => setEnvs(envs.filter((_, j) => j !== i))}>×</Button>
-                    </div>
-                  ))}
-                  {envs.length === 0 && <p className="text-xs text-muted-foreground">Aucune variable. Vous pourrez en ajouter plus tard.</p>}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {step === 3 && (
-          <Card className="max-w-2xl">
-            <CardHeader><CardTitle className="text-base">Récapitulatif</CardTitle></CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <Row k="Source" v={source === "github" ? `GitHub: ${repoFullName} @ ${branch}` : source === "upload" ? `${files.length} fichiers` : "Projet vide"} />
-              <Row k="Nom" v={name} />
-              <Row k="Framework" v={framework || "static"} />
-              <Row k="Variables" v={`${envs.filter((e) => e.key).length} définie(s)`} />
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="mt-6 flex items-center gap-2">
-          {step > 1 && (
-            <Button variant="outline" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}>
-              <ArrowLeft className="h-4 w-4" /> Retour
-            </Button>
-          )}
-          {step < 3 ? (
-            <Button onClick={next} className="ml-auto">Continuer <ArrowRight className="h-4 w-4" /></Button>
-          ) : (
-            <Button onClick={() => create.mutate()} disabled={create.isPending} className="ml-auto">
-              {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
-              Déployer
-            </Button>
-          )}
-        </div>
+        </section>
       </PageContent>
     </>
   );
 }
 
-function SourceCard({ active, onClick, icon, title, desc }: { active: boolean; onClick: () => void; icon: React.ReactNode; title: string; desc: string }) {
+function BlockCard({ icon, title, desc, action }: { icon: React.ReactNode; title: string; desc: string; action: React.ReactNode }) {
   return (
-    <button onClick={onClick} className={cn(
-      "flex flex-col items-start gap-2 rounded-lg border p-4 text-left transition-colors",
-      active ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"
-    )}>
-      <div className={cn("rounded-md border border-border bg-background p-2", active && "border-primary text-primary")}>{icon}</div>
-      <p className="font-medium">{title}</p>
-      <p className="text-xs text-muted-foreground">{desc}</p>
-    </button>
+    <Card>
+      <CardContent className="flex items-center gap-3 p-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">{icon}</div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold">{title}</p>
+          <p className="truncate text-[11px] text-muted-foreground">{desc}</p>
+        </div>
+        {action}
+      </CardContent>
+    </Card>
   );
 }
-function Row({ k, v }: { k: string; v: string }) {
-  return <div className="flex justify-between gap-3"><span className="text-muted-foreground">{k}</span><span className="font-medium">{v}</span></div>;
-}
+
+const TEMPLATES = [
+  { name: "Vite + React", desc: "Modern React SPA with Vite and TypeScript.", icon: "⚡" },
+  { name: "Next.js", desc: "Full-stack React framework with SSR/SSG.", icon: "▲" },
+  { name: "Astro", desc: "Content-driven sites with island architecture.", icon: "🚀" },
+  { name: "Static HTML", desc: "Plain HTML/CSS/JS, zero build.", icon: "📄" },
+];
