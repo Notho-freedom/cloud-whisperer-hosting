@@ -1,4 +1,16 @@
-# Hostiq — Proxy PlanetHoster
+# Hostiq Proxy (PlanetHoster + Render)
+
+Ce serveur expose deux familles de routes :
+
+- `POST/GET/.../api/ph/*` → proxy authentifié vers `https://api.planethoster.net/*`
+- `POST/GET/.../api/render/*` → proxy authentifié vers `https://api.render.com/v1/*`
+- `GET /api/render/health` → ping signé qui valide la clé `RENDER_API_KEY`
+
+Ajoutez la variable d'env supplémentaire `RENDER_API_KEY` (clé `rnd_...` de
+votre compte Render) dans le panneau "Setup Node.js App" puis redémarrez.
+
+---
+
 
 Petit serveur Node Express à déployer **sur votre hébergement PlanetHoster**
 (par exemple `hostiq.genesis-company.net`) pour contourner la restriction IP
