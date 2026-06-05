@@ -205,6 +205,107 @@ export type Database = {
         }
         Relationships: []
       }
+      blueprint_syncs: {
+        Row: {
+          blueprint_id: string
+          created_at: string
+          details: Json
+          id: string
+          status: string
+        }
+        Insert: {
+          blueprint_id: string
+          created_at?: string
+          details?: Json
+          id?: string
+          status: string
+        }
+        Update: {
+          blueprint_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blueprint_syncs_blueprint_id_fkey"
+            columns: ["blueprint_id"]
+            isOneToOne: false
+            referencedRelation: "blueprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blueprints: {
+        Row: {
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          last_sync_status: string | null
+          name: string
+          org_id: string
+          render_blueprint_id: string | null
+          yaml: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          name: string
+          org_id: string
+          render_blueprint_id?: string | null
+          yaml: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          name?: string
+          org_id?: string
+          render_blueprint_id?: string | null
+          yaml?: string
+        }
+        Relationships: []
+      }
+      dedicated_ips: {
+        Row: {
+          created_at: string
+          environment_ids: Json
+          id: string
+          ips: Json
+          name: string
+          org_id: string
+          region: string
+          render_ip_set_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          environment_ids?: Json
+          id?: string
+          ips?: Json
+          name: string
+          org_id: string
+          region: string
+          render_ip_set_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          environment_ids?: Json
+          id?: string
+          ips?: Json
+          name?: string
+          org_id?: string
+          region?: string
+          render_ip_set_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       deployments: {
         Row: {
           author: string | null
@@ -254,6 +355,38 @@ export type Database = {
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disk_snapshots: {
+        Row: {
+          disk_id: string
+          id: string
+          key_expires_at: string | null
+          render_snapshot_key: string | null
+          taken_at: string
+        }
+        Insert: {
+          disk_id: string
+          id?: string
+          key_expires_at?: string | null
+          render_snapshot_key?: string | null
+          taken_at?: string
+        }
+        Update: {
+          disk_id?: string
+          id?: string
+          key_expires_at?: string | null
+          render_snapshot_key?: string | null
+          taken_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disk_snapshots_disk_id_fkey"
+            columns: ["disk_id"]
+            isOneToOne: false
+            referencedRelation: "service_disks"
             referencedColumns: ["id"]
           },
         ]
@@ -505,6 +638,95 @@ export type Database = {
           },
         ]
       }
+      env_group_links: {
+        Row: {
+          env_group_id: string
+          id: string
+          service_id: string
+        }
+        Insert: {
+          env_group_id: string
+          id?: string
+          service_id: string
+        }
+        Update: {
+          env_group_id?: string
+          id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "env_group_links_env_group_id_fkey"
+            columns: ["env_group_id"]
+            isOneToOne: false
+            referencedRelation: "env_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "env_group_links_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      env_group_vars: {
+        Row: {
+          env_group_id: string
+          id: string
+          is_secret_file: boolean
+          key: string
+          value: string
+        }
+        Insert: {
+          env_group_id: string
+          id?: string
+          is_secret_file?: boolean
+          key: string
+          value: string
+        }
+        Update: {
+          env_group_id?: string
+          id?: string
+          is_secret_file?: boolean
+          key?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "env_group_vars_env_group_id_fkey"
+            columns: ["env_group_id"]
+            isOneToOne: false
+            referencedRelation: "env_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      env_groups: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          org_id: string
+          render_env_group_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          org_id: string
+          render_env_group_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          org_id?: string
+          render_env_group_id?: string | null
+        }
+        Relationships: []
+      }
       env_vars: {
         Row: {
           id: string
@@ -578,6 +800,44 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      header_rules: {
+        Row: {
+          id: string
+          name: string
+          path: string
+          priority: number
+          render_rule_id: string | null
+          service_id: string
+          value: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          path?: string
+          priority?: number
+          render_rule_id?: string | null
+          service_id: string
+          value: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          path?: string
+          priority?: number
+          render_rule_id?: string | null
+          service_id?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "header_rules_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       incidents: {
         Row: {
@@ -659,6 +919,102 @@ export type Database = {
           },
         ]
       }
+      key_value_instances: {
+        Row: {
+          created_at: string
+          environment_id: string | null
+          id: string
+          ip_allow_list: Json
+          maxmemory_policy: string | null
+          name: string
+          org_id: string
+          persistence: string | null
+          plan: string | null
+          project_id: string | null
+          region: string | null
+          render_kv_id: string | null
+          status: string | null
+          suspended: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          environment_id?: string | null
+          id?: string
+          ip_allow_list?: Json
+          maxmemory_policy?: string | null
+          name: string
+          org_id: string
+          persistence?: string | null
+          plan?: string | null
+          project_id?: string | null
+          region?: string | null
+          render_kv_id?: string | null
+          status?: string | null
+          suspended?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          environment_id?: string | null
+          id?: string
+          ip_allow_list?: Json
+          maxmemory_policy?: string | null
+          name?: string
+          org_id?: string
+          persistence?: string | null
+          plan?: string | null
+          project_id?: string | null
+          region?: string | null
+          render_kv_id?: string | null
+          status?: string | null
+          suspended?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_value_instances_environment_id_fkey"
+            columns: ["environment_id"]
+            isOneToOne: false
+            referencedRelation: "render_environments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_value_instances_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "render_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      log_streams: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          endpoint: string
+          id: string
+          org_id: string
+          token: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          endpoint: string
+          id?: string
+          org_id: string
+          token?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          endpoint?: string
+          id?: string
+          org_id?: string
+          token?: string | null
+        }
+        Relationships: []
+      }
       mailboxes: {
         Row: {
           address: string
@@ -702,6 +1058,62 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metrics_streams: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          endpoint: string
+          id: string
+          org_id: string
+          token: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          endpoint: string
+          id?: string
+          org_id: string
+          token?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          endpoint?: string
+          id?: string
+          org_id?: string
+          token?: string | null
+        }
+        Relationships: []
+      }
+      notification_overrides: {
+        Row: {
+          event_type: string
+          id: string
+          notify_via: Json
+          service_id: string
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          notify_via?: Json
+          service_id: string
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          notify_via?: Json
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_overrides_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
@@ -884,6 +1296,180 @@ export type Database = {
         }
         Relationships: []
       }
+      postgres_exports: {
+        Row: {
+          created_at: string
+          download_url: string | null
+          expires_at: string | null
+          id: string
+          instance_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          instance_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          instance_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "postgres_exports_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "postgres_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      postgres_instances: {
+        Row: {
+          created_at: string
+          database_name: string | null
+          environment_id: string | null
+          ha_enabled: boolean
+          id: string
+          ip_allow_list: Json
+          name: string
+          org_id: string
+          pitr_enabled: boolean
+          plan: string | null
+          project_id: string | null
+          region: string | null
+          render_postgres_id: string | null
+          status: string | null
+          suspended: boolean
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          created_at?: string
+          database_name?: string | null
+          environment_id?: string | null
+          ha_enabled?: boolean
+          id?: string
+          ip_allow_list?: Json
+          name: string
+          org_id: string
+          pitr_enabled?: boolean
+          plan?: string | null
+          project_id?: string | null
+          region?: string | null
+          render_postgres_id?: string | null
+          status?: string | null
+          suspended?: boolean
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          created_at?: string
+          database_name?: string | null
+          environment_id?: string | null
+          ha_enabled?: boolean
+          id?: string
+          ip_allow_list?: Json
+          name?: string
+          org_id?: string
+          pitr_enabled?: boolean
+          plan?: string | null
+          project_id?: string | null
+          region?: string | null
+          render_postgres_id?: string | null
+          status?: string | null
+          suspended?: boolean
+          updated_at?: string
+          version?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "postgres_instances_environment_id_fkey"
+            columns: ["environment_id"]
+            isOneToOne: false
+            referencedRelation: "render_environments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "postgres_instances_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "render_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      postgres_recoveries: {
+        Row: {
+          created_at: string
+          id: string
+          instance_id: string
+          status: string
+          target_time: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instance_id: string
+          status?: string
+          target_time: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instance_id?: string
+          status?: string
+          target_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "postgres_recoveries_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "postgres_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      postgres_users: {
+        Row: {
+          created_at: string
+          id: string
+          instance_id: string
+          is_default: boolean
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instance_id: string
+          is_default?: boolean
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instance_id?: string
+          is_default?: boolean
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "postgres_users_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "postgres_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -913,6 +1499,518 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      registry_credentials: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          org_id: string
+          registry: string
+          render_credential_id: string | null
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          org_id: string
+          registry: string
+          render_credential_id?: string | null
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          org_id?: string
+          registry?: string
+          render_credential_id?: string | null
+          username?: string
+        }
+        Relationships: []
+      }
+      render_audit_log: {
+        Row: {
+          action: string | null
+          actor: string | null
+          details: Json
+          id: string
+          occurred_at: string
+          org_id: string
+          render_event_id: string | null
+          resource: string | null
+        }
+        Insert: {
+          action?: string | null
+          actor?: string | null
+          details?: Json
+          id?: string
+          occurred_at?: string
+          org_id: string
+          render_event_id?: string | null
+          resource?: string | null
+        }
+        Update: {
+          action?: string | null
+          actor?: string | null
+          details?: Json
+          id?: string
+          occurred_at?: string
+          org_id?: string
+          render_event_id?: string | null
+          resource?: string | null
+        }
+        Relationships: []
+      }
+      render_environments: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          project_id: string
+          protected: boolean
+          render_environment_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          project_id: string
+          protected?: boolean
+          render_environment_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          project_id?: string
+          protected?: boolean
+          render_environment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "render_environments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "render_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      render_projects: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          org_id: string
+          render_project_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          org_id: string
+          render_project_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          org_id?: string
+          render_project_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      route_rules: {
+        Row: {
+          destination: string
+          id: string
+          priority: number
+          render_rule_id: string | null
+          service_id: string
+          source: string
+          type: string
+        }
+        Insert: {
+          destination: string
+          id?: string
+          priority?: number
+          render_rule_id?: string | null
+          service_id: string
+          source: string
+          type: string
+        }
+        Update: {
+          destination?: string
+          id?: string
+          priority?: number
+          render_rule_id?: string | null
+          service_id?: string
+          source?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_rules_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_cron_runs: {
+        Row: {
+          finished_at: string | null
+          id: string
+          service_id: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          finished_at?: string | null
+          id?: string
+          service_id: string
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          finished_at?: string | null
+          id?: string
+          service_id?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_cron_runs_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_deploys: {
+        Row: {
+          commit_msg: string | null
+          commit_sha: string | null
+          created_at: string
+          finished_at: string | null
+          id: string
+          image_sha: string | null
+          render_deploy_id: string | null
+          service_id: string
+          status: string
+          trigger: string | null
+        }
+        Insert: {
+          commit_msg?: string | null
+          commit_sha?: string | null
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          image_sha?: string | null
+          render_deploy_id?: string | null
+          service_id: string
+          status?: string
+          trigger?: string | null
+        }
+        Update: {
+          commit_msg?: string | null
+          commit_sha?: string | null
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          image_sha?: string | null
+          render_deploy_id?: string | null
+          service_id?: string
+          status?: string
+          trigger?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_deploys_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_disks: {
+        Row: {
+          created_at: string
+          id: string
+          mount_path: string
+          name: string
+          render_disk_id: string | null
+          service_id: string
+          size_gb: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mount_path: string
+          name: string
+          render_disk_id?: string | null
+          service_id: string
+          size_gb: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mount_path?: string
+          name?: string
+          render_disk_id?: string | null
+          service_id?: string
+          size_gb?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_disks_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_env_vars: {
+        Row: {
+          generate_value: boolean
+          id: string
+          is_secret_file: boolean
+          key: string
+          service_id: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          generate_value?: boolean
+          id?: string
+          is_secret_file?: boolean
+          key: string
+          service_id: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          generate_value?: boolean
+          id?: string
+          is_secret_file?: boolean
+          key?: string
+          service_id?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_env_vars_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_events: {
+        Row: {
+          details: Json
+          id: string
+          occurred_at: string
+          render_event_id: string | null
+          service_id: string
+          type: string
+        }
+        Insert: {
+          details?: Json
+          id?: string
+          occurred_at?: string
+          render_event_id?: string | null
+          service_id: string
+          type: string
+        }
+        Update: {
+          details?: Json
+          id?: string
+          occurred_at?: string
+          render_event_id?: string | null
+          service_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_events_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_jobs: {
+        Row: {
+          created_at: string
+          finished_at: string | null
+          id: string
+          plan_id: string | null
+          render_job_id: string | null
+          service_id: string
+          start_command: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          plan_id?: string | null
+          render_job_id?: string | null
+          service_id: string
+          start_command: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          plan_id?: string | null
+          render_job_id?: string | null
+          service_id?: string
+          start_command?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_jobs_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          auto_deploy: boolean
+          branch: string | null
+          build_command: string | null
+          created_at: string
+          environment_id: string | null
+          health_check_path: string | null
+          id: string
+          image_url: string | null
+          is_favorite: boolean
+          last_deploy_at: string | null
+          metadata: Json
+          name: string
+          org_id: string
+          plan: string | null
+          prod_url: string | null
+          project_id: string | null
+          region: string | null
+          registry_credential_id: string | null
+          render_service_id: string | null
+          repo: string | null
+          root_dir: string | null
+          runtime: string | null
+          schedule_cron: string | null
+          start_command: string | null
+          status: string | null
+          suspended: boolean
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          auto_deploy?: boolean
+          branch?: string | null
+          build_command?: string | null
+          created_at?: string
+          environment_id?: string | null
+          health_check_path?: string | null
+          id?: string
+          image_url?: string | null
+          is_favorite?: boolean
+          last_deploy_at?: string | null
+          metadata?: Json
+          name: string
+          org_id: string
+          plan?: string | null
+          prod_url?: string | null
+          project_id?: string | null
+          region?: string | null
+          registry_credential_id?: string | null
+          render_service_id?: string | null
+          repo?: string | null
+          root_dir?: string | null
+          runtime?: string | null
+          schedule_cron?: string | null
+          start_command?: string | null
+          status?: string | null
+          suspended?: boolean
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          auto_deploy?: boolean
+          branch?: string | null
+          build_command?: string | null
+          created_at?: string
+          environment_id?: string | null
+          health_check_path?: string | null
+          id?: string
+          image_url?: string | null
+          is_favorite?: boolean
+          last_deploy_at?: string | null
+          metadata?: Json
+          name?: string
+          org_id?: string
+          plan?: string | null
+          prod_url?: string | null
+          project_id?: string | null
+          region?: string | null
+          registry_credential_id?: string | null
+          render_service_id?: string | null
+          repo?: string | null
+          root_dir?: string | null
+          runtime?: string | null
+          schedule_cron?: string | null
+          start_command?: string | null
+          status?: string | null
+          suspended?: boolean
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_environment_id_fkey"
+            columns: ["environment_id"]
+            isOneToOne: false
+            referencedRelation: "render_environments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "render_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_registry_credential_id_fkey"
+            columns: ["registry_credential_id"]
+            isOneToOne: false
+            referencedRelation: "registry_credentials"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_uploads: {
         Row: {
@@ -1232,6 +2330,36 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      webhooks_render: {
+        Row: {
+          created_at: string
+          endpoint: string
+          events: Json
+          id: string
+          org_id: string
+          render_webhook_id: string | null
+          signing_secret: string | null
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          events?: Json
+          id?: string
+          org_id: string
+          render_webhook_id?: string | null
+          signing_secret?: string | null
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          events?: Json
+          id?: string
+          org_id?: string
+          render_webhook_id?: string | null
+          signing_secret?: string | null
         }
         Relationships: []
       }
