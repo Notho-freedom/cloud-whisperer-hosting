@@ -23,16 +23,16 @@ async function deps() {
 async function getServiceForUser(serviceId: string, userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/admin");
   const { data, error } = await supabaseAdmin
-    .from("services").select("*").eq("id", serviceId).maybeSingle();
+    .from("services" as any).select("*").eq("id", serviceId).maybeSingle();
   if (error) throw error;
   if (!data) throw new Error("Service not found");
   // Ownership check
   const { data: org } = await supabaseAdmin
-    .from("organization_members").select("user_id")
+    .from("organization_members" as any).select("user_id")
     .eq("org_id", data.org_id).eq("user_id", userId).maybeSingle();
   if (!org) {
     const { data: o2 } = await supabaseAdmin
-      .from("organizations").select("owner_id").eq("id", data.org_id).maybeSingle();
+      .from("organizations" as any).select("owner_id").eq("id", data.org_id).maybeSingle();
     if (!o2 || o2.owner_id !== userId) throw new Error("Forbidden");
   }
   return data;
@@ -43,7 +43,7 @@ export const listServices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
-      .from("services").select("*").order("created_at", { ascending: false });
+      .from("services" as any).select("*").order("created_at", { ascending: false });
     if (error) throw error;
     return data ?? [];
   });
@@ -53,7 +53,7 @@ export const getService = createServerFn({ method: "GET" })
   .inputValidator(z.object({ id: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const { data: svc, error } = await context.supabase
-      .from("services").select("*").eq("id", data.id).maybeSingle();
+      .from("services" as any).select("*").eq("id", data.id).maybeSingle();
     if (error) throw error;
     return svc;
   });
@@ -91,7 +91,7 @@ export const syncRenderServices = createServerFn({ method: "POST" })
         };
       });
       for (const row of rows) {
-        await supabaseAdmin.from("services").upsert(row, { onConflict: "render_service_id" });
+        await supabaseAdmin.from("services" as any).upsert(row, { onConflict: "render_service_id" });
       }
       await logApiCall({
         provider: "render", endpoint: "/services", method: "GET",
@@ -171,7 +171,7 @@ export const createService = createServerFn({ method: "POST" })
       const svc = (created.service as Record<string, unknown>) || created;
 
       const { data: row, error } = await supabaseAdmin
-        .from("services").insert({
+        .from("services" as any).insert({
           org_id: orgId,
           render_service_id: svc.id as string,
           name: data.name,
@@ -216,7 +216,7 @@ export const suspendService = createServerFn({ method: "POST" })
     const svc = await getServiceForUser(data.id, context.userId);
     const { renderFetch, supabaseAdmin } = await deps();
     await renderFetch({ method: "POST", path: `/services/${svc.render_service_id}/suspend` });
-    await supabaseAdmin.from("services").update({ suspended: true }).eq("id", data.id);
+    await supabaseAdmin.from("services" as any).update({ suspended: true }).eq("id", data.id);
     return { ok: true };
   });
 
@@ -226,7 +226,7 @@ export const resumeService = createServerFn({ method: "POST" })
     const svc = await getServiceForUser(data.id, context.userId);
     const { renderFetch, supabaseAdmin } = await deps();
     await renderFetch({ method: "POST", path: `/services/${svc.render_service_id}/resume` });
-    await supabaseAdmin.from("services").update({ suspended: false }).eq("id", data.id);
+    await supabaseAdmin.from("services" as any).update({ suspended: false }).eq("id", data.id);
     return { ok: true };
   });
 
@@ -245,7 +245,7 @@ export const deleteService = createServerFn({ method: "POST" })
     const svc = await getServiceForUser(data.id, context.userId);
     const { renderFetch, supabaseAdmin } = await deps();
     await renderFetch({ method: "DELETE", path: `/services/${svc.render_service_id}` });
-    await supabaseAdmin.from("services").delete().eq("id", data.id);
+    await supabaseAdmin.from("services" as any).delete().eq("id", data.id);
     return { ok: true };
   });
 
@@ -264,7 +264,7 @@ export const setFavoriteService = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await getServiceForUser(data.id, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/admin");
-    await supabaseAdmin.from("services").update({ is_favorite: data.favorite }).eq("id", data.id);
+    await supabaseAdmin.from("services" as any).update({ is_favorite: data.favorite }).eq("id", data.id);
     return { ok: true };
   });
 
@@ -328,7 +328,7 @@ export const listDeploys = createServerFn({ method: "GET" })
       const { items } = unwrapList<Record<string, unknown>>(raw);
       // Mirror to DB
       for (const d of items) {
-        await supabaseAdmin.from("service_deploys").upsert({
+        await supabaseAdmin.from("service_deploys" as any).upsert({
           service_id: data.serviceId,
           render_deploy_id: d.id as string,
           status: (d.status as string) ?? "unknown",
@@ -343,7 +343,7 @@ export const listDeploys = createServerFn({ method: "GET" })
     } catch (e) {
       // Fallback to cached DB
       const { data: cached } = await supabaseAdmin
-        .from("service_deploys").select("*").eq("service_id", data.serviceId)
+        .from("service_deploys" as any).select("*").eq("service_id", data.serviceId)
         .order("created_at", { ascending: false }).limit(data.limit);
       return cached ?? [];
     }
@@ -400,7 +400,7 @@ export const listEvents = createServerFn({ method: "GET" })
       });
       const { items } = unwrapList<Record<string, unknown>>(raw);
       for (const ev of items) {
-        await supabaseAdmin.from("service_events").upsert({
+        await supabaseAdmin.from("service_events" as any).upsert({
           service_id: data.serviceId,
           render_event_id: ev.id as string,
           type: (ev.type as string) ?? "unknown",
@@ -411,7 +411,7 @@ export const listEvents = createServerFn({ method: "GET" })
       return items;
     } catch {
       const { data: cached } = await supabaseAdmin
-        .from("service_events").select("*").eq("service_id", data.serviceId)
+        .from("service_events" as any).select("*").eq("service_id", data.serviceId)
         .order("occurred_at", { ascending: false }).limit(data.limit);
       return cached ?? [];
     }
