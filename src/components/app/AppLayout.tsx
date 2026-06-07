@@ -25,12 +25,18 @@ import { getSite } from "@/api/sites-api";
 // ─── Workspace nav ──────────────────────────────────────────────────────────
 const WORKSPACE_NAV: Array<{
   label: string;
-  items: Array<{ to: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean }>;
+  items: Array<{ to: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean; badge?: string }>;
 }> = [
   { label: "Overview", items: [
     { to: "/app", label: "Dashboard", icon: LayoutGrid, exact: true },
     { to: "/app/sites", label: "Projects", icon: Server },
+    { to: "/app/services", label: "Services", icon: Cpu, badge: "Render" },
     { to: "/app/deployments", label: "Deployments", icon: Rocket },
+  ]},
+  { label: "Backend", items: [
+    { to: "/app/datastores", label: "Datastores", icon: Database },
+    { to: "/app/env-groups", label: "Env Groups", icon: Layers },
+    { to: "/app/blueprints", label: "Blueprints", icon: FileCode2 },
   ]},
   { label: "Monitor", items: [
     { to: "/app/notifications", label: "Notifications", icon: Bell },
@@ -45,6 +51,27 @@ const WORKSPACE_NAV: Array<{
     { to: "/app/api-keys", label: "API Keys", icon: KeyRound },
     { to: "/app/support", label: "Support", icon: LifeBuoy },
     { to: "/app/settings/profile", label: "Settings", icon: SettingsIcon },
+  ]},
+];
+
+// ─── Service (per-service) nav — Render-style ──────────────────────────────
+const SERVICE_NAV = (serviceId: string): Array<{
+  label: string;
+  items: Array<{ to: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean }>;
+}> => [
+  { label: "Monitor", items: [
+    { to: `/app/services/${serviceId}`, label: "Overview", icon: LayoutGrid, exact: true },
+    { to: `/app/services/${serviceId}/events`, label: "Events", icon: Activity },
+    { to: `/app/services/${serviceId}/logs`, label: "Logs", icon: ScrollText },
+    { to: `/app/services/${serviceId}/metrics`, label: "Metrics", icon: BarChart3 },
+  ]},
+  { label: "Manage", items: [
+    { to: `/app/services/${serviceId}/deploys`, label: "Deploys", icon: Rocket },
+    { to: `/app/services/${serviceId}/environment`, label: "Environment", icon: SlidersHorizontal },
+    { to: `/app/services/${serviceId}/scaling`, label: "Scaling", icon: GaugeCircle },
+    { to: `/app/services/${serviceId}/jobs`, label: "Jobs", icon: Briefcase },
+    { to: `/app/services/${serviceId}/domains`, label: "Custom Domains", icon: Globe2 },
+    { to: `/app/services/${serviceId}/settings`, label: "Settings", icon: Cog },
   ]},
 ];
 
