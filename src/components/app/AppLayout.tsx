@@ -4,7 +4,8 @@ import {
   LayoutGrid, Server, Rocket, ScrollText, BarChart3, Globe2, Mail, Database, Plug, Users,
   CreditCard, KeyRound, Settings as SettingsIcon, Bell, Search, ChevronDown, LogOut, ShieldCheck,
   Sparkles, Plus, Menu, ChevronRight, ArrowLeft, Activity, GaugeCircle, FolderTree,
-  SlidersHorizontal, FileClock, LifeBuoy, ChevronsUpDown, CircleDot,
+  SlidersHorizontal, FileClock, LifeBuoy, ChevronsUpDown, CircleDot, Boxes, Layers, FileCode2,
+  Cpu, Zap, Briefcase, Cog,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/brand/Logo";
