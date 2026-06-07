@@ -248,6 +248,53 @@ function ProjectSidebar({ projectId, onNavigate }: { projectId: string; onNaviga
   );
 }
 
+// ─── Service sidebar (per-Render-service contextual nav) ───────────────────
+function ServiceSidebar({ serviceId, onNavigate }: { serviceId: string; onNavigate?: () => void }) {
+  const location = useLocation();
+  const groups = SERVICE_NAV(serviceId);
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-3">
+        <Link to="/app" onClick={onNavigate} className="flex items-center gap-2"><Logo /></Link>
+      </div>
+      <div className="border-b border-sidebar-border px-3 py-3">
+        <Link to="/app/services" onClick={onNavigate}
+          className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-3 w-3" /> Services
+        </Link>
+        <div className="mt-2 flex items-center gap-2">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary/30 to-primary/10 text-[11px] font-bold text-primary">
+            <Cpu className="h-3.5 w-3.5" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold leading-tight">Service</p>
+            <p className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">{serviceId.slice(0, 8)}</p>
+          </div>
+        </div>
+      </div>
+      <nav className="flex-1 space-y-5 overflow-y-auto px-2 py-4">
+        {groups.map((group) => (
+          <div key={group.label}>
+            <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/60">{group.label}</p>
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const active = item.exact ? location.pathname === item.to : location.pathname === item.to || location.pathname.startsWith(item.to + "/");
+                return (
+                  <Link key={item.to} to={item.to} onClick={onNavigate}
+                    className={cn("flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors",
+                      active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground")}>
+                    <item.icon className="h-4 w-4" />{item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+      <PlatformStatusFooter />
+    </div>
+  );
+
 function PlatformStatusFooter() {
   return (
     <div className="border-t border-sidebar-border p-2">
