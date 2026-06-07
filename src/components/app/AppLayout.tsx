@@ -378,7 +378,7 @@ function useBreadcrumbSegments(projectId: string | null) {
   return segments;
 }
 
-function AppHeader({ onOpenMobile, projectId }: { onOpenMobile: () => void; projectId: string | null }) {
+function AppHeader({ onOpenMobile, projectId, serviceId: _serviceId }: { onOpenMobile: () => void; projectId: string | null; serviceId: string | null }) {
   const auth = useAuth();
   const navigate = useNavigate();
   const segments = useBreadcrumbSegments(projectId);
