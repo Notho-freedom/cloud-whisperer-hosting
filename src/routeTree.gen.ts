@@ -91,6 +91,7 @@ import { Route as AdminAdminUsersRolesRouteImport } from './routes/_admin.admin.
 import { Route as AdminAdminUsersUserIdRouteImport } from './routes/_admin.admin.users.$userId'
 import { Route as AdminAdminSupportMacrosRouteImport } from './routes/_admin.admin.support.macros'
 import { Route as AppAppSitesProjectIdIndexRouteImport } from './routes/_app.app.sites.$projectId.index'
+import { Route as AppAppServicesServiceIdIndexRouteImport } from './routes/_app.app.services.$serviceId.index'
 import { Route as AppAppSitesProjectIdSourceRouteImport } from './routes/_app.app.sites.$projectId.source'
 import { Route as AppAppSitesProjectIdSettingsRouteImport } from './routes/_app.app.sites.$projectId.settings'
 import { Route as AppAppSitesProjectIdLogsRouteImport } from './routes/_app.app.sites.$projectId.logs'
@@ -513,6 +514,12 @@ const AppAppSitesProjectIdIndexRoute =
     path: '/',
     getParentRoute: () => AppAppSitesProjectIdRoute,
   } as any)
+const AppAppServicesServiceIdIndexRoute =
+  AppAppServicesServiceIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppAppServicesServiceIdRoute,
+  } as any)
 const AppAppSitesProjectIdSourceRoute =
   AppAppSitesProjectIdSourceRouteImport.update({
     id: '/source',
@@ -631,7 +638,7 @@ export interface FileRoutesByFullPath {
   '/app/email/$mailboxId': typeof AppAppEmailMailboxIdRoute
   '/app/email/new': typeof AppAppEmailNewRoute
   '/app/email/providers': typeof AppAppEmailProvidersRoute
-  '/app/services/$serviceId': typeof AppAppServicesServiceIdRoute
+  '/app/services/$serviceId': typeof AppAppServicesServiceIdRouteWithChildren
   '/app/services/new': typeof AppAppServicesNewRoute
   '/app/settings/danger': typeof AppAppSettingsDangerRoute
   '/app/settings/integrations': typeof AppAppSettingsIntegrationsRoute
@@ -665,6 +672,7 @@ export interface FileRoutesByFullPath {
   '/app/sites/$projectId/logs': typeof AppAppSitesProjectIdLogsRoute
   '/app/sites/$projectId/settings': typeof AppAppSitesProjectIdSettingsRoute
   '/app/sites/$projectId/source': typeof AppAppSitesProjectIdSourceRoute
+  '/app/services/$serviceId/': typeof AppAppServicesServiceIdIndexRoute
   '/app/sites/$projectId/': typeof AppAppSitesProjectIdIndexRoute
   '/app/sites/$projectId/deployments/$deploymentId': typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
@@ -721,7 +729,6 @@ export interface FileRoutesByTo {
   '/app/email/$mailboxId': typeof AppAppEmailMailboxIdRoute
   '/app/email/new': typeof AppAppEmailNewRoute
   '/app/email/providers': typeof AppAppEmailProvidersRoute
-  '/app/services/$serviceId': typeof AppAppServicesServiceIdRoute
   '/app/services/new': typeof AppAppServicesNewRoute
   '/app/settings/danger': typeof AppAppSettingsDangerRoute
   '/app/settings/integrations': typeof AppAppSettingsIntegrationsRoute
@@ -754,6 +761,7 @@ export interface FileRoutesByTo {
   '/app/sites/$projectId/logs': typeof AppAppSitesProjectIdLogsRoute
   '/app/sites/$projectId/settings': typeof AppAppSitesProjectIdSettingsRoute
   '/app/sites/$projectId/source': typeof AppAppSitesProjectIdSourceRoute
+  '/app/services/$serviceId': typeof AppAppServicesServiceIdIndexRoute
   '/app/sites/$projectId': typeof AppAppSitesProjectIdIndexRoute
   '/app/sites/$projectId/deployments/$deploymentId': typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
@@ -816,7 +824,7 @@ export interface FileRoutesById {
   '/_app/app/email/$mailboxId': typeof AppAppEmailMailboxIdRoute
   '/_app/app/email/new': typeof AppAppEmailNewRoute
   '/_app/app/email/providers': typeof AppAppEmailProvidersRoute
-  '/_app/app/services/$serviceId': typeof AppAppServicesServiceIdRoute
+  '/_app/app/services/$serviceId': typeof AppAppServicesServiceIdRouteWithChildren
   '/_app/app/services/new': typeof AppAppServicesNewRoute
   '/_app/app/settings/danger': typeof AppAppSettingsDangerRoute
   '/_app/app/settings/integrations': typeof AppAppSettingsIntegrationsRoute
@@ -850,6 +858,7 @@ export interface FileRoutesById {
   '/_app/app/sites/$projectId/logs': typeof AppAppSitesProjectIdLogsRoute
   '/_app/app/sites/$projectId/settings': typeof AppAppSitesProjectIdSettingsRoute
   '/_app/app/sites/$projectId/source': typeof AppAppSitesProjectIdSourceRoute
+  '/_app/app/services/$serviceId/': typeof AppAppServicesServiceIdIndexRoute
   '/_app/app/sites/$projectId/': typeof AppAppSitesProjectIdIndexRoute
   '/_app/app/sites/$projectId/deployments/$deploymentId': typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
@@ -943,6 +952,7 @@ export interface FileRouteTypes {
     | '/app/sites/$projectId/logs'
     | '/app/sites/$projectId/settings'
     | '/app/sites/$projectId/source'
+    | '/app/services/$serviceId/'
     | '/app/sites/$projectId/'
     | '/app/sites/$projectId/deployments/$deploymentId'
   fileRoutesByTo: FileRoutesByTo
@@ -999,7 +1009,6 @@ export interface FileRouteTypes {
     | '/app/email/$mailboxId'
     | '/app/email/new'
     | '/app/email/providers'
-    | '/app/services/$serviceId'
     | '/app/services/new'
     | '/app/settings/danger'
     | '/app/settings/integrations'
@@ -1032,6 +1041,7 @@ export interface FileRouteTypes {
     | '/app/sites/$projectId/logs'
     | '/app/sites/$projectId/settings'
     | '/app/sites/$projectId/source'
+    | '/app/services/$serviceId'
     | '/app/sites/$projectId'
     | '/app/sites/$projectId/deployments/$deploymentId'
   id:
@@ -1127,6 +1137,7 @@ export interface FileRouteTypes {
     | '/_app/app/sites/$projectId/logs'
     | '/_app/app/sites/$projectId/settings'
     | '/_app/app/sites/$projectId/source'
+    | '/_app/app/services/$serviceId/'
     | '/_app/app/sites/$projectId/'
     | '/_app/app/sites/$projectId/deployments/$deploymentId'
   fileRoutesById: FileRoutesById
@@ -1717,6 +1728,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppSitesProjectIdIndexRouteImport
       parentRoute: typeof AppAppSitesProjectIdRoute
     }
+    '/_app/app/services/$serviceId/': {
+      id: '/_app/app/services/$serviceId/'
+      path: '/'
+      fullPath: '/app/services/$serviceId/'
+      preLoaderRoute: typeof AppAppServicesServiceIdIndexRouteImport
+      parentRoute: typeof AppAppServicesServiceIdRoute
+    }
     '/_app/app/sites/$projectId/source': {
       id: '/_app/app/sites/$projectId/source'
       path: '/source'
@@ -1905,6 +1923,20 @@ const AppAppDomainsDomainRouteChildren: AppAppDomainsDomainRouteChildren = {
 const AppAppDomainsDomainRouteWithChildren =
   AppAppDomainsDomainRoute._addFileChildren(AppAppDomainsDomainRouteChildren)
 
+interface AppAppServicesServiceIdRouteChildren {
+  AppAppServicesServiceIdIndexRoute: typeof AppAppServicesServiceIdIndexRoute
+}
+
+const AppAppServicesServiceIdRouteChildren: AppAppServicesServiceIdRouteChildren =
+  {
+    AppAppServicesServiceIdIndexRoute: AppAppServicesServiceIdIndexRoute,
+  }
+
+const AppAppServicesServiceIdRouteWithChildren =
+  AppAppServicesServiceIdRoute._addFileChildren(
+    AppAppServicesServiceIdRouteChildren,
+  )
+
 interface AppAppSitesProjectIdDeploymentsRouteChildren {
   AppAppSitesProjectIdDeploymentsDeploymentIdRoute: typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
@@ -1960,7 +1992,7 @@ interface AppRouteChildren {
   AppAppEmailMailboxIdRoute: typeof AppAppEmailMailboxIdRoute
   AppAppEmailNewRoute: typeof AppAppEmailNewRoute
   AppAppEmailProvidersRoute: typeof AppAppEmailProvidersRoute
-  AppAppServicesServiceIdRoute: typeof AppAppServicesServiceIdRoute
+  AppAppServicesServiceIdRoute: typeof AppAppServicesServiceIdRouteWithChildren
   AppAppServicesNewRoute: typeof AppAppServicesNewRoute
   AppAppSitesProjectIdRoute: typeof AppAppSitesProjectIdRouteWithChildren
   AppAppSitesNewRoute: typeof AppAppSitesNewRoute
@@ -1987,7 +2019,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppEmailMailboxIdRoute: AppAppEmailMailboxIdRoute,
   AppAppEmailNewRoute: AppAppEmailNewRoute,
   AppAppEmailProvidersRoute: AppAppEmailProvidersRoute,
-  AppAppServicesServiceIdRoute: AppAppServicesServiceIdRoute,
+  AppAppServicesServiceIdRoute: AppAppServicesServiceIdRouteWithChildren,
   AppAppServicesNewRoute: AppAppServicesNewRoute,
   AppAppSitesProjectIdRoute: AppAppSitesProjectIdRouteWithChildren,
   AppAppSitesNewRoute: AppAppSitesNewRoute,
