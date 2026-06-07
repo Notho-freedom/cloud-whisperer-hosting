@@ -4,7 +4,8 @@ import {
   LayoutGrid, Server, Rocket, ScrollText, BarChart3, Globe2, Mail, Database, Plug, Users,
   CreditCard, KeyRound, Settings as SettingsIcon, Bell, Search, ChevronDown, LogOut, ShieldCheck,
   Sparkles, Plus, Menu, ChevronRight, ArrowLeft, Activity, GaugeCircle, FolderTree,
-  SlidersHorizontal, FileClock, LifeBuoy, ChevronsUpDown, CircleDot,
+  SlidersHorizontal, FileClock, LifeBuoy, ChevronsUpDown, CircleDot, Boxes, Layers, FileCode2,
+  Cpu, Zap, Briefcase, Cog,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/brand/Logo";
@@ -24,12 +25,18 @@ import { getSite } from "@/api/sites-api";
 // ─── Workspace nav ──────────────────────────────────────────────────────────
 const WORKSPACE_NAV: Array<{
   label: string;
-  items: Array<{ to: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean }>;
+  items: Array<{ to: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean; badge?: string }>;
 }> = [
   { label: "Overview", items: [
     { to: "/app", label: "Dashboard", icon: LayoutGrid, exact: true },
     { to: "/app/sites", label: "Projects", icon: Server },
+    { to: "/app/services", label: "Services", icon: Cpu, badge: "Render" },
     { to: "/app/deployments", label: "Deployments", icon: Rocket },
+  ]},
+  { label: "Backend", items: [
+    { to: "/app/datastores", label: "Datastores", icon: Database },
+    { to: "/app/env-groups", label: "Env Groups", icon: Layers },
+    { to: "/app/blueprints", label: "Blueprints", icon: FileCode2 },
   ]},
   { label: "Monitor", items: [
     { to: "/app/notifications", label: "Notifications", icon: Bell },
@@ -44,6 +51,27 @@ const WORKSPACE_NAV: Array<{
     { to: "/app/api-keys", label: "API Keys", icon: KeyRound },
     { to: "/app/support", label: "Support", icon: LifeBuoy },
     { to: "/app/settings/profile", label: "Settings", icon: SettingsIcon },
+  ]},
+];
+
+// ─── Service (per-service) nav — Render-style ──────────────────────────────
+const SERVICE_NAV = (serviceId: string): Array<{
+  label: string;
+  items: Array<{ to: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean }>;
+}> => [
+  { label: "Monitor", items: [
+    { to: `/app/services/${serviceId}`, label: "Overview", icon: LayoutGrid, exact: true },
+    { to: `/app/services/${serviceId}/events`, label: "Events", icon: Activity },
+    { to: `/app/services/${serviceId}/logs`, label: "Logs", icon: ScrollText },
+    { to: `/app/services/${serviceId}/metrics`, label: "Metrics", icon: BarChart3 },
+  ]},
+  { label: "Manage", items: [
+    { to: `/app/services/${serviceId}/deploys`, label: "Deploys", icon: Rocket },
+    { to: `/app/services/${serviceId}/environment`, label: "Environment", icon: SlidersHorizontal },
+    { to: `/app/services/${serviceId}/scaling`, label: "Scaling", icon: GaugeCircle },
+    { to: `/app/services/${serviceId}/jobs`, label: "Jobs", icon: Briefcase },
+    { to: `/app/services/${serviceId}/domains`, label: "Custom Domains", icon: Globe2 },
+    { to: `/app/services/${serviceId}/settings`, label: "Settings", icon: Cog },
   ]},
 ];
 
@@ -67,7 +95,7 @@ const PROJECT_NAV = (projectId: string): Array<{
   ]},
 ];
 
-// Detect project id from matched routes (only set when inside /app/sites/$projectId/*)
+// Detect project id (sites) or service id (render) from matched routes
 function useProjectId(): string | null {
   const matches = useMatches();
   for (const m of matches) {
@@ -76,30 +104,41 @@ function useProjectId(): string | null {
   }
   return null;
 }
+function useServiceId(): string | null {
+  const matches = useMatches();
+  for (const m of matches) {
+    const params = m.params as Record<string, string> | undefined;
+    if (params?.serviceId) return params.serviceId;
+  }
+  return null;
+}
 
 export function AppLayout() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const projectId = useProjectId();
+  const serviceId = useServiceId();
+
+  const renderSidebar = (closeMobile?: () => void) => {
+    if (serviceId) return <ServiceSidebar serviceId={serviceId} onNavigate={closeMobile} />;
+    if (projectId) return <ProjectSidebar projectId={projectId} onNavigate={closeMobile} />;
+    return <WorkspaceSidebar onNavigate={closeMobile} />;
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-60 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
-        {projectId ? <ProjectSidebar projectId={projectId} /> : <WorkspaceSidebar />}
+        {renderSidebar()}
       </aside>
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
           <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" />
           <aside className="absolute left-0 top-0 h-full w-72 border-r border-sidebar-border bg-sidebar" onClick={(e) => e.stopPropagation()}>
-            {projectId ? (
-              <ProjectSidebar projectId={projectId} onNavigate={() => setMobileOpen(false)} />
-            ) : (
-              <WorkspaceSidebar onNavigate={() => setMobileOpen(false)} />
-            )}
+            {renderSidebar(() => setMobileOpen(false))}
           </aside>
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <AppHeader onOpenMobile={() => setMobileOpen(true)} projectId={projectId} />
+        <AppHeader onOpenMobile={() => setMobileOpen(true)} projectId={projectId} serviceId={serviceId} />
         <main className="flex-1"><Outlet /></main>
       </div>
     </div>
@@ -131,7 +170,8 @@ function WorkspaceSidebar({ onNavigate }: { onNavigate?: () => void }) {
                   <Link key={item.to} to={item.to} onClick={onNavigate}
                     className={cn("flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors",
                       active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground")}>
-                    <item.icon className="h-4 w-4" />{item.label}
+                    <item.icon className="h-4 w-4" /><span className="flex-1">{item.label}</span>
+                    {item.badge && <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary">{item.badge}</span>}
                   </Link>
                 );
               })}
@@ -207,6 +247,56 @@ function ProjectSidebar({ projectId, onNavigate }: { projectId: string; onNaviga
     </div>
   );
 }
+
+// ─── Service sidebar (per-Render-service contextual nav) ───────────────────
+function ServiceSidebar({ serviceId, onNavigate }: { serviceId: string; onNavigate?: () => void }) {
+  const location = useLocation();
+  const groups = SERVICE_NAV(serviceId);
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-3">
+        <Link to="/app" onClick={onNavigate} className="flex items-center gap-2"><Logo /></Link>
+      </div>
+      <div className="border-b border-sidebar-border px-3 py-3">
+        <Link to="/app/services" onClick={onNavigate}
+          className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-3 w-3" /> Services
+        </Link>
+        <div className="mt-2 flex items-center gap-2">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary/30 to-primary/10 text-[11px] font-bold text-primary">
+            <Cpu className="h-3.5 w-3.5" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold leading-tight">Service</p>
+            <p className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">{serviceId.slice(0, 8)}</p>
+          </div>
+        </div>
+      </div>
+      <nav className="flex-1 space-y-5 overflow-y-auto px-2 py-4">
+        {groups.map((group) => (
+          <div key={group.label}>
+            <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/60">{group.label}</p>
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const active = item.exact ? location.pathname === item.to : location.pathname === item.to || location.pathname.startsWith(item.to + "/");
+                return (
+                  <Link key={item.to} to={item.to} onClick={onNavigate}
+                    className={cn("flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors",
+                      active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground")}>
+                    <item.icon className="h-4 w-4" />{item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+      <PlatformStatusFooter />
+    </div>
+  );
+}
+
+
 
 function PlatformStatusFooter() {
   return (
@@ -288,7 +378,7 @@ function useBreadcrumbSegments(projectId: string | null) {
   return segments;
 }
 
-function AppHeader({ onOpenMobile, projectId }: { onOpenMobile: () => void; projectId: string | null }) {
+function AppHeader({ onOpenMobile, projectId, serviceId: _serviceId }: { onOpenMobile: () => void; projectId: string | null; serviceId: string | null }) {
   const auth = useAuth();
   const navigate = useNavigate();
   const segments = useBreadcrumbSegments(projectId);

@@ -39,7 +39,10 @@ import { Route as MarketingLegalCookiesRouteImport } from './routes/_marketing.l
 import { Route as MarketingBlogSlugRouteImport } from './routes/_marketing.blog.$slug'
 import { Route as AppAppSettingsRouteImport } from './routes/_app.app.settings'
 import { Route as AppAppNotificationsRouteImport } from './routes/_app.app.notifications'
+import { Route as AppAppEnvGroupsRouteImport } from './routes/_app.app.env-groups'
 import { Route as AppAppDeploymentsRouteImport } from './routes/_app.app.deployments'
+import { Route as AppAppDatastoresRouteImport } from './routes/_app.app.datastores'
+import { Route as AppAppBlueprintsRouteImport } from './routes/_app.app.blueprints'
 import { Route as AppAppBillingRouteImport } from './routes/_app.app.billing'
 import { Route as AppAppApiKeysRouteImport } from './routes/_app.app.api-keys'
 import { Route as AdminAdminStatusRouteImport } from './routes/_admin.admin.status'
@@ -57,6 +60,7 @@ import { Route as AdminAdminAnnouncementsRouteImport } from './routes/_admin.adm
 import { Route as AppAppTeamIndexRouteImport } from './routes/_app.app.team.index'
 import { Route as AppAppSupportIndexRouteImport } from './routes/_app.app.support.index'
 import { Route as AppAppSitesIndexRouteImport } from './routes/_app.app.sites.index'
+import { Route as AppAppServicesIndexRouteImport } from './routes/_app.app.services.index'
 import { Route as AppAppEmailIndexRouteImport } from './routes/_app.app.email.index'
 import { Route as AppAppDomainsIndexRouteImport } from './routes/_app.app.domains.index'
 import { Route as AppAppBillingIndexRouteImport } from './routes/_app.app.billing.index'
@@ -75,6 +79,8 @@ import { Route as AppAppSettingsProfileRouteImport } from './routes/_app.app.set
 import { Route as AppAppSettingsPreferencesRouteImport } from './routes/_app.app.settings.preferences'
 import { Route as AppAppSettingsIntegrationsRouteImport } from './routes/_app.app.settings.integrations'
 import { Route as AppAppSettingsDangerRouteImport } from './routes/_app.app.settings.danger'
+import { Route as AppAppServicesNewRouteImport } from './routes/_app.app.services.new'
+import { Route as AppAppServicesServiceIdRouteImport } from './routes/_app.app.services.$serviceId'
 import { Route as AppAppEmailProvidersRouteImport } from './routes/_app.app.email.providers'
 import { Route as AppAppEmailNewRouteImport } from './routes/_app.app.email.new'
 import { Route as AppAppEmailMailboxIdRouteImport } from './routes/_app.app.email.$mailboxId'
@@ -88,6 +94,7 @@ import { Route as AdminAdminUsersRolesRouteImport } from './routes/_admin.admin.
 import { Route as AdminAdminUsersUserIdRouteImport } from './routes/_admin.admin.users.$userId'
 import { Route as AdminAdminSupportMacrosRouteImport } from './routes/_admin.admin.support.macros'
 import { Route as AppAppSitesProjectIdIndexRouteImport } from './routes/_app.app.sites.$projectId.index'
+import { Route as AppAppServicesServiceIdIndexRouteImport } from './routes/_app.app.services.$serviceId.index'
 import { Route as AppAppSitesProjectIdSourceRouteImport } from './routes/_app.app.sites.$projectId.source'
 import { Route as AppAppSitesProjectIdSettingsRouteImport } from './routes/_app.app.sites.$projectId.settings'
 import { Route as AppAppSitesProjectIdLogsRouteImport } from './routes/_app.app.sites.$projectId.logs'
@@ -96,6 +103,15 @@ import { Route as AppAppSitesProjectIdEnvRouteImport } from './routes/_app.app.s
 import { Route as AppAppSitesProjectIdDomainsRouteImport } from './routes/_app.app.sites.$projectId.domains'
 import { Route as AppAppSitesProjectIdDeploymentsRouteImport } from './routes/_app.app.sites.$projectId.deployments'
 import { Route as AppAppSitesProjectIdAnalyticsRouteImport } from './routes/_app.app.sites.$projectId.analytics'
+import { Route as AppAppServicesServiceIdSettingsRouteImport } from './routes/_app.app.services.$serviceId.settings'
+import { Route as AppAppServicesServiceIdScalingRouteImport } from './routes/_app.app.services.$serviceId.scaling'
+import { Route as AppAppServicesServiceIdMetricsRouteImport } from './routes/_app.app.services.$serviceId.metrics'
+import { Route as AppAppServicesServiceIdLogsRouteImport } from './routes/_app.app.services.$serviceId.logs'
+import { Route as AppAppServicesServiceIdJobsRouteImport } from './routes/_app.app.services.$serviceId.jobs'
+import { Route as AppAppServicesServiceIdEventsRouteImport } from './routes/_app.app.services.$serviceId.events'
+import { Route as AppAppServicesServiceIdEnvironmentRouteImport } from './routes/_app.app.services.$serviceId.environment'
+import { Route as AppAppServicesServiceIdDomainsRouteImport } from './routes/_app.app.services.$serviceId.domains'
+import { Route as AppAppServicesServiceIdDeploysRouteImport } from './routes/_app.app.services.$serviceId.deploys'
 import { Route as AppAppDomainsDomainDnsRouteImport } from './routes/_app.app.domains.$domain.dns'
 import { Route as AppAppBillingInvoicesIdRouteImport } from './routes/_app.app.billing.invoices.$id'
 import { Route as AppAppSitesProjectIdDeploymentsDeploymentIdRouteImport } from './routes/_app.app.sites.$projectId.deployments.$deploymentId'
@@ -246,9 +262,24 @@ const AppAppNotificationsRoute = AppAppNotificationsRouteImport.update({
   path: '/app/notifications',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAppEnvGroupsRoute = AppAppEnvGroupsRouteImport.update({
+  id: '/app/env-groups',
+  path: '/app/env-groups',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAppDeploymentsRoute = AppAppDeploymentsRouteImport.update({
   id: '/app/deployments',
   path: '/app/deployments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppDatastoresRoute = AppAppDatastoresRouteImport.update({
+  id: '/app/datastores',
+  path: '/app/datastores',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppBlueprintsRoute = AppAppBlueprintsRouteImport.update({
+  id: '/app/blueprints',
+  path: '/app/blueprints',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAppBillingRoute = AppAppBillingRouteImport.update({
@@ -334,6 +365,11 @@ const AppAppSupportIndexRoute = AppAppSupportIndexRouteImport.update({
 const AppAppSitesIndexRoute = AppAppSitesIndexRouteImport.update({
   id: '/app/sites/',
   path: '/app/sites/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppServicesIndexRoute = AppAppServicesIndexRouteImport.update({
+  id: '/app/services/',
+  path: '/app/services/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAppEmailIndexRoute = AppAppEmailIndexRouteImport.update({
@@ -428,6 +464,16 @@ const AppAppSettingsDangerRoute = AppAppSettingsDangerRouteImport.update({
   path: '/danger',
   getParentRoute: () => AppAppSettingsRoute,
 } as any)
+const AppAppServicesNewRoute = AppAppServicesNewRouteImport.update({
+  id: '/app/services/new',
+  path: '/app/services/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppServicesServiceIdRoute = AppAppServicesServiceIdRouteImport.update({
+  id: '/app/services/$serviceId',
+  path: '/app/services/$serviceId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAppEmailProvidersRoute = AppAppEmailProvidersRouteImport.update({
   id: '/app/email/providers',
   path: '/app/email/providers',
@@ -495,6 +541,12 @@ const AppAppSitesProjectIdIndexRoute =
     path: '/',
     getParentRoute: () => AppAppSitesProjectIdRoute,
   } as any)
+const AppAppServicesServiceIdIndexRoute =
+  AppAppServicesServiceIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppAppServicesServiceIdRoute,
+  } as any)
 const AppAppSitesProjectIdSourceRoute =
   AppAppSitesProjectIdSourceRouteImport.update({
     id: '/source',
@@ -541,6 +593,60 @@ const AppAppSitesProjectIdAnalyticsRoute =
     id: '/analytics',
     path: '/analytics',
     getParentRoute: () => AppAppSitesProjectIdRoute,
+  } as any)
+const AppAppServicesServiceIdSettingsRoute =
+  AppAppServicesServiceIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AppAppServicesServiceIdRoute,
+  } as any)
+const AppAppServicesServiceIdScalingRoute =
+  AppAppServicesServiceIdScalingRouteImport.update({
+    id: '/scaling',
+    path: '/scaling',
+    getParentRoute: () => AppAppServicesServiceIdRoute,
+  } as any)
+const AppAppServicesServiceIdMetricsRoute =
+  AppAppServicesServiceIdMetricsRouteImport.update({
+    id: '/metrics',
+    path: '/metrics',
+    getParentRoute: () => AppAppServicesServiceIdRoute,
+  } as any)
+const AppAppServicesServiceIdLogsRoute =
+  AppAppServicesServiceIdLogsRouteImport.update({
+    id: '/logs',
+    path: '/logs',
+    getParentRoute: () => AppAppServicesServiceIdRoute,
+  } as any)
+const AppAppServicesServiceIdJobsRoute =
+  AppAppServicesServiceIdJobsRouteImport.update({
+    id: '/jobs',
+    path: '/jobs',
+    getParentRoute: () => AppAppServicesServiceIdRoute,
+  } as any)
+const AppAppServicesServiceIdEventsRoute =
+  AppAppServicesServiceIdEventsRouteImport.update({
+    id: '/events',
+    path: '/events',
+    getParentRoute: () => AppAppServicesServiceIdRoute,
+  } as any)
+const AppAppServicesServiceIdEnvironmentRoute =
+  AppAppServicesServiceIdEnvironmentRouteImport.update({
+    id: '/environment',
+    path: '/environment',
+    getParentRoute: () => AppAppServicesServiceIdRoute,
+  } as any)
+const AppAppServicesServiceIdDomainsRoute =
+  AppAppServicesServiceIdDomainsRouteImport.update({
+    id: '/domains',
+    path: '/domains',
+    getParentRoute: () => AppAppServicesServiceIdRoute,
+  } as any)
+const AppAppServicesServiceIdDeploysRoute =
+  AppAppServicesServiceIdDeploysRouteImport.update({
+    id: '/deploys',
+    path: '/deploys',
+    getParentRoute: () => AppAppServicesServiceIdRoute,
   } as any)
 const AppAppDomainsDomainDnsRoute = AppAppDomainsDomainDnsRouteImport.update({
   id: '/dns',
@@ -591,7 +697,10 @@ export interface FileRoutesByFullPath {
   '/admin/status': typeof AdminAdminStatusRoute
   '/app/api-keys': typeof AppAppApiKeysRoute
   '/app/billing': typeof AppAppBillingRouteWithChildren
+  '/app/blueprints': typeof AppAppBlueprintsRoute
+  '/app/datastores': typeof AppAppDatastoresRoute
   '/app/deployments': typeof AppAppDeploymentsRoute
+  '/app/env-groups': typeof AppAppEnvGroupsRoute
   '/app/notifications': typeof AppAppNotificationsRoute
   '/app/settings': typeof AppAppSettingsRouteWithChildren
   '/blog/$slug': typeof MarketingBlogSlugRoute
@@ -613,6 +722,8 @@ export interface FileRoutesByFullPath {
   '/app/email/$mailboxId': typeof AppAppEmailMailboxIdRoute
   '/app/email/new': typeof AppAppEmailNewRoute
   '/app/email/providers': typeof AppAppEmailProvidersRoute
+  '/app/services/$serviceId': typeof AppAppServicesServiceIdRouteWithChildren
+  '/app/services/new': typeof AppAppServicesNewRoute
   '/app/settings/danger': typeof AppAppSettingsDangerRoute
   '/app/settings/integrations': typeof AppAppSettingsIntegrationsRoute
   '/app/settings/preferences': typeof AppAppSettingsPreferencesRoute
@@ -631,11 +742,21 @@ export interface FileRoutesByFullPath {
   '/app/billing/': typeof AppAppBillingIndexRoute
   '/app/domains/': typeof AppAppDomainsIndexRoute
   '/app/email/': typeof AppAppEmailIndexRoute
+  '/app/services/': typeof AppAppServicesIndexRoute
   '/app/sites/': typeof AppAppSitesIndexRoute
   '/app/support/': typeof AppAppSupportIndexRoute
   '/app/team/': typeof AppAppTeamIndexRoute
   '/app/billing/invoices/$id': typeof AppAppBillingInvoicesIdRoute
   '/app/domains/$domain/dns': typeof AppAppDomainsDomainDnsRoute
+  '/app/services/$serviceId/deploys': typeof AppAppServicesServiceIdDeploysRoute
+  '/app/services/$serviceId/domains': typeof AppAppServicesServiceIdDomainsRoute
+  '/app/services/$serviceId/environment': typeof AppAppServicesServiceIdEnvironmentRoute
+  '/app/services/$serviceId/events': typeof AppAppServicesServiceIdEventsRoute
+  '/app/services/$serviceId/jobs': typeof AppAppServicesServiceIdJobsRoute
+  '/app/services/$serviceId/logs': typeof AppAppServicesServiceIdLogsRoute
+  '/app/services/$serviceId/metrics': typeof AppAppServicesServiceIdMetricsRoute
+  '/app/services/$serviceId/scaling': typeof AppAppServicesServiceIdScalingRoute
+  '/app/services/$serviceId/settings': typeof AppAppServicesServiceIdSettingsRoute
   '/app/sites/$projectId/analytics': typeof AppAppSitesProjectIdAnalyticsRoute
   '/app/sites/$projectId/deployments': typeof AppAppSitesProjectIdDeploymentsRouteWithChildren
   '/app/sites/$projectId/domains': typeof AppAppSitesProjectIdDomainsRoute
@@ -644,6 +765,7 @@ export interface FileRoutesByFullPath {
   '/app/sites/$projectId/logs': typeof AppAppSitesProjectIdLogsRoute
   '/app/sites/$projectId/settings': typeof AppAppSitesProjectIdSettingsRoute
   '/app/sites/$projectId/source': typeof AppAppSitesProjectIdSourceRoute
+  '/app/services/$serviceId/': typeof AppAppServicesServiceIdIndexRoute
   '/app/sites/$projectId/': typeof AppAppSitesProjectIdIndexRoute
   '/app/sites/$projectId/deployments/$deploymentId': typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
@@ -678,7 +800,10 @@ export interface FileRoutesByTo {
   '/admin/sites': typeof AdminAdminSitesRoute
   '/admin/status': typeof AdminAdminStatusRoute
   '/app/api-keys': typeof AppAppApiKeysRoute
+  '/app/blueprints': typeof AppAppBlueprintsRoute
+  '/app/datastores': typeof AppAppDatastoresRoute
   '/app/deployments': typeof AppAppDeploymentsRoute
+  '/app/env-groups': typeof AppAppEnvGroupsRoute
   '/app/notifications': typeof AppAppNotificationsRoute
   '/app/settings': typeof AppAppSettingsRouteWithChildren
   '/blog/$slug': typeof MarketingBlogSlugRoute
@@ -700,6 +825,7 @@ export interface FileRoutesByTo {
   '/app/email/$mailboxId': typeof AppAppEmailMailboxIdRoute
   '/app/email/new': typeof AppAppEmailNewRoute
   '/app/email/providers': typeof AppAppEmailProvidersRoute
+  '/app/services/new': typeof AppAppServicesNewRoute
   '/app/settings/danger': typeof AppAppSettingsDangerRoute
   '/app/settings/integrations': typeof AppAppSettingsIntegrationsRoute
   '/app/settings/preferences': typeof AppAppSettingsPreferencesRoute
@@ -717,11 +843,21 @@ export interface FileRoutesByTo {
   '/app/billing': typeof AppAppBillingIndexRoute
   '/app/domains': typeof AppAppDomainsIndexRoute
   '/app/email': typeof AppAppEmailIndexRoute
+  '/app/services': typeof AppAppServicesIndexRoute
   '/app/sites': typeof AppAppSitesIndexRoute
   '/app/support': typeof AppAppSupportIndexRoute
   '/app/team': typeof AppAppTeamIndexRoute
   '/app/billing/invoices/$id': typeof AppAppBillingInvoicesIdRoute
   '/app/domains/$domain/dns': typeof AppAppDomainsDomainDnsRoute
+  '/app/services/$serviceId/deploys': typeof AppAppServicesServiceIdDeploysRoute
+  '/app/services/$serviceId/domains': typeof AppAppServicesServiceIdDomainsRoute
+  '/app/services/$serviceId/environment': typeof AppAppServicesServiceIdEnvironmentRoute
+  '/app/services/$serviceId/events': typeof AppAppServicesServiceIdEventsRoute
+  '/app/services/$serviceId/jobs': typeof AppAppServicesServiceIdJobsRoute
+  '/app/services/$serviceId/logs': typeof AppAppServicesServiceIdLogsRoute
+  '/app/services/$serviceId/metrics': typeof AppAppServicesServiceIdMetricsRoute
+  '/app/services/$serviceId/scaling': typeof AppAppServicesServiceIdScalingRoute
+  '/app/services/$serviceId/settings': typeof AppAppServicesServiceIdSettingsRoute
   '/app/sites/$projectId/analytics': typeof AppAppSitesProjectIdAnalyticsRoute
   '/app/sites/$projectId/deployments': typeof AppAppSitesProjectIdDeploymentsRouteWithChildren
   '/app/sites/$projectId/domains': typeof AppAppSitesProjectIdDomainsRoute
@@ -730,6 +866,7 @@ export interface FileRoutesByTo {
   '/app/sites/$projectId/logs': typeof AppAppSitesProjectIdLogsRoute
   '/app/sites/$projectId/settings': typeof AppAppSitesProjectIdSettingsRoute
   '/app/sites/$projectId/source': typeof AppAppSitesProjectIdSourceRoute
+  '/app/services/$serviceId': typeof AppAppServicesServiceIdIndexRoute
   '/app/sites/$projectId': typeof AppAppSitesProjectIdIndexRoute
   '/app/sites/$projectId/deployments/$deploymentId': typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
@@ -770,7 +907,10 @@ export interface FileRoutesById {
   '/_admin/admin/status': typeof AdminAdminStatusRoute
   '/_app/app/api-keys': typeof AppAppApiKeysRoute
   '/_app/app/billing': typeof AppAppBillingRouteWithChildren
+  '/_app/app/blueprints': typeof AppAppBlueprintsRoute
+  '/_app/app/datastores': typeof AppAppDatastoresRoute
   '/_app/app/deployments': typeof AppAppDeploymentsRoute
+  '/_app/app/env-groups': typeof AppAppEnvGroupsRoute
   '/_app/app/notifications': typeof AppAppNotificationsRoute
   '/_app/app/settings': typeof AppAppSettingsRouteWithChildren
   '/_marketing/blog/$slug': typeof MarketingBlogSlugRoute
@@ -792,6 +932,8 @@ export interface FileRoutesById {
   '/_app/app/email/$mailboxId': typeof AppAppEmailMailboxIdRoute
   '/_app/app/email/new': typeof AppAppEmailNewRoute
   '/_app/app/email/providers': typeof AppAppEmailProvidersRoute
+  '/_app/app/services/$serviceId': typeof AppAppServicesServiceIdRouteWithChildren
+  '/_app/app/services/new': typeof AppAppServicesNewRoute
   '/_app/app/settings/danger': typeof AppAppSettingsDangerRoute
   '/_app/app/settings/integrations': typeof AppAppSettingsIntegrationsRoute
   '/_app/app/settings/preferences': typeof AppAppSettingsPreferencesRoute
@@ -810,11 +952,21 @@ export interface FileRoutesById {
   '/_app/app/billing/': typeof AppAppBillingIndexRoute
   '/_app/app/domains/': typeof AppAppDomainsIndexRoute
   '/_app/app/email/': typeof AppAppEmailIndexRoute
+  '/_app/app/services/': typeof AppAppServicesIndexRoute
   '/_app/app/sites/': typeof AppAppSitesIndexRoute
   '/_app/app/support/': typeof AppAppSupportIndexRoute
   '/_app/app/team/': typeof AppAppTeamIndexRoute
   '/_app/app/billing/invoices/$id': typeof AppAppBillingInvoicesIdRoute
   '/_app/app/domains/$domain/dns': typeof AppAppDomainsDomainDnsRoute
+  '/_app/app/services/$serviceId/deploys': typeof AppAppServicesServiceIdDeploysRoute
+  '/_app/app/services/$serviceId/domains': typeof AppAppServicesServiceIdDomainsRoute
+  '/_app/app/services/$serviceId/environment': typeof AppAppServicesServiceIdEnvironmentRoute
+  '/_app/app/services/$serviceId/events': typeof AppAppServicesServiceIdEventsRoute
+  '/_app/app/services/$serviceId/jobs': typeof AppAppServicesServiceIdJobsRoute
+  '/_app/app/services/$serviceId/logs': typeof AppAppServicesServiceIdLogsRoute
+  '/_app/app/services/$serviceId/metrics': typeof AppAppServicesServiceIdMetricsRoute
+  '/_app/app/services/$serviceId/scaling': typeof AppAppServicesServiceIdScalingRoute
+  '/_app/app/services/$serviceId/settings': typeof AppAppServicesServiceIdSettingsRoute
   '/_app/app/sites/$projectId/analytics': typeof AppAppSitesProjectIdAnalyticsRoute
   '/_app/app/sites/$projectId/deployments': typeof AppAppSitesProjectIdDeploymentsRouteWithChildren
   '/_app/app/sites/$projectId/domains': typeof AppAppSitesProjectIdDomainsRoute
@@ -823,6 +975,7 @@ export interface FileRoutesById {
   '/_app/app/sites/$projectId/logs': typeof AppAppSitesProjectIdLogsRoute
   '/_app/app/sites/$projectId/settings': typeof AppAppSitesProjectIdSettingsRoute
   '/_app/app/sites/$projectId/source': typeof AppAppSitesProjectIdSourceRoute
+  '/_app/app/services/$serviceId/': typeof AppAppServicesServiceIdIndexRoute
   '/_app/app/sites/$projectId/': typeof AppAppSitesProjectIdIndexRoute
   '/_app/app/sites/$projectId/deployments/$deploymentId': typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
@@ -860,7 +1013,10 @@ export interface FileRouteTypes {
     | '/admin/status'
     | '/app/api-keys'
     | '/app/billing'
+    | '/app/blueprints'
+    | '/app/datastores'
     | '/app/deployments'
+    | '/app/env-groups'
     | '/app/notifications'
     | '/app/settings'
     | '/blog/$slug'
@@ -882,6 +1038,8 @@ export interface FileRouteTypes {
     | '/app/email/$mailboxId'
     | '/app/email/new'
     | '/app/email/providers'
+    | '/app/services/$serviceId'
+    | '/app/services/new'
     | '/app/settings/danger'
     | '/app/settings/integrations'
     | '/app/settings/preferences'
@@ -900,11 +1058,21 @@ export interface FileRouteTypes {
     | '/app/billing/'
     | '/app/domains/'
     | '/app/email/'
+    | '/app/services/'
     | '/app/sites/'
     | '/app/support/'
     | '/app/team/'
     | '/app/billing/invoices/$id'
     | '/app/domains/$domain/dns'
+    | '/app/services/$serviceId/deploys'
+    | '/app/services/$serviceId/domains'
+    | '/app/services/$serviceId/environment'
+    | '/app/services/$serviceId/events'
+    | '/app/services/$serviceId/jobs'
+    | '/app/services/$serviceId/logs'
+    | '/app/services/$serviceId/metrics'
+    | '/app/services/$serviceId/scaling'
+    | '/app/services/$serviceId/settings'
     | '/app/sites/$projectId/analytics'
     | '/app/sites/$projectId/deployments'
     | '/app/sites/$projectId/domains'
@@ -913,6 +1081,7 @@ export interface FileRouteTypes {
     | '/app/sites/$projectId/logs'
     | '/app/sites/$projectId/settings'
     | '/app/sites/$projectId/source'
+    | '/app/services/$serviceId/'
     | '/app/sites/$projectId/'
     | '/app/sites/$projectId/deployments/$deploymentId'
   fileRoutesByTo: FileRoutesByTo
@@ -947,7 +1116,10 @@ export interface FileRouteTypes {
     | '/admin/sites'
     | '/admin/status'
     | '/app/api-keys'
+    | '/app/blueprints'
+    | '/app/datastores'
     | '/app/deployments'
+    | '/app/env-groups'
     | '/app/notifications'
     | '/app/settings'
     | '/blog/$slug'
@@ -969,6 +1141,7 @@ export interface FileRouteTypes {
     | '/app/email/$mailboxId'
     | '/app/email/new'
     | '/app/email/providers'
+    | '/app/services/new'
     | '/app/settings/danger'
     | '/app/settings/integrations'
     | '/app/settings/preferences'
@@ -986,11 +1159,21 @@ export interface FileRouteTypes {
     | '/app/billing'
     | '/app/domains'
     | '/app/email'
+    | '/app/services'
     | '/app/sites'
     | '/app/support'
     | '/app/team'
     | '/app/billing/invoices/$id'
     | '/app/domains/$domain/dns'
+    | '/app/services/$serviceId/deploys'
+    | '/app/services/$serviceId/domains'
+    | '/app/services/$serviceId/environment'
+    | '/app/services/$serviceId/events'
+    | '/app/services/$serviceId/jobs'
+    | '/app/services/$serviceId/logs'
+    | '/app/services/$serviceId/metrics'
+    | '/app/services/$serviceId/scaling'
+    | '/app/services/$serviceId/settings'
     | '/app/sites/$projectId/analytics'
     | '/app/sites/$projectId/deployments'
     | '/app/sites/$projectId/domains'
@@ -999,6 +1182,7 @@ export interface FileRouteTypes {
     | '/app/sites/$projectId/logs'
     | '/app/sites/$projectId/settings'
     | '/app/sites/$projectId/source'
+    | '/app/services/$serviceId'
     | '/app/sites/$projectId'
     | '/app/sites/$projectId/deployments/$deploymentId'
   id:
@@ -1038,7 +1222,10 @@ export interface FileRouteTypes {
     | '/_admin/admin/status'
     | '/_app/app/api-keys'
     | '/_app/app/billing'
+    | '/_app/app/blueprints'
+    | '/_app/app/datastores'
     | '/_app/app/deployments'
+    | '/_app/app/env-groups'
     | '/_app/app/notifications'
     | '/_app/app/settings'
     | '/_marketing/blog/$slug'
@@ -1060,6 +1247,8 @@ export interface FileRouteTypes {
     | '/_app/app/email/$mailboxId'
     | '/_app/app/email/new'
     | '/_app/app/email/providers'
+    | '/_app/app/services/$serviceId'
+    | '/_app/app/services/new'
     | '/_app/app/settings/danger'
     | '/_app/app/settings/integrations'
     | '/_app/app/settings/preferences'
@@ -1078,11 +1267,21 @@ export interface FileRouteTypes {
     | '/_app/app/billing/'
     | '/_app/app/domains/'
     | '/_app/app/email/'
+    | '/_app/app/services/'
     | '/_app/app/sites/'
     | '/_app/app/support/'
     | '/_app/app/team/'
     | '/_app/app/billing/invoices/$id'
     | '/_app/app/domains/$domain/dns'
+    | '/_app/app/services/$serviceId/deploys'
+    | '/_app/app/services/$serviceId/domains'
+    | '/_app/app/services/$serviceId/environment'
+    | '/_app/app/services/$serviceId/events'
+    | '/_app/app/services/$serviceId/jobs'
+    | '/_app/app/services/$serviceId/logs'
+    | '/_app/app/services/$serviceId/metrics'
+    | '/_app/app/services/$serviceId/scaling'
+    | '/_app/app/services/$serviceId/settings'
     | '/_app/app/sites/$projectId/analytics'
     | '/_app/app/sites/$projectId/deployments'
     | '/_app/app/sites/$projectId/domains'
@@ -1091,6 +1290,7 @@ export interface FileRouteTypes {
     | '/_app/app/sites/$projectId/logs'
     | '/_app/app/sites/$projectId/settings'
     | '/_app/app/sites/$projectId/source'
+    | '/_app/app/services/$serviceId/'
     | '/_app/app/sites/$projectId/'
     | '/_app/app/sites/$projectId/deployments/$deploymentId'
   fileRoutesById: FileRoutesById
@@ -1317,11 +1517,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppNotificationsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/env-groups': {
+      id: '/_app/app/env-groups'
+      path: '/app/env-groups'
+      fullPath: '/app/env-groups'
+      preLoaderRoute: typeof AppAppEnvGroupsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/app/deployments': {
       id: '/_app/app/deployments'
       path: '/app/deployments'
       fullPath: '/app/deployments'
       preLoaderRoute: typeof AppAppDeploymentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/datastores': {
+      id: '/_app/app/datastores'
+      path: '/app/datastores'
+      fullPath: '/app/datastores'
+      preLoaderRoute: typeof AppAppDatastoresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/blueprints': {
+      id: '/_app/app/blueprints'
+      path: '/app/blueprints'
+      fullPath: '/app/blueprints'
+      preLoaderRoute: typeof AppAppBlueprintsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/app/billing': {
@@ -1441,6 +1662,13 @@ declare module '@tanstack/react-router' {
       path: '/app/sites'
       fullPath: '/app/sites/'
       preLoaderRoute: typeof AppAppSitesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/services/': {
+      id: '/_app/app/services/'
+      path: '/app/services'
+      fullPath: '/app/services/'
+      preLoaderRoute: typeof AppAppServicesIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/app/email/': {
@@ -1569,6 +1797,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppSettingsDangerRouteImport
       parentRoute: typeof AppAppSettingsRoute
     }
+    '/_app/app/services/new': {
+      id: '/_app/app/services/new'
+      path: '/app/services/new'
+      fullPath: '/app/services/new'
+      preLoaderRoute: typeof AppAppServicesNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/services/$serviceId': {
+      id: '/_app/app/services/$serviceId'
+      path: '/app/services/$serviceId'
+      fullPath: '/app/services/$serviceId'
+      preLoaderRoute: typeof AppAppServicesServiceIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/app/email/providers': {
       id: '/_app/app/email/providers'
       path: '/app/email/providers'
@@ -1660,6 +1902,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppSitesProjectIdIndexRouteImport
       parentRoute: typeof AppAppSitesProjectIdRoute
     }
+    '/_app/app/services/$serviceId/': {
+      id: '/_app/app/services/$serviceId/'
+      path: '/'
+      fullPath: '/app/services/$serviceId/'
+      preLoaderRoute: typeof AppAppServicesServiceIdIndexRouteImport
+      parentRoute: typeof AppAppServicesServiceIdRoute
+    }
     '/_app/app/sites/$projectId/source': {
       id: '/_app/app/sites/$projectId/source'
       path: '/source'
@@ -1715,6 +1964,69 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/sites/$projectId/analytics'
       preLoaderRoute: typeof AppAppSitesProjectIdAnalyticsRouteImport
       parentRoute: typeof AppAppSitesProjectIdRoute
+    }
+    '/_app/app/services/$serviceId/settings': {
+      id: '/_app/app/services/$serviceId/settings'
+      path: '/settings'
+      fullPath: '/app/services/$serviceId/settings'
+      preLoaderRoute: typeof AppAppServicesServiceIdSettingsRouteImport
+      parentRoute: typeof AppAppServicesServiceIdRoute
+    }
+    '/_app/app/services/$serviceId/scaling': {
+      id: '/_app/app/services/$serviceId/scaling'
+      path: '/scaling'
+      fullPath: '/app/services/$serviceId/scaling'
+      preLoaderRoute: typeof AppAppServicesServiceIdScalingRouteImport
+      parentRoute: typeof AppAppServicesServiceIdRoute
+    }
+    '/_app/app/services/$serviceId/metrics': {
+      id: '/_app/app/services/$serviceId/metrics'
+      path: '/metrics'
+      fullPath: '/app/services/$serviceId/metrics'
+      preLoaderRoute: typeof AppAppServicesServiceIdMetricsRouteImport
+      parentRoute: typeof AppAppServicesServiceIdRoute
+    }
+    '/_app/app/services/$serviceId/logs': {
+      id: '/_app/app/services/$serviceId/logs'
+      path: '/logs'
+      fullPath: '/app/services/$serviceId/logs'
+      preLoaderRoute: typeof AppAppServicesServiceIdLogsRouteImport
+      parentRoute: typeof AppAppServicesServiceIdRoute
+    }
+    '/_app/app/services/$serviceId/jobs': {
+      id: '/_app/app/services/$serviceId/jobs'
+      path: '/jobs'
+      fullPath: '/app/services/$serviceId/jobs'
+      preLoaderRoute: typeof AppAppServicesServiceIdJobsRouteImport
+      parentRoute: typeof AppAppServicesServiceIdRoute
+    }
+    '/_app/app/services/$serviceId/events': {
+      id: '/_app/app/services/$serviceId/events'
+      path: '/events'
+      fullPath: '/app/services/$serviceId/events'
+      preLoaderRoute: typeof AppAppServicesServiceIdEventsRouteImport
+      parentRoute: typeof AppAppServicesServiceIdRoute
+    }
+    '/_app/app/services/$serviceId/environment': {
+      id: '/_app/app/services/$serviceId/environment'
+      path: '/environment'
+      fullPath: '/app/services/$serviceId/environment'
+      preLoaderRoute: typeof AppAppServicesServiceIdEnvironmentRouteImport
+      parentRoute: typeof AppAppServicesServiceIdRoute
+    }
+    '/_app/app/services/$serviceId/domains': {
+      id: '/_app/app/services/$serviceId/domains'
+      path: '/domains'
+      fullPath: '/app/services/$serviceId/domains'
+      preLoaderRoute: typeof AppAppServicesServiceIdDomainsRouteImport
+      parentRoute: typeof AppAppServicesServiceIdRoute
+    }
+    '/_app/app/services/$serviceId/deploys': {
+      id: '/_app/app/services/$serviceId/deploys'
+      path: '/deploys'
+      fullPath: '/app/services/$serviceId/deploys'
+      preLoaderRoute: typeof AppAppServicesServiceIdDeploysRouteImport
+      parentRoute: typeof AppAppServicesServiceIdRoute
     }
     '/_app/app/domains/$domain/dns': {
       id: '/_app/app/domains/$domain/dns'
@@ -1848,6 +2160,39 @@ const AppAppDomainsDomainRouteChildren: AppAppDomainsDomainRouteChildren = {
 const AppAppDomainsDomainRouteWithChildren =
   AppAppDomainsDomainRoute._addFileChildren(AppAppDomainsDomainRouteChildren)
 
+interface AppAppServicesServiceIdRouteChildren {
+  AppAppServicesServiceIdDeploysRoute: typeof AppAppServicesServiceIdDeploysRoute
+  AppAppServicesServiceIdDomainsRoute: typeof AppAppServicesServiceIdDomainsRoute
+  AppAppServicesServiceIdEnvironmentRoute: typeof AppAppServicesServiceIdEnvironmentRoute
+  AppAppServicesServiceIdEventsRoute: typeof AppAppServicesServiceIdEventsRoute
+  AppAppServicesServiceIdJobsRoute: typeof AppAppServicesServiceIdJobsRoute
+  AppAppServicesServiceIdLogsRoute: typeof AppAppServicesServiceIdLogsRoute
+  AppAppServicesServiceIdMetricsRoute: typeof AppAppServicesServiceIdMetricsRoute
+  AppAppServicesServiceIdScalingRoute: typeof AppAppServicesServiceIdScalingRoute
+  AppAppServicesServiceIdSettingsRoute: typeof AppAppServicesServiceIdSettingsRoute
+  AppAppServicesServiceIdIndexRoute: typeof AppAppServicesServiceIdIndexRoute
+}
+
+const AppAppServicesServiceIdRouteChildren: AppAppServicesServiceIdRouteChildren =
+  {
+    AppAppServicesServiceIdDeploysRoute: AppAppServicesServiceIdDeploysRoute,
+    AppAppServicesServiceIdDomainsRoute: AppAppServicesServiceIdDomainsRoute,
+    AppAppServicesServiceIdEnvironmentRoute:
+      AppAppServicesServiceIdEnvironmentRoute,
+    AppAppServicesServiceIdEventsRoute: AppAppServicesServiceIdEventsRoute,
+    AppAppServicesServiceIdJobsRoute: AppAppServicesServiceIdJobsRoute,
+    AppAppServicesServiceIdLogsRoute: AppAppServicesServiceIdLogsRoute,
+    AppAppServicesServiceIdMetricsRoute: AppAppServicesServiceIdMetricsRoute,
+    AppAppServicesServiceIdScalingRoute: AppAppServicesServiceIdScalingRoute,
+    AppAppServicesServiceIdSettingsRoute: AppAppServicesServiceIdSettingsRoute,
+    AppAppServicesServiceIdIndexRoute: AppAppServicesServiceIdIndexRoute,
+  }
+
+const AppAppServicesServiceIdRouteWithChildren =
+  AppAppServicesServiceIdRoute._addFileChildren(
+    AppAppServicesServiceIdRouteChildren,
+  )
+
 interface AppAppSitesProjectIdDeploymentsRouteChildren {
   AppAppSitesProjectIdDeploymentsDeploymentIdRoute: typeof AppAppSitesProjectIdDeploymentsDeploymentIdRoute
 }
@@ -1894,7 +2239,10 @@ const AppAppSitesProjectIdRouteWithChildren =
 interface AppRouteChildren {
   AppAppApiKeysRoute: typeof AppAppApiKeysRoute
   AppAppBillingRoute: typeof AppAppBillingRouteWithChildren
+  AppAppBlueprintsRoute: typeof AppAppBlueprintsRoute
+  AppAppDatastoresRoute: typeof AppAppDatastoresRoute
   AppAppDeploymentsRoute: typeof AppAppDeploymentsRoute
+  AppAppEnvGroupsRoute: typeof AppAppEnvGroupsRoute
   AppAppNotificationsRoute: typeof AppAppNotificationsRoute
   AppAppSettingsRoute: typeof AppAppSettingsRouteWithChildren
   AppAppIndexRoute: typeof AppAppIndexRoute
@@ -1903,6 +2251,8 @@ interface AppRouteChildren {
   AppAppEmailMailboxIdRoute: typeof AppAppEmailMailboxIdRoute
   AppAppEmailNewRoute: typeof AppAppEmailNewRoute
   AppAppEmailProvidersRoute: typeof AppAppEmailProvidersRoute
+  AppAppServicesServiceIdRoute: typeof AppAppServicesServiceIdRouteWithChildren
+  AppAppServicesNewRoute: typeof AppAppServicesNewRoute
   AppAppSitesProjectIdRoute: typeof AppAppSitesProjectIdRouteWithChildren
   AppAppSitesNewRoute: typeof AppAppSitesNewRoute
   AppAppSupportTicketIdRoute: typeof AppAppSupportTicketIdRoute
@@ -1910,6 +2260,7 @@ interface AppRouteChildren {
   AppAppTeamInviteRoute: typeof AppAppTeamInviteRoute
   AppAppDomainsIndexRoute: typeof AppAppDomainsIndexRoute
   AppAppEmailIndexRoute: typeof AppAppEmailIndexRoute
+  AppAppServicesIndexRoute: typeof AppAppServicesIndexRoute
   AppAppSitesIndexRoute: typeof AppAppSitesIndexRoute
   AppAppSupportIndexRoute: typeof AppAppSupportIndexRoute
   AppAppTeamIndexRoute: typeof AppAppTeamIndexRoute
@@ -1918,7 +2269,10 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAppApiKeysRoute: AppAppApiKeysRoute,
   AppAppBillingRoute: AppAppBillingRouteWithChildren,
+  AppAppBlueprintsRoute: AppAppBlueprintsRoute,
+  AppAppDatastoresRoute: AppAppDatastoresRoute,
   AppAppDeploymentsRoute: AppAppDeploymentsRoute,
+  AppAppEnvGroupsRoute: AppAppEnvGroupsRoute,
   AppAppNotificationsRoute: AppAppNotificationsRoute,
   AppAppSettingsRoute: AppAppSettingsRouteWithChildren,
   AppAppIndexRoute: AppAppIndexRoute,
@@ -1927,6 +2281,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppEmailMailboxIdRoute: AppAppEmailMailboxIdRoute,
   AppAppEmailNewRoute: AppAppEmailNewRoute,
   AppAppEmailProvidersRoute: AppAppEmailProvidersRoute,
+  AppAppServicesServiceIdRoute: AppAppServicesServiceIdRouteWithChildren,
+  AppAppServicesNewRoute: AppAppServicesNewRoute,
   AppAppSitesProjectIdRoute: AppAppSitesProjectIdRouteWithChildren,
   AppAppSitesNewRoute: AppAppSitesNewRoute,
   AppAppSupportTicketIdRoute: AppAppSupportTicketIdRoute,
@@ -1934,6 +2290,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppTeamInviteRoute: AppAppTeamInviteRoute,
   AppAppDomainsIndexRoute: AppAppDomainsIndexRoute,
   AppAppEmailIndexRoute: AppAppEmailIndexRoute,
+  AppAppServicesIndexRoute: AppAppServicesIndexRoute,
   AppAppSitesIndexRoute: AppAppSitesIndexRoute,
   AppAppSupportIndexRoute: AppAppSupportIndexRoute,
   AppAppTeamIndexRoute: AppAppTeamIndexRoute,
@@ -2035,3 +2392,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
