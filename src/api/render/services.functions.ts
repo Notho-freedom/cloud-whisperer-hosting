@@ -20,19 +20,22 @@ async function deps() {
   return { supabaseAdmin, ...helpers, ...render };
 }
 
-async function getServiceForUser(serviceId: string, userId: string) {
+async function getServiceForUser(serviceId: string, userId: string): Promise<any> {
   const { supabaseAdmin } = await import("@/integrations/supabase/admin");
-  const { data, error } = await supabaseAdmin
+  const { data: dRaw, error } = await supabaseAdmin
     .from("services" as any).select("*").eq("id", serviceId).maybeSingle();
+  const data: any = dRaw;
   if (error) throw error;
   if (!data) throw new Error("Service not found");
   // Ownership check
-  const { data: org } = await supabaseAdmin
+  const { data: orgRaw } = await supabaseAdmin
     .from("organization_members" as any).select("user_id")
     .eq("org_id", data.org_id).eq("user_id", userId).maybeSingle();
+  const org: any = orgRaw;
   if (!org) {
-    const { data: o2 } = await supabaseAdmin
+    const { data: o2Raw } = await supabaseAdmin
       .from("organizations" as any).select("owner_id").eq("id", data.org_id).maybeSingle();
+    const o2: any = o2Raw;
     if (!o2 || o2.owner_id !== userId) throw new Error("Forbidden");
   }
   return data;
@@ -45,7 +48,7 @@ export const listServices = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("services" as any).select("*").order("created_at", { ascending: false });
     if (error) throw error;
-    return data ?? [];
+    return (data ?? []) as any;
   });
 
 export const getService = createServerFn({ method: "GET" })
@@ -55,7 +58,7 @@ export const getService = createServerFn({ method: "GET" })
     const { data: svc, error } = await context.supabase
       .from("services" as any).select("*").eq("id", data.id).maybeSingle();
     if (error) throw error;
-    return svc;
+    return svc as any;
   });
 
 // ─── Sync ALL Render services into our DB for the current user's org ───────
@@ -196,7 +199,7 @@ export const createService = createServerFn({ method: "POST" })
         provider: "render", endpoint: "/services", method: "POST",
         status: 201, latency_ms: Date.now() - t0, user_id: context.userId,
       });
-      return row;
+      return row as any;
     } catch (e) {
       await logApiCall({
         provider: "render", endpoint: "/services", method: "POST",
@@ -339,13 +342,13 @@ export const listDeploys = createServerFn({ method: "GET" })
           created_at: (d.createdAt as string) ?? new Date().toISOString(),
         }, { onConflict: "render_deploy_id" });
       }
-      return items;
+      return items as any;
     } catch (e) {
       // Fallback to cached DB
       const { data: cached } = await supabaseAdmin
         .from("service_deploys" as any).select("*").eq("service_id", data.serviceId)
         .order("created_at", { ascending: false }).limit(data.limit);
-      return cached ?? [];
+      return (cached ?? []) as any;
     }
   });
 
@@ -359,7 +362,7 @@ export const triggerDeploy = createServerFn({ method: "POST" })
       method: "POST", path: `/services/${svc.render_service_id}/deploys`,
       body: { clearCache: data.clearCache ? "clear" : "do_not_clear" },
     });
-    return r;
+    return r as any;
   });
 
 export const cancelDeploy = createServerFn({ method: "POST" })
@@ -408,12 +411,12 @@ export const listEvents = createServerFn({ method: "GET" })
           occurred_at: (ev.timestamp as string) ?? new Date().toISOString(),
         }, { onConflict: "render_event_id" });
       }
-      return items;
+      return items as any;
     } catch {
       const { data: cached } = await supabaseAdmin
         .from("service_events" as any).select("*").eq("service_id", data.serviceId)
         .order("occurred_at", { ascending: false }).limit(data.limit);
-      return cached ?? [];
+      return (cached ?? []) as any;
     }
   });
 
@@ -425,7 +428,7 @@ export const listEnvVars = createServerFn({ method: "GET" })
     const { renderFetch, unwrapList } = await deps();
     const raw = await renderFetch({ path: `/services/${svc.render_service_id}/env-vars` });
     const { items } = unwrapList<Record<string, unknown>>(raw);
-    return items;
+    return items as any;
   });
 
 export const upsertEnvVar = createServerFn({ method: "POST" })
@@ -482,7 +485,7 @@ export const listJobs = createServerFn({ method: "GET" })
     const svc = await getServiceForUser(data.id, context.userId);
     const { renderFetch, unwrapList } = await deps();
     const raw = await renderFetch({ path: `/services/${svc.render_service_id}/jobs` });
-    return unwrapList<Record<string, unknown>>(raw).items;
+    return unwrapList<Record<string, unknown>>(raw).items as any;
   });
 
 export const createJob = createServerFn({ method: "POST" })
@@ -495,10 +498,10 @@ export const createJob = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const svc = await getServiceForUser(data.id, context.userId);
     const { renderFetch } = await deps();
-    return renderFetch({
+    return (await renderFetch({
       method: "POST", path: `/services/${svc.render_service_id}/jobs`,
       body: { startCommand: data.startCommand, ...(data.planId ? { planId: data.planId } : {}) },
-    });
+    })) as any;
   });
 
 export const cancelJob = createServerFn({ method: "POST" })
@@ -519,9 +522,9 @@ export const triggerCronJob = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const svc = await getServiceForUser(data.id, context.userId);
     const { renderFetch } = await deps();
-    return renderFetch({
+    return (await renderFetch({
       method: "POST", path: `/cron-jobs/${svc.render_service_id}/runs`,
-    });
+    })) as any;
   });
 
 // ─── Custom domains ────────────────────────────────────────────────────────
@@ -531,7 +534,7 @@ export const listCustomDomains = createServerFn({ method: "GET" })
     const svc = await getServiceForUser(data.id, context.userId);
     const { renderFetch, unwrapList } = await deps();
     const raw = await renderFetch({ path: `/services/${svc.render_service_id}/custom-domains` });
-    return unwrapList<Record<string, unknown>>(raw).items;
+    return unwrapList<Record<string, unknown>>(raw).items as any;
   });
 
 export const addCustomDomain = createServerFn({ method: "POST" })
@@ -540,10 +543,10 @@ export const addCustomDomain = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const svc = await getServiceForUser(data.id, context.userId);
     const { renderFetch } = await deps();
-    return renderFetch({
+    return (await renderFetch({
       method: "POST", path: `/services/${svc.render_service_id}/custom-domains`,
       body: { name: data.name },
-    });
+    })) as any;
   });
 
 export const verifyCustomDomain = createServerFn({ method: "POST" })
@@ -552,10 +555,10 @@ export const verifyCustomDomain = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const svc = await getServiceForUser(data.id, context.userId);
     const { renderFetch } = await deps();
-    return renderFetch({
+    return (await renderFetch({
       method: "POST",
       path: `/services/${svc.render_service_id}/custom-domains/${data.domainId}/verify`,
-    });
+    })) as any;
   });
 
 export const deleteCustomDomain = createServerFn({ method: "POST" })
