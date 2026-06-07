@@ -77,6 +77,7 @@ import { Route as AppAppSettingsPreferencesRouteImport } from './routes/_app.app
 import { Route as AppAppSettingsIntegrationsRouteImport } from './routes/_app.app.settings.integrations'
 import { Route as AppAppSettingsDangerRouteImport } from './routes/_app.app.settings.danger'
 import { Route as AppAppServicesNewRouteImport } from './routes/_app.app.services.new'
+import { Route as AppAppServicesServiceIdRouteImport } from './routes/_app.app.services.$serviceId'
 import { Route as AppAppEmailProvidersRouteImport } from './routes/_app.app.email.providers'
 import { Route as AppAppEmailNewRouteImport } from './routes/_app.app.email.new'
 import { Route as AppAppEmailMailboxIdRouteImport } from './routes/_app.app.email.$mailboxId'
@@ -440,6 +441,11 @@ const AppAppServicesNewRoute = AppAppServicesNewRouteImport.update({
   path: '/app/services/new',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAppServicesServiceIdRoute = AppAppServicesServiceIdRouteImport.update({
+  id: '/app/services/$serviceId',
+  path: '/app/services/$serviceId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAppEmailProvidersRoute = AppAppEmailProvidersRouteImport.update({
   id: '/app/email/providers',
   path: '/app/email/providers',
@@ -625,6 +631,7 @@ export interface FileRoutesByFullPath {
   '/app/email/$mailboxId': typeof AppAppEmailMailboxIdRoute
   '/app/email/new': typeof AppAppEmailNewRoute
   '/app/email/providers': typeof AppAppEmailProvidersRoute
+  '/app/services/$serviceId': typeof AppAppServicesServiceIdRoute
   '/app/services/new': typeof AppAppServicesNewRoute
   '/app/settings/danger': typeof AppAppSettingsDangerRoute
   '/app/settings/integrations': typeof AppAppSettingsIntegrationsRoute
@@ -714,6 +721,7 @@ export interface FileRoutesByTo {
   '/app/email/$mailboxId': typeof AppAppEmailMailboxIdRoute
   '/app/email/new': typeof AppAppEmailNewRoute
   '/app/email/providers': typeof AppAppEmailProvidersRoute
+  '/app/services/$serviceId': typeof AppAppServicesServiceIdRoute
   '/app/services/new': typeof AppAppServicesNewRoute
   '/app/settings/danger': typeof AppAppSettingsDangerRoute
   '/app/settings/integrations': typeof AppAppSettingsIntegrationsRoute
@@ -808,6 +816,7 @@ export interface FileRoutesById {
   '/_app/app/email/$mailboxId': typeof AppAppEmailMailboxIdRoute
   '/_app/app/email/new': typeof AppAppEmailNewRoute
   '/_app/app/email/providers': typeof AppAppEmailProvidersRoute
+  '/_app/app/services/$serviceId': typeof AppAppServicesServiceIdRoute
   '/_app/app/services/new': typeof AppAppServicesNewRoute
   '/_app/app/settings/danger': typeof AppAppSettingsDangerRoute
   '/_app/app/settings/integrations': typeof AppAppSettingsIntegrationsRoute
@@ -900,6 +909,7 @@ export interface FileRouteTypes {
     | '/app/email/$mailboxId'
     | '/app/email/new'
     | '/app/email/providers'
+    | '/app/services/$serviceId'
     | '/app/services/new'
     | '/app/settings/danger'
     | '/app/settings/integrations'
@@ -989,6 +999,7 @@ export interface FileRouteTypes {
     | '/app/email/$mailboxId'
     | '/app/email/new'
     | '/app/email/providers'
+    | '/app/services/$serviceId'
     | '/app/services/new'
     | '/app/settings/danger'
     | '/app/settings/integrations'
@@ -1082,6 +1093,7 @@ export interface FileRouteTypes {
     | '/_app/app/email/$mailboxId'
     | '/_app/app/email/new'
     | '/_app/app/email/providers'
+    | '/_app/app/services/$serviceId'
     | '/_app/app/services/new'
     | '/_app/app/settings/danger'
     | '/_app/app/settings/integrations'
@@ -1607,6 +1619,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppServicesNewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/services/$serviceId': {
+      id: '/_app/app/services/$serviceId'
+      path: '/app/services/$serviceId'
+      fullPath: '/app/services/$serviceId'
+      preLoaderRoute: typeof AppAppServicesServiceIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/app/email/providers': {
       id: '/_app/app/email/providers'
       path: '/app/email/providers'
@@ -1941,6 +1960,7 @@ interface AppRouteChildren {
   AppAppEmailMailboxIdRoute: typeof AppAppEmailMailboxIdRoute
   AppAppEmailNewRoute: typeof AppAppEmailNewRoute
   AppAppEmailProvidersRoute: typeof AppAppEmailProvidersRoute
+  AppAppServicesServiceIdRoute: typeof AppAppServicesServiceIdRoute
   AppAppServicesNewRoute: typeof AppAppServicesNewRoute
   AppAppSitesProjectIdRoute: typeof AppAppSitesProjectIdRouteWithChildren
   AppAppSitesNewRoute: typeof AppAppSitesNewRoute
@@ -1967,6 +1987,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppEmailMailboxIdRoute: AppAppEmailMailboxIdRoute,
   AppAppEmailNewRoute: AppAppEmailNewRoute,
   AppAppEmailProvidersRoute: AppAppEmailProvidersRoute,
+  AppAppServicesServiceIdRoute: AppAppServicesServiceIdRoute,
   AppAppServicesNewRoute: AppAppServicesNewRoute,
   AppAppSitesProjectIdRoute: AppAppSitesProjectIdRouteWithChildren,
   AppAppSitesNewRoute: AppAppSitesNewRoute,
