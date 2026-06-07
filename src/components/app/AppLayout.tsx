@@ -95,7 +95,7 @@ const PROJECT_NAV = (projectId: string): Array<{
   ]},
 ];
 
-// Detect project id from matched routes (only set when inside /app/sites/$projectId/*)
+// Detect project id (sites) or service id (render) from matched routes
 function useProjectId(): string | null {
   const matches = useMatches();
   for (const m of matches) {
@@ -104,30 +104,41 @@ function useProjectId(): string | null {
   }
   return null;
 }
+function useServiceId(): string | null {
+  const matches = useMatches();
+  for (const m of matches) {
+    const params = m.params as Record<string, string> | undefined;
+    if (params?.serviceId) return params.serviceId;
+  }
+  return null;
+}
 
 export function AppLayout() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const projectId = useProjectId();
+  const serviceId = useServiceId();
+
+  const renderSidebar = (closeMobile?: () => void) => {
+    if (serviceId) return <ServiceSidebar serviceId={serviceId} onNavigate={closeMobile} />;
+    if (projectId) return <ProjectSidebar projectId={projectId} onNavigate={closeMobile} />;
+    return <WorkspaceSidebar onNavigate={closeMobile} />;
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-60 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
-        {projectId ? <ProjectSidebar projectId={projectId} /> : <WorkspaceSidebar />}
+        {renderSidebar()}
       </aside>
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
           <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" />
           <aside className="absolute left-0 top-0 h-full w-72 border-r border-sidebar-border bg-sidebar" onClick={(e) => e.stopPropagation()}>
-            {projectId ? (
-              <ProjectSidebar projectId={projectId} onNavigate={() => setMobileOpen(false)} />
-            ) : (
-              <WorkspaceSidebar onNavigate={() => setMobileOpen(false)} />
-            )}
+            {renderSidebar(() => setMobileOpen(false))}
           </aside>
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <AppHeader onOpenMobile={() => setMobileOpen(true)} projectId={projectId} />
+        <AppHeader onOpenMobile={() => setMobileOpen(true)} projectId={projectId} serviceId={serviceId} />
         <main className="flex-1"><Outlet /></main>
       </div>
     </div>
