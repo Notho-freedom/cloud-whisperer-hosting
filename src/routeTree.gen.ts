@@ -57,6 +57,7 @@ import { Route as AdminAdminAnnouncementsRouteImport } from './routes/_admin.adm
 import { Route as AppAppTeamIndexRouteImport } from './routes/_app.app.team.index'
 import { Route as AppAppSupportIndexRouteImport } from './routes/_app.app.support.index'
 import { Route as AppAppSitesIndexRouteImport } from './routes/_app.app.sites.index'
+import { Route as AppAppServicesIndexRouteImport } from './routes/_app.app.services.index'
 import { Route as AppAppEmailIndexRouteImport } from './routes/_app.app.email.index'
 import { Route as AppAppDomainsIndexRouteImport } from './routes/_app.app.domains.index'
 import { Route as AppAppBillingIndexRouteImport } from './routes/_app.app.billing.index'
@@ -334,6 +335,11 @@ const AppAppSupportIndexRoute = AppAppSupportIndexRouteImport.update({
 const AppAppSitesIndexRoute = AppAppSitesIndexRouteImport.update({
   id: '/app/sites/',
   path: '/app/sites/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppServicesIndexRoute = AppAppServicesIndexRouteImport.update({
+  id: '/app/services/',
+  path: '/app/services/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAppEmailIndexRoute = AppAppEmailIndexRouteImport.update({
@@ -631,6 +637,7 @@ export interface FileRoutesByFullPath {
   '/app/billing/': typeof AppAppBillingIndexRoute
   '/app/domains/': typeof AppAppDomainsIndexRoute
   '/app/email/': typeof AppAppEmailIndexRoute
+  '/app/services/': typeof AppAppServicesIndexRoute
   '/app/sites/': typeof AppAppSitesIndexRoute
   '/app/support/': typeof AppAppSupportIndexRoute
   '/app/team/': typeof AppAppTeamIndexRoute
@@ -717,6 +724,7 @@ export interface FileRoutesByTo {
   '/app/billing': typeof AppAppBillingIndexRoute
   '/app/domains': typeof AppAppDomainsIndexRoute
   '/app/email': typeof AppAppEmailIndexRoute
+  '/app/services': typeof AppAppServicesIndexRoute
   '/app/sites': typeof AppAppSitesIndexRoute
   '/app/support': typeof AppAppSupportIndexRoute
   '/app/team': typeof AppAppTeamIndexRoute
@@ -810,6 +818,7 @@ export interface FileRoutesById {
   '/_app/app/billing/': typeof AppAppBillingIndexRoute
   '/_app/app/domains/': typeof AppAppDomainsIndexRoute
   '/_app/app/email/': typeof AppAppEmailIndexRoute
+  '/_app/app/services/': typeof AppAppServicesIndexRoute
   '/_app/app/sites/': typeof AppAppSitesIndexRoute
   '/_app/app/support/': typeof AppAppSupportIndexRoute
   '/_app/app/team/': typeof AppAppTeamIndexRoute
@@ -900,6 +909,7 @@ export interface FileRouteTypes {
     | '/app/billing/'
     | '/app/domains/'
     | '/app/email/'
+    | '/app/services/'
     | '/app/sites/'
     | '/app/support/'
     | '/app/team/'
@@ -986,6 +996,7 @@ export interface FileRouteTypes {
     | '/app/billing'
     | '/app/domains'
     | '/app/email'
+    | '/app/services'
     | '/app/sites'
     | '/app/support'
     | '/app/team'
@@ -1078,6 +1089,7 @@ export interface FileRouteTypes {
     | '/_app/app/billing/'
     | '/_app/app/domains/'
     | '/_app/app/email/'
+    | '/_app/app/services/'
     | '/_app/app/sites/'
     | '/_app/app/support/'
     | '/_app/app/team/'
@@ -1441,6 +1453,13 @@ declare module '@tanstack/react-router' {
       path: '/app/sites'
       fullPath: '/app/sites/'
       preLoaderRoute: typeof AppAppSitesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/services/': {
+      id: '/_app/app/services/'
+      path: '/app/services'
+      fullPath: '/app/services/'
+      preLoaderRoute: typeof AppAppServicesIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/app/email/': {
@@ -1910,6 +1929,7 @@ interface AppRouteChildren {
   AppAppTeamInviteRoute: typeof AppAppTeamInviteRoute
   AppAppDomainsIndexRoute: typeof AppAppDomainsIndexRoute
   AppAppEmailIndexRoute: typeof AppAppEmailIndexRoute
+  AppAppServicesIndexRoute: typeof AppAppServicesIndexRoute
   AppAppSitesIndexRoute: typeof AppAppSitesIndexRoute
   AppAppSupportIndexRoute: typeof AppAppSupportIndexRoute
   AppAppTeamIndexRoute: typeof AppAppTeamIndexRoute
@@ -1934,6 +1954,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppTeamInviteRoute: AppAppTeamInviteRoute,
   AppAppDomainsIndexRoute: AppAppDomainsIndexRoute,
   AppAppEmailIndexRoute: AppAppEmailIndexRoute,
+  AppAppServicesIndexRoute: AppAppServicesIndexRoute,
   AppAppSitesIndexRoute: AppAppSitesIndexRoute,
   AppAppSupportIndexRoute: AppAppSupportIndexRoute,
   AppAppTeamIndexRoute: AppAppTeamIndexRoute,
