@@ -170,7 +170,8 @@ function WorkspaceSidebar({ onNavigate }: { onNavigate?: () => void }) {
                   <Link key={item.to} to={item.to} onClick={onNavigate}
                     className={cn("flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors",
                       active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground")}>
-                    <item.icon className="h-4 w-4" />{item.label}
+                    <item.icon className="h-4 w-4" /><span className="flex-1">{item.label}</span>
+                    {item.badge && <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary">{item.badge}</span>}
                   </Link>
                 );
               })}
