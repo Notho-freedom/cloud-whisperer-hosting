@@ -294,6 +294,9 @@ function ServiceSidebar({ serviceId, onNavigate }: { serviceId: string; onNaviga
       <PlatformStatusFooter />
     </div>
   );
+}
+
+
 
 function PlatformStatusFooter() {
   return (
