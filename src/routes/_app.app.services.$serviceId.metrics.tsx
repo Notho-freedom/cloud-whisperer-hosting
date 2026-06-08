@@ -14,13 +14,13 @@ export const Route = createFileRoute("/_app/app/services/$serviceId/metrics")({
   component: MetricsPage,
 });
 
-const METRICS: Array<{ key: any; label: string; unit?: string; color: string }> = [
-  { key: "cpu", label: "CPU", unit: "%", color: "hsl(var(--primary))" },
-  { key: "memory", label: "Memory", unit: "MB", color: "hsl(var(--success))" },
-  { key: "instance_count", label: "Instances", color: "hsl(var(--warning))" },
-  { key: "http_request_count", label: "HTTP Requests", color: "hsl(var(--primary))" },
-  { key: "http_latency", label: "HTTP Latency", unit: "ms", color: "hsl(var(--success))" },
-  { key: "bandwidth", label: "Bandwidth", unit: "MB", color: "hsl(var(--warning))" },
+const METRICS: Array<{ metric: string; label: string; unit?: string; color: string }> = [
+  { metric: "cpu", label: "CPU", unit: "%", color: "hsl(var(--primary))" },
+  { metric: "memory", label: "Memory", unit: "MB", color: "hsl(var(--success))" },
+  { metric: "instance_count", label: "Instances", color: "hsl(var(--warning))" },
+  { metric: "http_request_count", label: "HTTP Requests", color: "hsl(var(--primary))" },
+  { metric: "http_latency", label: "HTTP Latency", unit: "ms", color: "hsl(var(--success))" },
+  { metric: "bandwidth", label: "Bandwidth", unit: "MB", color: "hsl(var(--warning))" },
 ];
 
 const RANGES = [
@@ -50,16 +50,17 @@ function MetricsPage() {
       />
       <PageContent>
         <div className="grid gap-4 md:grid-cols-2">
-          {METRICS.map((m) => <MetricCard key={m.key} serviceId={serviceId} range={range} {...m} />)}
+          {METRICS.map((m) => <MetricCard key={m.metric} serviceId={serviceId} range={range} {...m} />)}
         </div>
       </PageContent>
     </>
   );
 }
 
-function MetricCard({ serviceId, range, key: _k, label, unit, color, ...rest }: any) {
-  const metric = rest.metric ?? _k ?? label.toLowerCase();
-  const metricKey = (rest.key ?? metric) as string;
+function MetricCard({ serviceId, range, metric, label, unit, color }: {
+  serviceId: string; range: number; metric: string; label: string; unit?: string; color: string;
+}) {
+  const metricKey = metric;
   const { data = [], isLoading } = useQuery({
     queryKey: ["svc", serviceId, "metric", metricKey, range],
     queryFn: () => getMetrics({ data: { id: serviceId, metric: metricKey as any, rangeHours: range } }) as Promise<any[]>,
