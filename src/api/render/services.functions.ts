@@ -573,3 +573,65 @@ export const deleteCustomDomain = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+// ─── Logs ──────────────────────────────────────────────────────────────────
+export const listLogs = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({
+    id: z.string().uuid(),
+    limit: z.number().int().min(1).max(500).default(100),
+    search: z.string().max(200).optional(),
+    direction: z.enum(["backward", "forward"]).default("backward"),
+  }).parse)
+  .handler(async ({ data, context }) => {
+    const svc = await getServiceForUser(data.id, context.userId);
+    const { renderFetch } = await deps();
+    try {
+      const r = await renderFetch<any>({
+        path: `/logs`,
+        query: {
+          resource: svc.render_service_id,
+          limit: data.limit,
+          direction: data.direction,
+          ...(data.search ? { text: data.search } : {}),
+        },
+      });
+      return (r?.logs ?? r?.items ?? r ?? []) as any;
+    } catch {
+      return [] as any;
+    }
+  });
+
+// ─── Metrics ───────────────────────────────────────────────────────────────
+export const getMetrics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({
+    id: z.string().uuid(),
+    metric: z.enum(["cpu", "memory", "instance_count", "http_request_count", "http_latency", "bandwidth"]),
+    rangeHours: z.number().int().min(1).max(720).default(24),
+  }).parse)
+  .handler(async ({ data, context }) => {
+    const svc = await getServiceForUser(data.id, context.userId);
+    const { renderFetch } = await deps();
+    const endTime = new Date().toISOString();
+    const startTime = new Date(Date.now() - data.rangeHours * 3600 * 1000).toISOString();
+    const pathMap: Record<string, string> = {
+      cpu: "/metrics/cpu",
+      memory: "/metrics/memory",
+      instance_count: "/metrics/instance-count",
+      http_request_count: "/metrics/http-request-count",
+      http_latency: "/metrics/http-latency",
+      bandwidth: "/metrics/bandwidth",
+    };
+    try {
+      const r = await renderFetch<any>({
+        path: pathMap[data.metric],
+        query: { resource: svc.render_service_id, startTime, endTime, resolutionSeconds: data.rangeHours <= 6 ? 60 : data.rangeHours <= 24 ? 300 : 1800 },
+      });
+      // Render returns [{ resource, values: [{timestamp, value}] }]
+      const series = Array.isArray(r) ? (r[0]?.values ?? []) : (r?.values ?? []);
+      return series as any;
+    } catch {
+      return [] as any;
+    }
+  });
